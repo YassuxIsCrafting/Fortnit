@@ -60,9 +60,21 @@
       });
     });
   }
+  // Le mot de passe n'est jamais envoyé tel quel : le navigateur en dérive une clé (PBKDF2, 150 000 tours)
+  // avec le nom d'utilisateur comme sel, et c'est cette clé que le serveur vérifie.
+  function derive(u, pw) {
+    var C = typeof crypto !== 'undefined' ? crypto : window.crypto;
+    if (!C || !C.subtle) return Promise.reject('Navigateur non compatible avec les comptes.');
+    var enc = new TextEncoder();
+    return C.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']).then(function (k) {
+      return C.subtle.deriveBits({ name: 'PBKDF2', salt: enc.encode('ile-eclair|' + String(u).toLowerCase()), iterations: 150000, hash: 'SHA-256' }, k, 256);
+    }).then(function (b) {
+      return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+    });
+  }
   var auth = {
-    register: function (u, pw, p) { return call({ t: 'reg', u: u, pw: pw, p: p }); },
-    login: function (u, pw) { return call({ t: 'login', u: u, pw: pw }); },
+    register: function (u, pw, p) { return derive(u, pw).then(function (k) { return call({ t: 'reg', u: u, pw: k, p: p }); }); },
+    login: function (u, pw) { return derive(u, pw).then(function (k) { return call({ t: 'login', u: u, pw: k }); }); },
     resume: function (u, token) { return call({ t: 'resume', u: u, token: token }); },
     save: function (p) { return call({ t: 'save', p: p }); }
   };
