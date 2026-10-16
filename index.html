@@ -324,7 +324,7 @@ function initBus(){
   const r=mul(t0%2147483647),a=r()*6.2832,off=(r()-.5)*M*.5,dx=Math.cos(a),dy=Math.sin(a),h=M*.62;
   bus={dx,dy,len:2*h,sx:C-dx*h-dy*off,sy:C-dy*h+dx*off,m:mkBus()};bus.m.rotation.y=-a;dyn.add(bus.m);
   P.mode="bus";P.x=bus.sx;P.y=bus.sy;P.z=BUS_Z;yaw=Math.atan2(-dx,-dy);pitch=-.3;
-  for(const b of botsAll){b.mode="bus";b.drop=rnd(.05,.97);b.x=b.sx=bus.sx;b.y=b.sy=bus.sy;b.z=b.tz=BUS_Z}
+  for(const b of botsAll){b.mode="bus";b.lx=rnd(150,M-150);b.ly=rnd(150,M-150);b.drop=Math.max(.03,Math.min(.97,((b.lx-bus.sx)*dx+(b.ly-bus.sy)*dy)/bus.len+rnd(-.06,.06)));b.armT=0;b.x=b.sx=bus.sx;b.y=b.sy=bus.sy;b.z=b.tz=BUS_Z}
 }
 function applyBots(arr,snap){
   arr.forEach((d,i)=>{const b=botsAll[i];if(!b||!b.alive)return;
@@ -523,17 +523,21 @@ function update(dt,now){
   const ents=[P,...liveOthers(),...bots];
   if(!isHost){const k=Math.min(1,dt*12);for(const b of bots){b.x+=(b.sx-b.x)*k;b.y+=(b.sy-b.y)*k;b.z+=((b.tz||0)-b.z)*k}}
   else for(const b of [...bots]){
-    if(b.mode==='bus'){b.x=bp.x;b.y=bp.y;b.z=BUS_Z;if(bp.p>=b.drop){b.mode='air';b.vz=-200;const a=rnd(0,6.28),v=rnd(40,220);b.gx=Math.cos(a)*v;b.gy=Math.sin(a)*v;b.a=a}continue}
-    if(b.mode==='air'){const gl=b.z<GLIDE;b.vz+=((gl?-120:-430)-b.vz)*Math.min(1,dt*3);b.z+=b.vz*dt;b.x+=b.gx*dt;b.y+=b.gy*dt;collide(b);const fl=floorAt(b);if(b.z<=fl){b.z=fl;b.mode='ground'}continue}
+    if(b.mode==='bus'){b.x=bp.x;b.y=bp.y;b.z=BUS_Z;if(bp.p>=b.drop){b.mode="air";b.vz=-200}continue}
+    if(b.mode==="air"){
+      const ex=b.lx-b.x,ey=b.ly-b.y,dd=Math.hypot(ex,ey),mv=Math.min(520*dt,dd);if(dd>1){b.x+=ex/dd*mv;b.y+=ey/dd*mv;b.a=Math.atan2(ey,ex)}
+      b.vz+=(Math.max(-430,Math.min(-40,-b.z/Math.max(.8,dd/520)))-b.vz)*Math.min(1,dt*3);b.z+=b.vz*dt;collide(b);
+      const fl=floorAt(b);if(b.z<=fl){b.z=fl;b.mode="ground";b.armT=rnd(6,20)}continue}
+    if(b.armT>0)b.armT-=dt;
     b.cd-=dt;b.tt-=dt;
     let tg=null,td=380;
-    for(const e of ents){if(e===b||e.alive===false||(e.z||0)>GLIDE+20)continue;const lim=e.i===undefined?td:b.agg?Math.min(td,150):0;if(Math.abs(b.x-e.x)>lim||Math.abs(b.y-e.y)>lim)continue;const d=dist(b,e);if(d<lim){td=d;tg=e}}
+    for(const e of ents){if(e===b||e.alive===false||(e.z||0)>GLIDE+20)continue;const lim=e.i===undefined?td:Math.min(td,b.agg?260:170);if(Math.abs(b.x-e.x)>lim||Math.abs(b.y-e.y)>lim)continue;const d=dist(b,e);if(d<lim){td=d;tg=e}}
     let vx=0,vy=0;
     if(Math.hypot(b.x-C,b.y-C)>stormR-60){b.tx=C;b.ty=C;b.tt=1}
     if(tg){
-      b.a=Math.atan2(tg.y-b.y,tg.x-b.x);const k=td>220?1:-.4,sw=.5*Math.sin(now/900+b.x);
+      b.a=Math.atan2(tg.y-b.y,tg.x-b.x);const k=b.armT>0?-1:td>220?1:-.4,sw=.5*Math.sin(now/900+b.x);
       vx=Math.cos(b.a)*k+Math.cos(b.a+1.57)*sw;vy=Math.sin(b.a)*k+Math.sin(b.a+1.57)*sw;
-      if(b.cd<=0){shoot(b,b.a,BOTW,(tg.z||0)/Math.max(td,1));b.cd=rnd(.45,.8)}
+      if(b.armT>0)b.a+=Math.PI;else if(b.cd<=0){shoot(b,b.a,BOTW,(tg.z||0)/Math.max(td,1));b.cd=rnd(.45,.8)}
     }else{
       if(b.tt<=0||Math.hypot(b.x-b.tx,b.y-b.ty)<30){b.tx=rnd(100,M-100);b.ty=rnd(100,M-100);b.tt=rnd(4,8)}
       b.a=Math.atan2(b.ty-b.y,b.tx-b.x);vx=Math.cos(b.a);vy=Math.sin(b.a);
@@ -549,7 +553,7 @@ function update(dt,now){
       if(dead)break;
       for(const s of stairs)if(inCell(s,b.x,b.y)&&b.z>=s.b&&b.z<=stH(s,b.x,b.y)+4){s.hp-=b.d;if(s.hp<=0){stairs.splice(stairs.indexOf(s),1);dyn.remove(s.m)}dead=true;b.hc=0xd9a066;break}
       if(dead)break;
-      for(const e of ents){if(e===b.o||e.alive===false||(e.z||0)>=BUS_Z-20||Math.abs(b.x-e.x)>24||Math.abs(b.y-e.y)>24)continue;if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+3&&Math.abs(b.z-(e.z||0)-25)<32){if(e===P){hit(P,b.d);ouch();if(P.hp<=0&&!P.dead&&b.o&&b.o.peer){P.dead=1;if(room)room.emit('kill',{k:b.o.peer}).catch(()=>{})}}else if(e.i!==undefined&&isHost){e.killer=b.o===P?'me':(b.o&&b.o.peer)||'x';hit(e,b.o&&b.o.i!==undefined?b.d*.3:b.d)}dead=true;b.hc=0xff5050;break}}
+      for(const e of ents){if(e===b.o||e.alive===false||(e.z||0)>=BUS_Z-20||Math.abs(b.x-e.x)>24||Math.abs(b.y-e.y)>24)continue;if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+3&&Math.abs(b.z-(e.z||0)-25)<32){if(e===P){hit(P,b.d);ouch();if(P.hp<=0&&!P.dead&&b.o&&b.o.peer){P.dead=1;if(room)room.emit('kill',{k:b.o.peer}).catch(()=>{})}}else if(e.i!==undefined&&isHost){e.killer=b.o===P?'me':(b.o&&b.o.peer)||'x';hit(e,b.o&&b.o.i!==undefined?b.d*.45:b.d)}dead=true;b.hc=0xff5050;break}}
     }
     if(dead){if(b.hc)sparks(b.x,b.y,Math.max(2,b.z),b.hc);dyn.remove(b.m);bul.splice(i,1)}else b.m.position.set(b.x,b.z,b.y);
   }
@@ -583,7 +587,7 @@ function animChar(g,x,y,dt,air){
 function airPose(g,air,z){glider(g,air&&z<GLIDE);g.rotation.z=air&&z>=GLIDE?-1.1:0}
 function draw(t,dt){
   P.m.position.set(P.x,P.z,P.y);P.m.rotation.y=-P.a;animChar(P.m,P.x,P.y,dt,!P.gr);airPose(P.m,P.mode==="air",P.z);
-  for(const b of bots){if(!(b.m.visible=Math.abs(b.x-P.x)<2300&&Math.abs(b.y-P.y)<2300))continue;const bz=b.z||0;if(bz>=BUS_Z-20){b.m.visible=false;continue}b.m.position.set(b.x,bz,b.y);b.m.rotation.y=-b.a;b.m.userData.bar.scale.x=Math.max(.1,36*b.hp/100);animChar(b.m,b.x,b.y,dt,false);airPose(b.m,isHost?b.mode==="air":bz>200,bz)}
+  for(const b of bots){if(!(b.m.visible=Math.abs(b.x-P.x)<2300&&Math.abs(b.y-P.y)<2300))continue;const bz=b.z||0;if(bz>=BUS_Z-20){b.m.visible=false;continue}b.m.position.set(b.x,bz,b.y);b.m.rotation.y=-b.a;b.m.userData.bar.scale.x=Math.max(.1,36*b.hp/100);b.m.children[2].visible=!(b.armT>0);animChar(b.m,b.x,b.y,dt,false);airPose(b.m,isHost?b.mode==="air":bz>200,bz)}
   for(const c of chests)c.m.visible=Math.abs(c.x-P.x)<2200&&Math.abs(c.y-P.y)<2200;
   for(const o of loot){if(!(o.m.visible=Math.abs(o.x-P.x)<1600&&Math.abs(o.y-P.y)<1600))continue;o.m.rotation.y=t/500;o.m.position.y=16+Math.sin(t/300+o.x)*4}
   setWeapon(P.m,P.sel);
