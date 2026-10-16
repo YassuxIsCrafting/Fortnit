@@ -134,7 +134,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <script src="net.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-const wait=15,shr=18,M=3000,C=M/2,WS=60,R=[2200,1300,800,450,200,40],GRAV=1100,JUMP=330,STEP=20,TOPB=600;
+const wait=15,shr=18,M=3000,C=M/2,WS=60,R=[2200,1300,800,450,200,40],GRAV=1100,JUMP=330,STEP=20,TOPB=600,FALL=130;
 const rnd=(a,b)=>a+Math.random()*(b-a),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
@@ -151,7 +151,7 @@ const grid=new THREE.GridHelper(M,50,0x6fbf58,0x79c661);grid.position.set(C,.5,C
 const storm=new THREE.Mesh(new THREE.CylinderGeometry(1,1,700,72,1,true),new THREE.MeshBasicMaterial({color:0x8a4dff,transparent:true,opacity:.4,side:THREE.DoubleSide,depthWrite:false}));
 storm.position.set(C,300,C);scene.add(storm);
 const gTrunk=new THREE.CylinderGeometry(6,8,30,6),gLeaf=new THREE.ConeGeometry(28,85,7),gWall=new THREE.BoxGeometry(WS,60,WS),gLoot=new THREE.OctahedronGeometry(11),gBul=new THREE.SphereGeometry(4,6,6),
- gBody=new THREE.CylinderGeometry(13,15,36,10),gHead=new THREE.SphereGeometry(11,10,8),gGun=new THREE.BoxGeometry(30,6,6);
+ gBody=new THREE.CylinderGeometry(12.5,10,22,10),gLeg=new THREE.BoxGeometry(7,17,7),gFoot=new THREE.BoxGeometry(11,4,8),gArm=new THREE.BoxGeometry(5.5,16,5.5),gHand=new THREE.SphereGeometry(3.4,8,6),gHead=new THREE.SphereGeometry(11,10,8),gGun=new THREE.BoxGeometry(30,6,6);
 const gPlank=new THREE.BoxGeometry(WS*Math.SQRT2,3,WS),gStep=new THREE.BoxGeometry(WS/5,4,WS),mStep=L(0xd9a066);
 const mTrunk=L(0x5a3a1a),mLeaf=L(0x2f9e44),mWall=L(0xc98b4a),mBul=B(0xfff27a),mGun=L(0x222222),mSkin=L(0xffd9b3);
 const mLoot={mini:B(0x4aa8ff),big:B(0x00e5ff),med:B(0xff4d4d),ammo:B(0xffd23f),wood:B(0xb0773a),ar:B(0x5fd35f),sg:B(0x4aa8ff),sn:B(0xc27bff)};
@@ -217,11 +217,20 @@ function addSkin(g,k,b,h){
   else if(k===5){const gr=L(0x3fae49);b.material=gr;h.material=gr;m(BX(12,8,10),L(0x5fd35f),12,43,0);m(BX(2,20,14),L(0xcdeb8b),14,18,0);for(const z of[-6,6]){m(SP(2.4),B(0xffffff),8,50,z);m(SP(1.2),B(0x111111),10,50,z)}for(const y of[36,28,20])m(CO(4,9),L(0xff9f1c),-13,y,0,Math.PI/2);m(CO(6,26),gr,-24,8,0,Math.PI/2)}
   else if(k===6){const gm=new THREE.MeshLambertMaterial({color:0xf5f7ff,transparent:true,opacity:.85});b.visible=false;h.visible=false;m(CY(13,17,38),gm,0,19,0);m(SP(13),gm,0,43,0);m(SP(2.6),B(0x111111),10.5,46,-5);m(SP(2.6),B(0x111111),10.5,46,5);m(BX(1.5,5,4),B(0x111111),12,38,0)}
 }
+const mPants=L(0x2b2b3a),mBoot=L(0x1a1a22),DOWN=new THREE.Vector3(0,-1,0);
 function mkChar(col,bar,name,sk,hat,w,k){
   const g=new THREE.Group(),b=new THREE.Mesh(gBody,L(col)),h=new THREE.Mesh(gHead,sk?L(sk):mSkin),u=new THREE.Group();
-  b.position.y=18;h.position.y=46;u.position.set(10,27,5);g.add(b,h,u);setWeapon(g,clampI(w,4));
+  b.position.y=27;h.position.y=46;u.position.set(10,27,5);g.add(b,h,u);setWeapon(g,clampI(w,4));
+  const mk=(geo,mat,x,y,z,p)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);p.add(o);return o},legs=[],limb=[],hands=[];
+  for(const s of[-1,1]){const p=new THREE.Group();p.position.set(0,17,s*5.5);g.add(p);limb.push(mk(gLeg,mPants,0,-8.5,0,p));mk(gFoot,mBoot,2,-15,0,p);legs.push(p)}
+  const arms=[[12,[8,-9,-7]],[-12,[14,-7,12]]].map(([z,d])=>{const p=new THREE.Group();p.position.set(0,35,z);p.quaternion.setFromUnitVectors(DOWN,new THREE.Vector3(...d).normalize());g.add(p);
+    mk(gArm,b.material,0,-8,0,p);hands.push(mk(gHand,h.material,0,-16.5,0,p));return p});
+  g.userData.legs=legs;
   if(bar){const s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xff5d8f}));s.position.y=70;s.scale.set(36,5,1);g.userData.bar=s;g.add(s)}
   addHat(g,k?0:hat,col);addSkin(g,k|0,b,h);
+  for(const a of arms)a.children[0].material=b.material;
+  if(k){for(const m of limb)m.material=b.material;for(const m of hands)m.material=b.material}
+  if(k===6)for(const p of[...legs,...arms])p.visible=false;
   if(name)g.add(label(name,bar?90:(hat||k)?88:74));
   return g;
 }
@@ -241,7 +250,7 @@ function init(){
   for(let i=0;i<120;i++){const x=60+rg()*(M-120),y=60+rg()*(M-120);addLoot(x,y,KINDS[Math.floor(rg()*KINDS.length)])}
   chests=[];for(let i=0;i<26;i++){const x=120+rg()*(M-240),y=120+rg()*(M-240),ry=rg()*6.28;chests.push(mkChest(i,x,y,ry))}
   let sx,sy;do{sx=rnd(900,2100);sy=rnd(900,2100)}while(trees.some(t=>dist(t,{x:sx,y:sy})<90)||chests.some(c=>dist(c,{x:sx,y:sy})<70));
-  P={x:sx,y:sy,z:0,vz:0,gr:true,hp:100,born:Date.now(),kills:0,sh:0,own:[true,false,false,false],sel:0,use:null,inv:{mini:2,big:1,med:1},wood:50,ammo:90,r:16,cd:0,a:0,hc:0,m:mkChar(look.c,0,myName,SKINS[look.s],look.h,0,look.k)};dyn.add(P.m);
+  P={x:sx,y:sy,z:0,vz:0,fz:0,gr:true,hp:100,born:Date.now(),kills:0,sh:0,own:[true,false,false,false],sel:0,use:null,inv:{mini:2,big:1,med:1},wood:50,ammo:90,r:16,cd:0,a:0,hc:0,m:mkChar(look.c,0,myName,SKINS[look.s],look.h,0,look.k)};dyn.add(P.m);
   bots=[];botsAll=[];for(let i=0;i<19;i++){const a=rnd(0,6.28),d=rnd(300,1300),b={i,alive:true,x:C+Math.cos(a)*d,y:C+Math.sin(a)*d,hp:100,r:16,cd:1,a:0,tx:C,ty:C,tt:0,m:mkChar(0xff7a3d,1,BOTN[i],0,0,1)};b.sx=b.x;b.sy=b.y;bots.push(b);botsAll.push(b);dyn.add(b.m)}
   bul=[];walls=[];stairs=[];t0=Date.now();aim=false;fov=70;cam.fov=70;cam.updateProjectionMatrix();
   const h=ingame().find(p=>p.presence.b);if(h){t0=h.presence.t;applyBots(h.presence.b,true)}
@@ -364,9 +373,11 @@ function update(dt,now){
   const f=(keys.KeyW||keys.KeyZ||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0),s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
   let mx=dx*f+rx*s,my=dy*f+ry*s;const l=Math.hypot(mx,my)||1;
   const sp=220*(P.use?.6:1);P.x+=mx/l*sp*dt;P.y+=my/l*sp*dt;collide(P);
-  if(keys.Space&&P.gr){P.vz=JUMP;P.gr=false}
+  if(keys.Space&&P.gr){P.vz=JUMP;P.gr=false;P.fz=P.z}
   P.vz-=GRAV*dt;P.z+=P.vz*dt;
-  {const fl=floorAt(P);if(P.z<=fl||(P.gr&&P.vz<=0&&P.z-fl<STEP)){P.z=fl;P.vz=0;P.gr=true}else P.gr=false}
+  {const fl=floorAt(P);
+    if(P.z<=fl||(P.gr&&P.vz<=0&&P.z-fl<STEP)){if(!P.gr&&P.fz-fl>FALL)P.hp-=(P.fz-fl-FALL)*.5;P.z=fl;P.vz=0;P.gr=true}
+    else{if(P.gr)P.fz=P.z;P.gr=false;P.fz=Math.max(P.fz,P.z)}}
   P.a=Math.atan2(dy,dx);P.cd-=dt;P.hc-=dt;
   if(down&&P.cd<=0&&!P.use){const W=WEAPONS[P.sel];if(P.ammo>=W.cost){shoot(P,P.a,W,pitch*.8);P.ammo-=W.cost;P.cd=W.rate}}
   if(P.use){P.use.t+=dt;if(P.use.t>=P.use.d){const u=P.use.k;P.use=null;P.inv[u]--;if(u==='mini')P.sh=Math.min(50,P.sh+25);else if(u==='big')P.sh=Math.min(100,P.sh+50);else P.hp=100}}
@@ -427,12 +438,18 @@ const mm=document.getElementById('mm').getContext('2d');
 const $=id=>document.getElementById(id),fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 const cmpEls=['N','NE','E','SE','S','SO','O','NO'].map(n=>{const d=document.createElement('span');d.textContent=n;$('cmp').appendChild(d);return d});
 function compass(){const b=((-yaw*57.2958)%360+360)%360;cmpEls.forEach((d,i)=>{const o=((i*45-b+540)%360)-180;d.style.left='calc(50% + '+(o*3.2)+'px)';d.style.opacity=Math.max(0,1-Math.abs(o)/70)})}
+function animChar(g,x,y,dt,air){
+  const u=g.userData;if(!u.legs)return;if(u.px===undefined){u.px=x;u.py=y;u.ph=0;u.amp=0}
+  const sp=Math.hypot(x-u.px,y-u.py)/Math.max(dt,1e-3);u.px=x;u.py=y;
+  u.amp+=(Math.min(1,sp/120)*.8-u.amp)*Math.min(1,dt*10);u.ph+=sp*dt*.085;
+  const r=air?.5:Math.sin(u.ph)*u.amp;u.legs[0].rotation.z=r;u.legs[1].rotation.z=air?-.35:-r;
+}
 function draw(t,dt){
-  P.m.position.set(P.x,P.z,P.y);P.m.rotation.y=-P.a;
-  for(const b of bots){b.m.position.set(b.x,0,b.y);b.m.rotation.y=-b.a;b.m.userData.bar.scale.x=Math.max(.1,36*b.hp/100)}
+  P.m.position.set(P.x,P.z,P.y);P.m.rotation.y=-P.a;animChar(P.m,P.x,P.y,dt,!P.gr);
+  for(const b of bots){b.m.position.set(b.x,0,b.y);b.m.rotation.y=-b.a;b.m.userData.bar.scale.x=Math.max(.1,36*b.hp/100);animChar(b.m,b.x,b.y,dt,false)}
   for(const o of loot){o.m.rotation.y=t/500;o.m.position.y=16+Math.sin(t/300+o.x)*4}
   setWeapon(P.m,P.sel);
-  const k=Math.min(1,dt*14);for(const e of others.values()){e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.z+=((e.tz||0)-e.z)*k;e.m.position.set(e.x,e.z,e.y);e.m.rotation.y=-e.a;e.m.visible=e.hp>0;setWeapon(e.m,e.w|0)}
+  const k=Math.min(1,dt*14);for(const e of others.values()){e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.z+=((e.tz||0)-e.z)*k;e.m.position.set(e.x,e.z,e.y);e.m.rotation.y=-e.a;animChar(e.m,e.x,e.y,dt,false);e.m.visible=e.hp>0;setWeapon(e.m,e.w|0)}
   storm.scale.set(Math.max(stormR,1),1,Math.max(stormR,1));
   const dx=-Math.sin(yaw),dy=-Math.cos(yaw);
   const tf=aim?(P.sel===3&&!P.use?16:50):70;if(Math.abs(fov-tf)>.05){fov+=(tf-fov)*Math.min(1,dt*12);cam.fov=fov;cam.updateProjectionMatrix()}
