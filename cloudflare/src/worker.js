@@ -29,7 +29,7 @@ function cleanPatch(p) {
     if (k === 'n') { if (typeof v === 'string') out.n = v.replace(/[\u0000-\u001f<>]/g, '').slice(0, 14); }
     else if (k === 'c') { if (typeof v === 'string' && HEX.test(v)) out.c = v; }
     else if (['s', 'h', 'k', 'w', 'g'].includes(k)) { if (Number.isInteger(v) && v >= 0 && v <= 9) out[k] = v; }
-    else if (['x', 'y', 'a', 'hp', 't'].includes(k)) { if (num(v)) out[k] = v; }
+    else if (['x', 'y', 'z', 'a', 'hp', 't'].includes(k)) { if (num(v)) out[k] = v; }
     else if (k === 'b') {
       if (Array.isArray(v) && v.length <= 24 && v.every(r => Array.isArray(r) && r.length <= 5 && r.every(z => num(z) || (typeof z === 'string' && z.length <= 40)))) out.b = v;
     }
