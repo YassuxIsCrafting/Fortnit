@@ -90,7 +90,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <div class="hud" id="scope"></div>
 <div class="hud" id="prm">Appuie sur F pour ouvrir le coffre</div>
 <div class="hud" id="cmp"></div>
-<div class="hud" id="tr"><canvas id="mm" width="150" height="150"></canvas><div class="pills"><span class="pill">👥 <b id="pa">20</b></span><span class="pill">☠️ <b id="pk">0</b></span><span class="pill">🪙 <b id="pt">0</b></span></div><div class="pill" id="pst"></div></div>
+<div class="hud" id="tr"><canvas id="mm" width="150" height="150"></canvas><div class="pills"><span class="pill">👥 <b id="pa">100</b></span><span class="pill">☠️ <b id="pk">0</b></span><span class="pill">🪙 <b id="pt">0</b></span></div><div class="pill" id="pst"></div></div>
 <div class="hud" id="kt"></div>
 <div class="hud" id="bot"><div class="vit"><div class="bar"><div id="sh"></div></div><b id="shn">0</b></div><div class="vit"><div class="bar"><div id="hp"></div></div><b id="hpn">100</b></div></div>
 <div class="hud" id="br"><div class="card">🪵 <b id="wd">50</b></div><div class="card">🔹 <b id="am">90</b><small>MUNITIONS</small></div></div>
@@ -134,20 +134,20 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <script src="net.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-const wait=15,shr=18,M=3000,C=M/2,WS=60,R=[2200,1300,800,450,200,40],GRAV=1100,JUMP=330,STEP=20,TOPB=600,FALL=130;
+const wait=25,shr=30,M=6000,C=M/2,WS=60,NP=100,NT=1000,R=[4400,2600,1600,950,500,220,60],GRAV=1100,JUMP=330,STEP=20,TOPB=600,FALL=130;
 const rnd=(a,b)=>a+Math.random()*(b-a),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 document.body.prepend(renderer.domElement);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9be0ff);scene.fog=new THREE.Fog(0x9be0ff,700,2800);
-const cam=new THREE.PerspectiveCamera(70,1,1,6000),lc=new THREE.PerspectiveCamera(38,1,1,3000);lc.position.set(0,120,420);lc.lookAt(0,55,0);
+const cam=new THREE.PerspectiveCamera(70,1,1,3000),lc=new THREE.PerspectiveCamera(38,1,1,3000);lc.position.set(0,120,420);lc.lookAt(0,55,0);
 scene.add(new THREE.HemisphereLight(0xffffff,0x6aa84f,.95));
 const sun=new THREE.DirectionalLight(0xffffff,.7);sun.position.set(500,1000,300);scene.add(sun);
 function rs(){renderer.setSize(innerWidth,innerHeight);cam.aspect=lc.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();lc.updateProjectionMatrix()}rs();addEventListener('resize',rs);
 const L=c=>new THREE.MeshLambertMaterial({color:c}),B=c=>new THREE.MeshBasicMaterial({color:c});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(M,M),L(0x86d36b));ground.rotation.x=-Math.PI/2;ground.position.set(C,0,C);scene.add(ground);
-const sea=new THREE.Mesh(new THREE.PlaneGeometry(14000,14000),L(0x3b2a8a));sea.rotation.x=-Math.PI/2;sea.position.set(C,-2,C);scene.add(sea);
-const grid=new THREE.GridHelper(M,50,0x6fbf58,0x79c661);grid.position.set(C,.5,C);scene.add(grid);
+const sea=new THREE.Mesh(new THREE.PlaneGeometry(40000,40000),L(0x3b2a8a));sea.rotation.x=-Math.PI/2;sea.position.set(C,-2,C);scene.add(sea);
+const grid=new THREE.GridHelper(M,M/WS,0x6fbf58,0x79c661);grid.position.set(C,.5,C);scene.add(grid);
 const storm=new THREE.Mesh(new THREE.CylinderGeometry(1,1,700,72,1,true),new THREE.MeshBasicMaterial({color:0x8a4dff,transparent:true,opacity:.4,side:THREE.DoubleSide,depthWrite:false}));
 storm.position.set(C,300,C);scene.add(storm);
 const gTrunk=new THREE.CylinderGeometry(6,8,30,6),gLeaf=new THREE.ConeGeometry(28,85,7),gWall=new THREE.BoxGeometry(WS,60,WS),gLoot=new THREE.OctahedronGeometry(11),gBul=new THREE.SphereGeometry(4,6,6),
@@ -245,21 +245,30 @@ const hostPeer=()=>{let h=myId();for(const p of ingame())if(p.peer<h)h=p.peer;re
 function init(){
   if(dyn)scene.remove(dyn);dyn=new THREE.Group();scene.add(dyn);others.clear();pend=[];
   const rg=mul(7);trees=[];loot=[];
-  for(let i=0;i<260;i++){const t={x:60+rg()*(M-120),y:60+rg()*(M-120),r:26,hp:8,sc:.8+rg()*.5};
-    const g=new THREE.Group(),a=new THREE.Mesh(gTrunk,mTrunk),b=new THREE.Mesh(gLeaf,mLeaf);a.position.y=15;b.position.y=70;g.add(a,b);g.position.set(t.x,0,t.y);g.scale.setScalar(t.sc);t.m=g;dyn.add(g);trees.push(t)}
-  for(let i=0;i<120;i++){const x=60+rg()*(M-120),y=60+rg()*(M-120);addLoot(x,y,KINDS[Math.floor(rg()*KINDS.length)])}
-  chests=[];for(let i=0;i<26;i++){const x=120+rg()*(M-240),y=120+rg()*(M-240),ry=rg()*6.28;chests.push(mkChest(i,x,y,ry))}
-  let sx,sy;do{sx=rnd(900,2100);sy=rnd(900,2100)}while(trees.some(t=>dist(t,{x:sx,y:sy})<90)||chests.some(c=>dist(c,{x:sx,y:sy})<70));
+  tTrunk=new THREE.InstancedMesh(gTrunk,mTrunk,NT);tLeaf=new THREE.InstancedMesh(gLeaf,mLeaf,NT);tTrunk.frustumCulled=tLeaf.frustumCulled=false;dyn.add(tTrunk,tLeaf);
+  tgrid=new Map();
+  for(let i=0;i<NT;i++){const t={i,x:60+rg()*(M-120),y:60+rg()*(M-120),r:26,hp:8,sc:.8+rg()*.5,rz:0};setTree(t);trees.push(t);const k=tKey(t.x,t.y);(tgrid.get(k)||tgrid.set(k,[]).get(k)).push(t)}
+  for(let i=0;i<480;i++){const x=60+rg()*(M-120),y=60+rg()*(M-120);addLoot(x,y,KINDS[Math.floor(rg()*KINDS.length)])}
+  chests=[];for(let i=0;i<100;i++){const x=120+rg()*(M-240),y=120+rg()*(M-240),ry=rg()*6.28;chests.push(mkChest(i,x,y,ry))}
+  let sx,sy;do{sx=rnd(M*.25,M*.75);sy=rnd(M*.25,M*.75)}while(trees.some(t=>dist(t,{x:sx,y:sy})<90)||chests.some(c=>dist(c,{x:sx,y:sy})<70));
   P={x:sx,y:sy,z:0,vz:0,fz:0,gr:true,hp:100,born:Date.now(),kills:0,sh:0,own:[true,false,false,false],sel:0,use:null,inv:{mini:2,big:1,med:1},wood:50,ammo:90,r:16,cd:0,a:0,hc:0,m:mkChar(look.c,0,0,SKINS[look.s],look.h,0,look.k)};dyn.add(P.m);
-  bots=[];botsAll=[];for(let i=0;i<19;i++){const a=rnd(0,6.28),d=rnd(300,1300),b={i,alive:true,x:C+Math.cos(a)*d,y:C+Math.sin(a)*d,hp:100,r:16,cd:1,a:0,tx:C,ty:C,tt:0,m:mkChar(0xff7a3d,1,0,0,0,1)};b.sx=b.x;b.sy=b.y;bots.push(b);botsAll.push(b);dyn.add(b.m)}
+  const hb=ingame().find(p=>Array.isArray(p.presence.b)),nb=hb?hb.presence.b.length:Math.max(0,NP-1-ingame().length);
+  bots=[];botsAll=[];for(let i=0;i<nb;i++){const a=rnd(0,6.28),d=M*.47*Math.sqrt(rnd(.02,1)),b={i,agg:i%5<2,alive:true,x:C+Math.cos(a)*d,y:C+Math.sin(a)*d,hp:100,r:16,cd:1,a:0,tx:C,ty:C,tt:0,m:mkChar(0xff7a3d,1,0,0,0,1)};b.sx=b.x;b.sy=b.y;bots.push(b);botsAll.push(b);dyn.add(b.m)}
   bul=[];walls=[];stairs=[];t0=Date.now();aim=false;fov=70;cam.fov=70;cam.updateProjectionMatrix();
   const h=ingame().find(p=>p.presence.b);if(h){t0=h.presence.t;applyBots(h.presence.b,true)}
   ph=0;phT=0;stormR=R[0];yaw=rnd(0,6.28);pitch=0;
+}
+let tTrunk,tLeaf,tgrid=new Map();const TC=120,tKey=(x,y)=>Math.floor(x/TC)*1e4+Math.floor(y/TC);const _tm=new THREE.Matrix4(),_to=new THREE.Matrix4(),_td=new THREE.Object3D();
+function setTree(t){
+  _td.position.set(t.x,0,t.y);_td.rotation.set(0,0,t.rz);_td.scale.setScalar(t.hp>0?t.sc:0);_td.updateMatrix();
+  tTrunk.setMatrixAt(t.i,_tm.multiplyMatrices(_td.matrix,_to.makeTranslation(0,15,0)));tLeaf.setMatrixAt(t.i,_tm.multiplyMatrices(_td.matrix,_to.makeTranslation(0,70,0)));
+  tTrunk.instanceMatrix.needsUpdate=tLeaf.instanceMatrix.needsUpdate=true;
 }
 function applyBots(arr,snap){
   arr.forEach((d,i)=>{const b=botsAll[i];if(!b||!b.alive)return;
     if(d[3]<=0){if(!snap&&d[4]&&d[4]===myId())addKill();killBot(b);return}
     b.sx=d[0];b.sy=d[1];b.a=d[2]/100;b.hp=d[3];if(snap){b.x=b.sx;b.y=b.sy}});
+  for(const b of botsAll.slice(arr.length))if(b.alive){b.alive=false;bots.splice(bots.indexOf(b),1);dyn.remove(b.m)}
 }
 let ktT=0;
 function addKill(){P.kills++;wallet.kp++;let tx='ÉLIMINATION ! +1';if(wallet.kp>=3){wallet.kp=0;wallet.tk++;P.tok=(P.tok|0)+1;tx+=' · +1 KILL TOKEN 🪙'}saveW();updateBal();const k=document.getElementById('kt');k.textContent=tx;k.style.opacity=1;clearTimeout(ktT);ktT=setTimeout(()=>k.style.opacity=0,1500)}
@@ -292,7 +301,7 @@ function floorAt(e){
 function collide(e){
   const z=e.z||0;
   e.x=Math.max(e.r,Math.min(M-e.r,e.x));e.y=Math.max(e.r,Math.min(M-e.r,e.y));
-  if(z<90)for(const t of trees){const d=Math.hypot(e.x-t.x,e.y-t.y),m=e.r+t.r*.6;if(d<m&&d>0){e.x=t.x+(e.x-t.x)/d*m;e.y=t.y+(e.y-t.y)/d*m}}
+  if(z<90){const cx=Math.floor(e.x/TC),cy=Math.floor(e.y/TC);for(let i=cx-1;i<=cx+1;i++)for(let j=cy-1;j<=cy+1;j++)for(const t of tgrid.get(i*1e4+j)||[]){if(t.hp<=0)continue;const d=Math.hypot(e.x-t.x,e.y-t.y),m=e.r+t.r*.6;if(d<m&&d>0){e.x=t.x+(e.x-t.x)/d*m;e.y=t.y+(e.y-t.y)/d*m}}}
   if(z<20)for(const c of chests){const d=Math.hypot(e.x-c.x,e.y-c.y),m=e.r+22;if(d<m&&d>0){e.x=c.x+(e.x-c.x)/d*m;e.y=c.y+(e.y-c.y)/d*m}}
   for(const w of walls){
     if(w.b+WS<=z+STEP||w.b>=z+50)continue;
@@ -396,16 +405,17 @@ function update(dt,now){
   if(P.use){P.use.t+=dt;if(P.use.t>=P.use.d){const u=P.use.k;P.use=null;P.inv[u]--;if(u==='mini')P.sh=Math.min(50,P.sh+25);else if(u==='big')P.sh=Math.min(100,P.sh+50);else P.hp=100}}
   if(keys.KeyE&&P.hc<=0){
     const t=trees.find(t=>dist(t,P)<t.r+P.r+24);
-    if(t){t.hp--;P.wood+=5;P.hc=.25;t.m.rotation.z=.08;setTimeout(()=>t.m.rotation.z=0,80);if(t.hp<=0){trees.splice(trees.indexOf(t),1);dyn.remove(t.m)}}
+    if(t){t.hp--;P.wood+=5;P.hc=.25;t.rz=.08;setTree(t);setTimeout(()=>{t.rz=0;setTree(t)},80);if(t.hp<=0)trees.splice(trees.indexOf(t),1)}
   }
   if(P.z<30)for(let i=loot.length-1;i>=0;i--){const o=loot[i];if(dist(o,P)<28){
     if(!pickup(o))continue;
     dyn.remove(o.m);loot.splice(i,1)}}
+  const ents=[P,...liveOthers(),...bots];
   if(!isHost){const k=Math.min(1,dt*12);for(const b of bots){b.x+=(b.sx-b.x)*k;b.y+=(b.sy-b.y)*k}}
   else for(const b of [...bots]){
     b.cd-=dt;b.tt-=dt;
     let tg=null,td=380;
-    for(const e of [P,...liveOthers(),...bots]){if(e===b)continue;const d=dist(b,e);if(d<td){td=d;tg=e}}
+    for(const e of ents){if(e===b||e.alive===false)continue;const lim=e.i===undefined?td:b.agg?Math.min(td,150):0;if(Math.abs(b.x-e.x)>lim||Math.abs(b.y-e.y)>lim)continue;const d=dist(b,e);if(d<lim){td=d;tg=e}}
     let vx=0,vy=0;
     if(Math.hypot(b.x-C,b.y-C)>stormR-60){b.tx=C;b.ty=C;b.tt=1}
     if(tg){
@@ -426,7 +436,7 @@ function update(dt,now){
       if(dead)break;
       for(const s of stairs)if(inCell(s,b.x,b.y)&&b.z>=s.b&&b.z<=stH(s,b.x,b.y)+4){s.hp-=b.d;if(s.hp<=0){stairs.splice(stairs.indexOf(s),1);dyn.remove(s.m)}dead=true;break}
       if(dead)break;
-      for(const e of [P,...liveOthers(),...bots]){if(e===b.o)continue;if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+3&&Math.abs(b.z-(e.z||0)-25)<32){if(e===P){hit(P,b.d);if(P.hp<=0&&!P.dead&&b.o&&b.o.peer){P.dead=1;if(room)room.emit('kill',{k:b.o.peer}).catch(()=>{})}}else if(e.i!==undefined&&isHost){e.killer=b.o===P?'me':(b.o&&b.o.peer)||'x';hit(e,b.d)}dead=true;break}}
+      for(const e of ents){if(e===b.o||e.alive===false||Math.abs(b.x-e.x)>24||Math.abs(b.y-e.y)>24)continue;if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+3&&Math.abs(b.z-(e.z||0)-25)<32){if(e===P){hit(P,b.d);if(P.hp<=0&&!P.dead&&b.o&&b.o.peer){P.dead=1;if(room)room.emit('kill',{k:b.o.peer}).catch(()=>{})}}else if(e.i!==undefined&&isHost){e.killer=b.o===P?'me':(b.o&&b.o.peer)||'x';hit(e,b.o&&b.o.i!==undefined?b.d*.3:b.d)}dead=true;break}}
     }
     if(dead){dyn.remove(b.m);bul.splice(i,1)}else b.m.position.set(b.x,b.z,b.y);
   }
@@ -459,7 +469,7 @@ function animChar(g,x,y,dt,air){
 }
 function draw(t,dt){
   P.m.position.set(P.x,P.z,P.y);P.m.rotation.y=-P.a;animChar(P.m,P.x,P.y,dt,!P.gr);
-  for(const b of bots){b.m.position.set(b.x,0,b.y);b.m.rotation.y=-b.a;b.m.userData.bar.scale.x=Math.max(.1,36*b.hp/100);animChar(b.m,b.x,b.y,dt,false)}
+  for(const b of bots){if(!(b.m.visible=Math.abs(b.x-P.x)<2700&&Math.abs(b.y-P.y)<2700))continue;b.m.position.set(b.x,0,b.y);b.m.rotation.y=-b.a;b.m.userData.bar.scale.x=Math.max(.1,36*b.hp/100);animChar(b.m,b.x,b.y,dt,false)}
   for(const o of loot){o.m.rotation.y=t/500;o.m.position.y=16+Math.sin(t/300+o.x)*4}
   setWeapon(P.m,P.sel);
   const k=Math.min(1,dt*14);for(const e of others.values()){e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.z+=((e.tz||0)-e.z)*k;e.m.position.set(e.x,e.z,e.y);e.m.rotation.y=-e.a;animChar(e.m,e.x,e.y,dt,false);e.m.visible=e.hp>0;setWeapon(e.m,e.w|0)}
