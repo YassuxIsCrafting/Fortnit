@@ -204,7 +204,7 @@ function label(txt,y){
   let f=34;x.font='700 '+f+'px Bungee,Impact,sans-serif';while(x.measureText(txt).width>240&&f>14){f-=2;x.font='700 '+f+'px Bungee,Impact,sans-serif'}
   x.textAlign='center';x.textBaseline='middle';x.lineWidth=8;x.lineJoin='round';x.strokeStyle='#14123a';x.strokeText(txt,128,34);x.fillStyle='#fff';x.fillText(txt,128,34);
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false,fog:false}));
-  s.scale.set(120,30,1);s.position.y=y;s.renderOrder=5;return s;
+  s.scale.set(44,11,1);s.position.y=y;s.renderOrder=5;return s;
 }
 function addSkin(g,k,b,h){
   if(!k)return;
@@ -231,7 +231,7 @@ function mkChar(col,bar,name,sk,hat,w,k){
   for(const a of arms)a.children[0].material=b.material;
   if(k){for(const m of limb)m.material=b.material;for(const m of hands)m.material=b.material}
   if(k===6)for(const p of[...legs,...arms])p.visible=false;
-  if(name)g.add(label(name,bar?90:(hat||k)?88:74));
+  if(name)g.add(label(name,(hat||k)?82:66));
   return g;
 }
 let P,bots,botsAll,bul,walls,stairs,trees,loot,ph,phT,stormR,run=false,last=0,down=false,keys={},yaw=0,pitch=0,dyn;
@@ -250,8 +250,8 @@ function init(){
   for(let i=0;i<120;i++){const x=60+rg()*(M-120),y=60+rg()*(M-120);addLoot(x,y,KINDS[Math.floor(rg()*KINDS.length)])}
   chests=[];for(let i=0;i<26;i++){const x=120+rg()*(M-240),y=120+rg()*(M-240),ry=rg()*6.28;chests.push(mkChest(i,x,y,ry))}
   let sx,sy;do{sx=rnd(900,2100);sy=rnd(900,2100)}while(trees.some(t=>dist(t,{x:sx,y:sy})<90)||chests.some(c=>dist(c,{x:sx,y:sy})<70));
-  P={x:sx,y:sy,z:0,vz:0,fz:0,gr:true,hp:100,born:Date.now(),kills:0,sh:0,own:[true,false,false,false],sel:0,use:null,inv:{mini:2,big:1,med:1},wood:50,ammo:90,r:16,cd:0,a:0,hc:0,m:mkChar(look.c,0,myName,SKINS[look.s],look.h,0,look.k)};dyn.add(P.m);
-  bots=[];botsAll=[];for(let i=0;i<19;i++){const a=rnd(0,6.28),d=rnd(300,1300),b={i,alive:true,x:C+Math.cos(a)*d,y:C+Math.sin(a)*d,hp:100,r:16,cd:1,a:0,tx:C,ty:C,tt:0,m:mkChar(0xff7a3d,1,BOTN[i],0,0,1)};b.sx=b.x;b.sy=b.y;bots.push(b);botsAll.push(b);dyn.add(b.m)}
+  P={x:sx,y:sy,z:0,vz:0,fz:0,gr:true,hp:100,born:Date.now(),kills:0,sh:0,own:[true,false,false,false],sel:0,use:null,inv:{mini:2,big:1,med:1},wood:50,ammo:90,r:16,cd:0,a:0,hc:0,m:mkChar(look.c,0,0,SKINS[look.s],look.h,0,look.k)};dyn.add(P.m);
+  bots=[];botsAll=[];for(let i=0;i<19;i++){const a=rnd(0,6.28),d=rnd(300,1300),b={i,alive:true,x:C+Math.cos(a)*d,y:C+Math.sin(a)*d,hp:100,r:16,cd:1,a:0,tx:C,ty:C,tt:0,m:mkChar(0xff7a3d,1,0,0,0,1)};b.sx=b.x;b.sy=b.y;bots.push(b);botsAll.push(b);dyn.add(b.m)}
   bul=[];walls=[];stairs=[];t0=Date.now();aim=false;fov=70;cam.fov=70;cam.updateProjectionMatrix();
   const h=ingame().find(p=>p.presence.b);if(h){t0=h.presence.t;applyBots(h.presence.b,true)}
   ph=0;phT=0;stormR=R[0];yaw=rnd(0,6.28);pitch=0;
@@ -306,6 +306,19 @@ function shoot(o,ang,w,s){
   const sp=w.sp*(o===P&&aim?.35:1)+(o===P&&w===WEAPONS[3]&&!aim?.05:0);for(let i=0;i<w.pel;i++){const a=Math.round((ang+rnd(-sp,sp))*1000)/1000;as.push(a);spawn(x,y,a,o,w,z,s)}
   if(room){if(o===P)room.emit('shot',{x,y,z,s,a:as,w:WEAPONS.indexOf(w)}).catch(()=>{});else if(isHost)pend.push([o.i,x,y,as[0],s])}
 }
+const aimDir=new THREE.Vector3();
+function aimSlope(){
+  cam.getWorldDirection(aimDir);const o=cam.position,hl2=aimDir.x*aimDir.x+aimDir.z*aimDir.z,ca=Math.cos(P.a),sa=Math.sin(P.a),mx=P.x+ca*26,my=P.y+sa*26,mz=P.z+32;
+  if(hl2<1e-6)return 0;
+  let best=Infinity,tx,ty,tz;
+  for(const e of[...bots,...liveOthers()]){
+    const s=((e.x-o.x)*aimDir.x+(e.y-o.z)*aimDir.z)/hl2;if(s<=0||s>=best||(e.x-P.x)*ca+(e.y-P.y)*sa<30)continue;
+    const px=o.x+aimDir.x*s,py=o.z+aimDir.z*s,h=o.y+aimDir.y*s,ez=e.z||0;
+    if(Math.hypot(px-e.x,py-e.y)<e.r+6&&h>=ez-5&&h<=ez+62){best=s;tx=e.x;ty=e.y;tz=Math.max(ez+5,Math.min(ez+50,h))}
+  }
+  if(best===Infinity){const s=aimDir.y<0?Math.min(2500,o.y/-aimDir.y):2500;tx=o.x+aimDir.x*s;ty=o.z+aimDir.z*s;tz=Math.max(0,o.y+aimDir.y*s)}
+  return(tz-mz)/Math.max(60,Math.hypot(tx-mx,ty-my));
+}
 function pickup(o){
   const k=o.k,I=P.inv;
   if(k==='mini'){if(I.mini>=6)return 0;I.mini=Math.min(6,I.mini+2)}
@@ -352,7 +365,7 @@ function net(){
   if(!room)return;
   const ig=ingame(),seen=new Set();
   for(const p of ig){seen.add(p.peer);const pr=p.presence;let e=others.get(p.peer);const lk=lookOf(pr,p.peer);
-    if(!e){e={x:pr.x,y:pr.y,a:0,hp:100,r:16,peer:p.peer,m:mkChar(lk.c,0,cleanName(pr.n)||'Joueur',lk.sk,lk.h,pr.w,lk.k)};dyn.add(e.m);others.set(p.peer,e)}
+    if(!e){e={x:pr.x,y:pr.y,a:0,hp:100,r:16,peer:p.peer,m:mkChar(lk.c,0,0,lk.sk,lk.h,pr.w,lk.k)};dyn.add(e.m);others.set(p.peer,e)}
     e.tx=pr.x;e.ty=pr.y;e.tz=isFinite(pr.z)?pr.z:0;if(e.z===undefined)e.z=e.tz;e.a=pr.a;e.hp=pr.hp;e.w=clampI(pr.w,4)}
   for(const[k,e]of others)if(!seen.has(k)){dyn.remove(e.m);others.delete(k)}
   const hp=hostPeer();isHost=hp===myId();
@@ -379,7 +392,7 @@ function update(dt,now){
     if(P.z<=fl||(P.gr&&P.vz<=0&&P.z-fl<STEP)){if(!P.gr&&P.fz-fl>FALL)P.hp-=(P.fz-fl-FALL)*.5;P.z=fl;P.vz=0;P.gr=true}
     else{if(P.gr)P.fz=P.z;P.gr=false;P.fz=Math.max(P.fz,P.z)}}
   P.a=Math.atan2(dy,dx);P.cd-=dt;P.hc-=dt;
-  if(down&&P.cd<=0&&!P.use){const W=WEAPONS[P.sel];if(P.ammo>=W.cost){shoot(P,P.a,W,pitch*.8);P.ammo-=W.cost;P.cd=W.rate}}
+  if(down&&P.cd<=0&&!P.use){const W=WEAPONS[P.sel];if(P.ammo>=W.cost){shoot(P,P.a,W,aimSlope());P.ammo-=W.cost;P.cd=W.rate}}
   if(P.use){P.use.t+=dt;if(P.use.t>=P.use.d){const u=P.use.k;P.use=null;P.inv[u]--;if(u==='mini')P.sh=Math.min(50,P.sh+25);else if(u==='big')P.sh=Math.min(100,P.sh+50);else P.hp=100}}
   if(keys.KeyE&&P.hc<=0){
     const t=trees.find(t=>dist(t,P)<t.r+P.r+24);
@@ -485,7 +498,7 @@ addEventListener('keydown',e=>{keys[e.code]=true;if(!run)return;if(e.code==='Spa
   if(/^[1-4]$/.test(d)){const w=+d-1;if(P.own[w]){P.sel=w;P.use=null}}else if(d==='5')useItem('mini');else if(d==='6')useItem('big');else if(d==='7')useItem('med')});
 addEventListener('wheel',e=>{if(!run)return;const o=[0,1,2,3].filter(i=>P.own[i]),j=o.indexOf(P.sel);P.sel=o[(j+(e.deltaY>0?1:-1)+o.length)%o.length];P.use=null});
 addEventListener('keyup',e=>keys[e.code]=false);
-addEventListener('mousemove',e=>{if(document.pointerLockElement===cv){const k=aim&&P?(P.sel===3?.3:.65):1;yaw-=e.movementX*.003*k;pitch=Math.max(-.35,Math.min(.5,pitch-e.movementY*.003*k))}});
+addEventListener('mousemove',e=>{if(document.pointerLockElement===cv){const k=aim&&P?(P.sel===3?.3:.65):1;yaw-=e.movementX*.003*k;pitch=Math.max(-1.1,Math.min(.5,pitch-e.movementY*.003*k))}});
 cv.addEventListener('mousedown',e=>{
   if(!run)return;
   if(document.pointerLockElement!==cv){try{cv.requestPointerLock()}catch(x){}return}
