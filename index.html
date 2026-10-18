@@ -294,7 +294,7 @@ const MODELS=[
   {id:'scout',n:'Éclaireuse',e:'🧭',p:35,file:'models/scout-girl.glb',src:'Low Poly Scout Girl (Apocalypse | Rigged)',by:'micaelsampaio',url:'https://sketchfab.com/3d-models/low-poly-scout-girl-apocalypse-rigged-e388c7898cb7465ab43d0cd2a53cd91a'},
   {id:'plague',n:'Docteur peste',e:'🩺',p:40,file:'models/plague-doctor.glb',src:'Plague Doctor',by:'BeardenInc',url:'https://sketchfab.com/3d-models/plague-doctor-41f7a1dfd6984135b876f334908e3ca4'},
   {id:'skeleton',n:'Seigneur squelette',e:'💀',p:45,file:'models/skeleton-lord.glb',src:'Skeleton Lord',by:'DJMaesen (compte Sketchfab bumstrum)',url:'https://sketchfab.com/3d-models/skeleton-lord-a3f7b44275cf4c489ad62c535268ac16'},
-  {id:'elf',n:'Gardienne elfe',e:'🏹',p:45,file:'models/elf-guardian.glb',src:'Low poly Character animated - Elf guardian',by:'Karthik Naidu',url:'https://sketchfab.com/3d-models/low-poly-character-animated-elf-guardian-c3fbde75977e421bb78e0e7c7fd7a0a3'},
+  {id:'elf',n:'Gardienne elfe',e:'🏹',p:45,drop:/^(ground|grass)/i,boneFit:true,file:'models/elf-guardian.glb',src:'Low poly Character animated - Elf guardian',by:'Karthik Naidu',url:'https://sketchfab.com/3d-models/low-poly-character-animated-elf-guardian-c3fbde75977e421bb78e0e7c7fd7a0a3'},
   {id:'striker',n:'Striker',e:'🦺',p:40,file:'models/jumpsuit-striker.glb',src:'Jumpsuit Low Poly Game Ready (Striker14)',by:'DanlyVostok',url:'https://sketchfab.com/3d-models/jumpsuit-low-poly-game-ready-striker14-da288adbddf949aa85962968732f0999'},
   {id:'suavio',n:'Suavio',e:'🥊',p:55,file:'models/suavio.glb',src:'Suavio (animated character)',by:'Jungle Jim',url:'https://sketchfab.com/3d-models/suavio-animated-character-7bb4d68c63714217a718b64306790193'},
   {id:'rabbit',n:'Guerrier lapin',e:'🐇',p:60,file:'models/rabbit-warrior.glb',src:'Rabbit Man Warrior (Animated)',by:'Jungle Jim',url:'https://sketchfab.com/3d-models/rabbit-man-warrior-animated-7dd8546fb8a444de817ec42d5a8e22a7'},
@@ -311,8 +311,10 @@ function loadGlb(def){
   const done=()=>{const w=st.wait;st.wait=[];w.forEach(f=>f())};
   if(!THREE.GLTFLoader){st.fail=true;return st}
   try{new THREE.GLTFLoader().load(def.file,gl=>{
-    const sc=gl.scene,box=new THREE.Box3();sc.updateMatrixWorld(true);box.setFromObject(sc);
-    const h=Math.max(.001,box.max.y-box.min.y);sc.scale.multiplyScalar(58/h);sc.updateMatrixWorld(true);box.setFromObject(sc);
+    const sc=gl.scene,box=new THREE.Box3(),bp=new THREE.Vector3();
+    if(def.drop){const rm=[];sc.traverse(o=>{if(o.isMesh&&def.drop.test(o.name))rm.push(o)});rm.forEach(o=>o.parent.remove(o))}
+    const fit=()=>{sc.updateMatrixWorld(true);if(def.boneFit){box.makeEmpty();sc.traverse(o=>{if(o.isBone)box.expandByPoint(o.getWorldPosition(bp))})}else box.setFromObject(sc)};
+    fit();const h=Math.max(.001,box.max.y-box.min.y);sc.scale.multiplyScalar(58/h);fit();
     sc.position.set(-(box.min.x+box.max.x)/2,-box.min.y,-(box.min.z+box.max.z)/2);
     const w=new THREE.Group();w.add(sc);w.rotation.y=def.rotY!==undefined?def.rotY:Math.PI/2;
     w.traverse(o=>{o.userData.keep=true;if(o.isMesh){o.castShadow=true;o.frustumCulled=false;for(const mt of [].concat(o.material))if(mt&&mt.isMeshStandardMaterial){mt.metalness=Math.min(mt.metalness??0,.15);mt.roughness=Math.max(mt.roughness??1,.55)}}});
@@ -1358,7 +1360,7 @@ function renderCredits(){
   const CCL='http://creativecommons.org/licenses/by/4.0/';
   for(const m of MODELS){const u=m.short||m.url;
     p(['“'+m.src+'” (',{t:u,href:u},') by '+m.by+' is licensed under Creative Commons Attribution (',{t:CCL,href:CCL},').']);
-    p(['Skin « '+m.n+' » : modèle redimensionné et réorienté pour le jeu.'],'lic')}
+    p(['Skin « '+m.n+' » : modèle redimensionné, réorienté et compressé pour le jeu (textures réduites, expressions du visage et animations d’origine retirées).'],'lic')}
   p(['Les autres skins, armes, véhicules, bâtiments et décors sont des créations originales du projet.'],'lic');
   h('Bibliothèques et outils');
   p([{t:'three.js',href:'https://threejs.org'},' (moteur 3D, GLTFLoader, SkeletonUtils) par mrdoob et les contributeurs, licence ',{t:'MIT',href:'https://github.com/mrdoob/three.js/blob/dev/LICENSE'},'.']);

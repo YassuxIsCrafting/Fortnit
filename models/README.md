@@ -44,3 +44,15 @@ Exemple :
 
 Sketchfab fournit ce texte, avec un lien court `skfb.ly`, quand on télécharge un modèle. Pour les autres
 modèles, le lien complet est utilisé tant que le lien court n'est pas renseigné (champ `short` dans `MODELS`).
+
+## Compression
+
+Les fichiers de ce dossier sont compressés pour le web avec [glTF Transform](https://gltf-transform.dev)
+(textures en WebP 1024 px, expressions du visage et animations d'origine retirées, car le jeu utilise
+ses propres animations). Les originaux sont gardés dans `models/originaux/` (non suivi par git).
+
+Pour compresser un nouveau modèle (Node.js requis) :
+
+```bash
+npx @gltf-transform/cli optimize originaux/mon-modele.glb mon-modele.glb --compress false --flatten false --join false --instance false --palette false --simplify false --sparse false --texture-compress webp --texture-size 1024
+```
