@@ -44,6 +44,10 @@ R1 / L1 arme suivante / précédente · croix directionnelle haut escalier, bas 
 Créer carte · Options paramètres. Dans le lobby : Croix pour jouer, Options pour les paramètres. La manette vibre
 quand tu tires et quand tu prends des dégâts.
 
+**Manette Xbox** (USB, Bluetooth ou adaptateur sans fil) : mêmes emplacements que la PS5 avec les noms Xbox :
+RT tirer · LT viser · A sauter · B mur · X action · Y pioche · RB / LB changer d'arme · croix directionnelle
+haut escalier, bas emotes, gauche / droite soins · Affichage carte · Menu paramètres. Dans le lobby : A pour jouer.
+
 ## Boutique et Kill Tokens
 
 On gagne **1 Kill Token toutes les 3 éliminations** (2 « éliminations » par kill quand on porte la

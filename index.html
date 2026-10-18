@@ -1340,7 +1340,7 @@ function renderCfg(){
   rng("Musique","mus",0,1,.05,v=>Math.round(v*100)+" %");
   rng("Effets sonores","sfx",0,1,.05,v=>Math.round(v*100)+" %");
   h('Commandes');
-  const k1=document.createElement('p');k1.className='keys';k1.innerHTML='<b>PC</b> : '+CTL_PC+' · <b>P</b> paramètres';const k2=document.createElement('p');k2.className='keys';k2.textContent='Mobile : '+CTL_MO+' · ⚙️ paramètres';const k3=document.createElement("p");k3.className="keys";k3.textContent="Manette PS5 : joystick gauche bouger · joystick droit viser · R2 tirer · L2 viser · Croix sauter · Rond mur · Carré action (coffre, voiture, relever) · Triangle pioche · R1 / L1 changer d'arme · haut escalier · bas roue d'emotes · gauche / droite soins · Créer carte · Options paramètres";b.append(k1,k2,k3);
+  const k1=document.createElement('p');k1.className='keys';k1.innerHTML='<b>PC</b> : '+CTL_PC+' · <b>P</b> paramètres';const k2=document.createElement('p');k2.className='keys';k2.textContent='Mobile : '+CTL_MO+' · ⚙️ paramètres';const k3=document.createElement("p");k3.className="keys";k3.textContent="Manette PS5 : joystick gauche bouger · joystick droit viser · R2 tirer · L2 viser · Croix sauter · Rond mur · Carré action (coffre, voiture, relever) · Triangle pioche · R1 / L1 changer d'arme · haut escalier · bas roue d'emotes · gauche / droite soins · Créer carte · Options paramètres";const pi=document.createElement("p");pi.className="keys";pi.id="padinfo";pi.textContent="…";b.append(pi);const k4=document.createElement("p");k4.className="keys";k4.textContent="Manette Xbox : joystick gauche bouger · joystick droit viser · RT tirer · LT viser · A sauter · B mur · X action (coffre, voiture, relever) · Y pioche · RB / LB changer d'arme · haut escalier · bas roue d'emotes · gauche / droite soins · Affichage carte · Menu paramètres";b.append(k1,k2,k3,k4);
 }
 function openCfg(){renderCfg();$('cfg').style.display='flex';down=false;aim=false;if(document.pointerLockElement)document.exitPointerLock()}
 function closeCfg(){$('cfg').style.display='none'}
@@ -1388,12 +1388,28 @@ $('credbtn').onclick=()=>{renderCredits();$('cred').style.display='flex'};$('cre
 // Boutons : 0 Croix · 1 Rond · 2 Carré · 3 Triangle · 4 L1 · 5 R1 · 6 L2 · 7 R2 · 8 Créer · 9 Options · 12-15 croix directionnelle.
 const padMove={x:0,y:0};let padPrev=[],padGp=null;
 function padRumble(m,ms){const v=padGp&&padGp.vibrationActuator;if(v&&v.playEffect)v.playEffect('dual-rumble',{duration:ms,strongMagnitude:m,weakMagnitude:m}).catch(()=>{})}
-addEventListener('gamepadconnected',e=>feed('🎮 Manette connectée'));addEventListener('gamepaddisconnected',()=>{padMove.x=padMove.y=0;feed('🎮 Manette déconnectée')});
+const padKind=id=>/xbox|xinput|045e/i.test(id||"")?"Xbox":/dualsense|dualshock|playstation|054c|wireless controller/i.test(id||"")?"PlayStation":"";
+addEventListener("gamepadconnected",e=>{const k=padKind(e.gamepad.id);feed("🎮 Manette "+(k?k+" ":"")+"connectée")});addEventListener('gamepaddisconnected',()=>{padMove.x=padMove.y=0;feed('🎮 Manette déconnectée')});
+// Lit la manette la plus adaptée et la ramène à la disposition standard (utile pour la DualSense dans Firefox).
+const SONY=/054c|dualsense|dualshock|wireless controller|playstation/i;
+function padRead(){
+  const list=[...(navigator.getGamepads?navigator.getGamepads():[])].filter(g=>g&&g.connected);if(!list.length)return null;
+  const g=list.find(g=>g.mapping==="standard"&&SONY.test(g.id))||list.find(g=>g.mapping==="standard")||list.find(g=>SONY.test(g.id))||list[0],raw=i=>!!(g.buttons[i]&&g.buttons[i].pressed);
+  if(g.mapping==="standard"||!SONY.test(g.id))return{g,ax:g.axes,bt:raw,std:g.mapping==="standard"};
+  const hat=g.axes[9],near=(...v)=>hat!==undefined&&v.some(x=>Math.abs(hat-x)<.15),M=[1,2,0,3,4,5,6,7,8,9,10,11];
+  return{g,ax:[g.axes[0],g.axes[1],g.axes[2],g.axes[5]],std:false,bt:i=>i<12?raw(M[i]):i===12?near(-1,-.714,1):i===13?near(-.142,.142,.428):i===14?near(.428,.714,1):i===15?near(-.714,-.428,-.142):false};
+}
+function padDiag(pad){
+  const el=document.getElementById("padinfo");if(!el||!cfgOpen())return;
+  if(!pad){el.textContent="Aucune manette détectée. Branche-la (ou connecte-la en Bluetooth), puis appuie sur un bouton : le navigateur ne la montre qu'après un premier appui.";return}
+  const on=[];for(let i=0;i<17;i++)if(pad.bt(i))on.push(i);const n=(navigator.getGamepads?[...navigator.getGamepads()].filter(Boolean).length:0);
+  el.textContent=(padKind(pad.g.id)||"Manette")+" · "+pad.g.id.slice(0,60)+" · disposition "+(pad.std?"standard":"adaptée")+" · "+n+" manette(s) · boutons appuyés : "+(on.length?on.join(", "):"aucun")+" · joysticks : "+pad.ax.slice(0,4).map(v=>(+v||0).toFixed(1)).join(" ");
+}
 function padPoll(dt){
-  const list=navigator.getGamepads?navigator.getGamepads():[];padGp=null;for(const g of list)if(g&&g.connected){padGp=g;break}
+  const pad=padRead();padGp=pad?pad.g:null;padDiag(pad);
   if(!padGp){padMove.x=padMove.y=0;return}
-  const g=padGp,dz=v=>Math.abs(v||0)<.15?0:(v-Math.sign(v)*.15)/.85,lx=dz(g.axes[0]),ly=dz(g.axes[1]),rx=dz(g.axes[2]),ry=dz(g.axes[3]);
-  const on=i=>!!(g.buttons[i]&&g.buttons[i].pressed),cur=g.buttons.map((b,i)=>on(i)),prev=padPrev,pr=i=>cur[i]&&!prev[i],rl=i=>!cur[i]&&prev[i];padPrev=cur;
+  const dz=v=>Math.abs(v||0)<.15?0:(v-Math.sign(v)*.15)/.85,lx=dz(pad.ax[0]),ly=dz(pad.ax[1]),rx=dz(pad.ax[2]),ry=dz(pad.ax[3]);
+  const cur=Array.from({length:17},(_,i)=>pad.bt(i)),prev=padPrev,pr=i=>cur[i]&&!prev[i],rl=i=>!cur[i]&&prev[i];padPrev=cur;
   const kd=(c,k)=>dispatchEvent(new KeyboardEvent('keydown',{code:c,key:k||''})),ku=(c,k)=>dispatchEvent(new KeyboardEvent('keyup',{code:c,key:k||''}));
   if(ewOpen){const sx=Math.abs(rx)+Math.abs(ry)>Math.abs(lx)+Math.abs(ly)?rx:lx,sy=sx===rx?ry:ly;
     if(Math.hypot(sx,sy)>.5){ewMoved=true;wheelPick(((Math.round((Math.atan2(sy,sx)+Math.PI/2)/(Math.PI/4))%8)+8)%8)}
