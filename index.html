@@ -1079,7 +1079,7 @@ const joy={x:0,y:0};
   const wt=e=>{if(!ewOpen)return;e.preventDefault();e.stopPropagation();const t=e.changedTouches[0];if(e.type==='touchend'){closeWheel(ewMoved&&ewSel>=0);return}wheelMove({clientX:t.clientX,clientY:t.clientY})};
   for(const ev of['touchstart','touchmove','touchend'])addEventListener(ev,wt,{capture:true,passive:false});
   $("dev-pc").onclick=()=>setDevice("pc",true);$("dev-mo").onclick=()=>setDevice("mo",true);$("devsw").onclick=askDevice;
-  {let d=null;try{d=localStorage.getItem("ie_device")}catch(e){}if(d==="pc"||d==="mo")setDevice(d,false);else{setDevice(GUESS_TOUCH?"mo":"pc",false);askDevice()}}
+  {let d=null;try{d=localStorage.getItem("ie_device")}catch(e){}if(/[?&]app=1/.test(location.search))setDevice("mo",false);else if(d==="pc"||d==="mo")setDevice(d,false);else{setDevice(GUESS_TOUCH?"mo":"pc",false);askDevice()}}
 })();
 function lobbyLoop(t){requestAnimationFrame(lobbyLoop);if(run)return;lobbyUpdate(t);renderer.render(ls,lc)}
 function netUI(){
