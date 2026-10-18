@@ -742,9 +742,9 @@ const mFlash=new THREE.SpriteMaterial({map:(()=>{const c=document.createElement(
 function sparks(x,y,z,c){if(!near(x,y)||fx.length>240)return;const m=mSparkC[c]||(mSparkC[c]=B(c));for(let i=0;i<6;i++){const o=new THREE.Mesh(gSpark,m);o.position.set(x,z,y);dyn.add(o);fx.push({o,vx:rnd(-90,90),vy:rnd(40,170),vz:rnd(-90,90),l:rnd(.25,.45),g:1})}}
 function flash(x,y,z){if(!near(x,y)||fx.length>240)return;const s=new THREE.Sprite(mFlash);s.position.set(x,z,y);s.scale.setScalar(rnd(22,30));dyn.add(s);fx.push({o:s,vx:0,vy:0,vz:0,l:.05,g:0})}
 function fxStep(dt){for(let i=fx.length-1;i>=0;i--){const f=fx[i];f.l-=dt;if(f.l<=0){dyn.remove(f.o);fx.splice(i,1);continue}if(f.g){f.vy-=500*dt;f.o.position.x+=f.vx*dt;f.o.position.y=Math.max(1,f.o.position.y+f.vy*dt);f.o.position.z+=f.vz*dt;f.o.scale.setScalar(Math.min(1,f.l*4))}}}
-function ouch(){sfx("hurt");const d=document.getElementById("dmg");d.style.transition="none";d.style.opacity=1;clearTimeout(ouchT);ouchT=setTimeout(()=>{d.style.transition="opacity .35s";d.style.opacity=0},60)}
+function ouch(){sfx("hurt");padRumble(.45,140);const d=document.getElementById("dmg");d.style.transition="none";d.style.opacity=1;clearTimeout(ouchT);ouchT=setTimeout(()=>{d.style.transition="opacity .35s";d.style.opacity=0},60)}
 function shoot(o,ang,w,s,wi){
-  if(w.melee)sfx("swing");else if(o===P)sfx("shot",wi);else if(o)sfx("shot",1,Math.hypot(o.x-P.x,o.y-P.y));
+  if(w.melee)sfx("swing");else if(o===P){sfx("shot",wi);padRumble(wi===2||wi===3?.35:.15,wi===2||wi===3?90:40)}else if(o)sfx("shot",1,Math.hypot(o.x-P.x,o.y-P.y));
   const x=Math.round(o.x+Math.cos(ang)*26),y=Math.round(o.y+Math.sin(ang)*26),z=Math.round((o.z||0)+32),as=[];s=Math.round((s||0)*1000)/1000;
   if(!w.melee)flash(x,y,z);
   const sp=w.sp*(o===P&&aim?.35:1)+(o===P&&w===WEAPONS[3]&&!aim?.05:0);for(let i=0;i<w.pel;i++){const a=Math.round((ang+rnd(-sp,sp))*1000)/1000;as.push(a);spawn(x,y,a,o,w,z,s)}
@@ -870,7 +870,7 @@ function update(dt,now){
   net();
   for(const c of chests)if(c.open&&c.t<1){c.t=Math.min(1,c.t+dt*2.5);c.lid.rotation.x=-c.t*1.4}
   const dx=-Math.sin(yaw),dy=-Math.cos(yaw),rx=Math.cos(yaw),ry=-Math.sin(yaw);
-  const f=Math.max(-1,Math.min(1,(keys.KeyW||keys.KeyZ||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y)),s=Math.max(-1,Math.min(1,(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x));
+  const f=Math.max(-1,Math.min(1,(keys.KeyW||keys.KeyZ||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y-padMove.y)),s=Math.max(-1,Math.min(1,(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x+padMove.x));
   let mx=dx*f+rx*s,my=dy*f+ry*s;const l=Math.hypot(mx,my)||1;
   const bp=busPos();
   if(bus){const d=(Date.now()-t0)/1000*BUS_V;bus.m.position.set(bus.sx+bus.dx*d,BUS_Z,bus.sy+bus.dy*d);bus.m.visible=d<bus.len+3000}
@@ -1028,7 +1028,7 @@ function drawBigMap(){
 let qT=0,qN=0,qL=0;
 function loop(t){
   if(!run)return;
-  const raw=(t-last)/1000,dt=Math.min(.05,raw);last=t;update(dt,t);draw(t,dt);fpsTick(raw);if(run)requestAnimationFrame(loop);
+  const raw=(t-last)/1000,dt=Math.min(.05,raw);last=t;padPoll(dt);update(dt,t);draw(t,dt);fpsTick(raw);if(run)requestAnimationFrame(loop);
   if(raw>0&&raw<.5){qT+=raw;qN++}
   if(qT>3){if(CFG.auto&&qN/qT<42&&qL<2){qL++;if(qL===1){renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));rs()}else sun.castShadow=false}qT=qN=0}
 }
@@ -1340,7 +1340,7 @@ function renderCfg(){
   rng("Musique","mus",0,1,.05,v=>Math.round(v*100)+" %");
   rng("Effets sonores","sfx",0,1,.05,v=>Math.round(v*100)+" %");
   h('Commandes');
-  const k1=document.createElement('p');k1.className='keys';k1.innerHTML='<b>PC</b> : '+CTL_PC+' · <b>P</b> paramètres';const k2=document.createElement('p');k2.className='keys';k2.textContent='Mobile : '+CTL_MO+' · ⚙️ paramètres';b.append(k1,k2);
+  const k1=document.createElement('p');k1.className='keys';k1.innerHTML='<b>PC</b> : '+CTL_PC+' · <b>P</b> paramètres';const k2=document.createElement('p');k2.className='keys';k2.textContent='Mobile : '+CTL_MO+' · ⚙️ paramètres';const k3=document.createElement("p");k3.className="keys";k3.textContent="Manette PS5 : joystick gauche bouger · joystick droit viser · R2 tirer · L2 viser · Croix sauter · Rond mur · Carré action (coffre, voiture, relever) · Triangle pioche · R1 / L1 changer d'arme · haut escalier · bas roue d'emotes · gauche / droite soins · Créer carte · Options paramètres";b.append(k1,k2,k3);
 }
 function openCfg(){renderCfg();$('cfg').style.display='flex';down=false;aim=false;if(document.pointerLockElement)document.exitPointerLock()}
 function closeCfg(){$('cfg').style.display='none'}
@@ -1384,7 +1384,38 @@ const SERVICES=[
   {n:'Android WebView, Gradle et Eclipse Temurin',url:'https://developer.android.com',d:'construction de l’appli Android.'}
 ];
 $('credbtn').onclick=()=>{renderCredits();$('cred').style.display='flex'};$('credx').onclick=()=>{$('cred').style.display='none'};
-let lobT=0;function lobbyLoop(t){requestAnimationFrame(lobbyLoop);const ldt=Math.min(.05,(t-lobT)/1000||0);lobT=t;if(run)return;tickRigs(ldt);lobbyUpdate(t);renderer.render(ls,lc)}
+// Manette (PS5 DualSense et autres, disposition standard du navigateur).
+// Boutons : 0 Croix · 1 Rond · 2 Carré · 3 Triangle · 4 L1 · 5 R1 · 6 L2 · 7 R2 · 8 Créer · 9 Options · 12-15 croix directionnelle.
+const padMove={x:0,y:0};let padPrev=[],padGp=null;
+function padRumble(m,ms){const v=padGp&&padGp.vibrationActuator;if(v&&v.playEffect)v.playEffect('dual-rumble',{duration:ms,strongMagnitude:m,weakMagnitude:m}).catch(()=>{})}
+addEventListener('gamepadconnected',e=>feed('🎮 Manette connectée'));addEventListener('gamepaddisconnected',()=>{padMove.x=padMove.y=0;feed('🎮 Manette déconnectée')});
+function padPoll(dt){
+  const list=navigator.getGamepads?navigator.getGamepads():[];padGp=null;for(const g of list)if(g&&g.connected){padGp=g;break}
+  if(!padGp){padMove.x=padMove.y=0;return}
+  const g=padGp,dz=v=>Math.abs(v||0)<.15?0:(v-Math.sign(v)*.15)/.85,lx=dz(g.axes[0]),ly=dz(g.axes[1]),rx=dz(g.axes[2]),ry=dz(g.axes[3]);
+  const on=i=>!!(g.buttons[i]&&g.buttons[i].pressed),cur=g.buttons.map((b,i)=>on(i)),prev=padPrev,pr=i=>cur[i]&&!prev[i],rl=i=>!cur[i]&&prev[i];padPrev=cur;
+  const kd=(c,k)=>dispatchEvent(new KeyboardEvent('keydown',{code:c,key:k||''})),ku=(c,k)=>dispatchEvent(new KeyboardEvent('keyup',{code:c,key:k||''}));
+  if(ewOpen){const sx=Math.abs(rx)+Math.abs(ry)>Math.abs(lx)+Math.abs(ly)?rx:lx,sy=sx===rx?ry:ly;
+    if(Math.hypot(sx,sy)>.5){ewMoved=true;wheelPick(((Math.round((Math.atan2(sy,sx)+Math.PI/2)/(Math.PI/4))%8)+8)%8)}
+    if(pr(0))closeWheel(true);else if(pr(1)||pr(13))closeWheel(false);padMove.x=padMove.y=0;return}
+  if(cfgOpen()){if(pr(9)||pr(1))closeCfg();return}
+  if(!run){if(pr(9))openCfg();else if(pr(13))openWheel();else if(pr(0)){const ov=document.getElementById('ov'),busy=['acct','dev','cred','inv'].some(id=>{const e=document.getElementById(id);return e&&getComputedStyle(e).display!=='none'});if(ov.style.display!=='none'&&!busy)document.getElementById('go').click()}return}
+  padMove.x=lx;padMove.y=ly;
+  if(rx||ry){const k=(aim&&P?(P.sel===3?.3:.55):1)*CFG.sens;yaw-=rx*dt*3.2*k;pitch=Math.max(-1.1,Math.min(.5,pitch-ry*dt*2.2*k*(CFG.invY?-1:1)))}
+  if(pr(7))down=true;else if(rl(7))down=false;
+  if(pr(6))aim=true;else if(rl(6))aim=false;
+  if(pr(0))kd('Space',' ');else if(rl(0))ku('Space',' ');
+  if(pr(1))kd('KeyQ','q');else if(rl(1))ku('KeyQ','q');
+  if(pr(12))kd('KeyR','r');else if(rl(12))ku('KeyR','r');
+  if(pr(2)){padAct=P&&P.mode!=='bus'&&!P.drive&&chests.some(c=>!c.open&&Math.hypot(c.x-P.x,c.y-P.y)<70)?'KeyF':P&&P.mode==='bus'?'Space':'KeyE';kd(padAct,padAct==='Space'?' ':'')}else if(rl(2))ku(padAct);
+  if(pr(3)&&P.own[4]){P.sel=4;P.use=null}
+  if(pr(5))dispatchEvent(new WheelEvent('wheel',{deltaY:1}));if(pr(4))dispatchEvent(new WheelEvent('wheel',{deltaY:-1}));
+  if(pr(13))openWheel();
+  if(pr(14))useItem(P.inv.mini&&P.sh<50?'mini':'big');if(pr(15))useItem('med');
+  if(pr(8))kd('KeyM','m');if(pr(9))openCfg();
+}
+let padAct='KeyE';
+let lobT=0;function lobbyLoop(t){requestAnimationFrame(lobbyLoop);const ldt=Math.min(.05,(t-lobT)/1000||0);lobT=t;if(run)return;padPoll(ldt);tickRigs(ldt);lobbyUpdate(t);renderer.render(ls,lc)}
 function netUI(){
   const el=document.getElementById('net');
   if(!room){el.textContent='Mode solo : le multijoueur n\'est pas disponible dans cette vue.';return}

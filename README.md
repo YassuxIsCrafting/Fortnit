@@ -38,6 +38,12 @@ A (Q en QWERTY) mur · R escalier · M carte · B roue des emotes · P paramètr
 ⤒ sauter · ✋ action · 🧱 mur · 🪜 escalier · 🗺️ carte · 💃 emotes · ⚙️ paramètres. Touche la barre du
 bas pour changer d'arme ou te soigner. Joue en mode paysage.
 
+**Manette PS5 (DualSense)**, en USB ou en Bluetooth : joystick gauche bouger · joystick droit viser · R2 tirer ·
+L2 viser · Croix sauter (et quitter le bus) · Rond mur · Carré action (coffre, voiture, relever) · Triangle pioche ·
+R1 / L1 arme suivante / précédente · croix directionnelle haut escalier, bas roue d'emotes, gauche / droite soins ·
+Créer carte · Options paramètres. Dans le lobby : Croix pour jouer, Options pour les paramètres. La manette vibre
+quand tu tires et quand tu prends des dégâts.
+
 ## Boutique et Kill Tokens
 
 On gagne **1 Kill Token toutes les 3 éliminations** (2 « éliminations » par kill quand on porte la
