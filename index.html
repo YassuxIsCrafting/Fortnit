@@ -845,7 +845,7 @@ function build(stair){
 function hit(e,dmg){if(e===P){if(P.mode==="island")return;let d=dmg;if(P.sh>0){const a=Math.min(P.sh,d);P.sh-=a;d-=a}P.hp-=d;return}e.hp-=dmg;if(e.hp<=0)killBot(e)}
 function net(){
   if(!room)return;
-  const ig=ingame(),seen=new Set();
+  const ig=P&&P.mode==="island"?islandPeers():ingame(),seen=new Set();
   for(const p of ig){seen.add(p.peer);const pr=p.presence;let e=others.get(p.peer);const lk=lookOf(pr,p.peer);
     if(!e){e={x:pr.x,y:pr.y,a:0,hp:100,r:16,peer:p.peer,m:mkChar(lk.c,0,0,lk.sk,lk.h,pr.w,lk.k)};if(pr.cr===1)addCrown(e.m);dyn.add(e.m);others.set(p.peer,e)}
     e.tx=pr.x;e.ty=pr.y;e.tz=isFinite(pr.z)?pr.z:0;if(e.z===undefined)e.z=e.tz;e.a=pr.a;e.hp=pr.hp;e.w=clampI(pr.w,5);e.v=pr.v|0;e.team=pr.tm?pr.tm:(teamMap.has(p.peer)?teamMap.get(p.peer):hashNum(p.peer));e.kn=pr.kn===1;{const nk=pr.em===1?"crown":pr.em===2?"trophy":pr.em===3&&EMO[pr.en|0]?EMO[pr.en|0].id:null,key=nk?nk+":"+(pr.en|0):"";if(key!==e.emK){e.emK=key;e.emT0=performance.now()/1000}e.em=nk?{id:nk,n:pr.em===3?0:pr.en|0}:null}e.n=cleanName(pr.n)||"Joueur"}
