@@ -20,7 +20,7 @@ function cleanP(p) {
     tk: int(p.tk, 0, 1e6), kp: int(p.kp, 0, 2),
     cr: p.cr ? 1 : 0, cw: int(p.cw, 0, 1e6), wins: int(p.wins, 0, 1e6), cs: typeof p.cs === 'string' && /^\d{4}-\d{2}$/.test(p.cs) ? p.cs : '',
     own: { c: A(o.c, x => typeof x === 'string' && HEX.test(x), 30), h: A(o.h, Number.isInteger, 10), k: A(o.k, Number.isInteger, 10), pal: !!o.pal },
-    look: { c: HEX.test(l.c) ? l.c : '#3da5ff', s: int(l.s, 0, 5), h: int(l.h, 0, 4), k: int(l.k, 0, 6) }
+    look: { c: HEX.test(l.c) ? l.c : '#3da5ff', s: int(l.s, 0, 5), h: int(l.h, 0, 4), k: int(l.k, 0, 40) }
   };
 }
 function cleanPatch(p) {
@@ -30,7 +30,7 @@ function cleanPatch(p) {
     if (v === null) { if (k === 't' || k === 'b') out[k] = null; continue; }
     if (k === 'n') { if (typeof v === 'string') out.n = v.replace(/[\u0000-\u001f<>]/g, '').slice(0, 14); }
     else if (k === 'c') { if (typeof v === 'string' && HEX.test(v)) out.c = v; }
-    else if (['s', 'h', 'k', 'w', 'g', 'cr', 'kn', 'em', 'md'].includes(k)) { if (Number.isInteger(v) && v >= 0 && v <= 9) out[k] = v; }
+    else if (['s', 'h', 'k', 'w', 'g', 'cr', 'kn', 'em', 'md'].includes(k)) { if (Number.isInteger(v) && v >= 0 && v <= (k === 'k' ? 40 : 9)) out[k] = v; }
     else if (['x', 'y', 'z', 'a', 'hp', 't', 'v', 'pt', 'tm', 'en'].includes(k)) { if (num(v)) out[k] = v; }
     else if (k === 'b') {
       if (Array.isArray(v) && v.length <= 128 && v.every(r => Array.isArray(r) && r.length <= 5 && r.every(z => num(z) || (typeof z === 'string' && z.length <= 40)))) out.b = v;
