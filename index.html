@@ -41,6 +41,25 @@ canvas{display:block}
 #pseudo:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #feed{top:calc(10px + env(safe-area-inset-top,0px));left:14px;display:flex;flex-direction:column;gap:4px;font-family:system-ui,sans-serif;font-size:13px;max-width:44vw}
 .fe{background:#14123acc;padding:3px 9px;border-radius:5px;transition:opacity .5s}
+#touch,#rot{display:none}
+body.touch.playing #touch{display:block;position:fixed;inset:0;z-index:3;touch-action:none;-webkit-user-select:none;user-select:none}
+body.touch.playing canvas{touch-action:none}
+#joy{position:absolute;left:calc(22px + env(safe-area-inset-left,0px));bottom:calc(62px + env(safe-area-inset-bottom,0px));width:min(132px,32vh);height:min(132px,32vh);border-radius:50%;background:#14123a55;border:3px solid #fff5}
+#knob{position:absolute;left:50%;top:50%;width:42%;height:42%;transform-origin:center;margin:-21% 0 0 -21%;border-radius:50%;background:#fffc;box-shadow:0 2px 8px #0006}
+.tb{position:absolute;width:min(58px,14vh);height:min(58px,14vh);padding:0;border-radius:50%;font-size:min(24px,6vh);background:#14123acc;color:#fff;border:3px solid #fff8;box-shadow:none;display:flex;align-items:center;justify-content:center;touch-action:none}
+.tb:active,.tb.on{background:var(--gold);color:var(--ink);transform:none;box-shadow:none}.tb.sm{width:min(46px,12vh);height:min(46px,12vh);font-size:min(19px,5vh)}
+#t-fire{width:min(84px,21vh);height:min(84px,21vh);font-size:min(32px,8vh);right:calc(22px + env(safe-area-inset-right,0px));bottom:calc(64px + env(safe-area-inset-bottom,0px));background:#ff4d4dcc}
+#t-aim{right:calc(22px + min(92px,23vh) + env(safe-area-inset-right,0px));bottom:calc(58px + env(safe-area-inset-bottom,0px))}
+#t-jump{right:calc(32px + env(safe-area-inset-right,0px));bottom:calc(64px + min(92px,23vh) + env(safe-area-inset-bottom,0px))}
+#t-act{right:calc(22px + min(92px,23vh) + env(safe-area-inset-right,0px));bottom:calc(58px + min(66px,16vh) + env(safe-area-inset-bottom,0px))}
+#t-wall{right:calc(22px + min(160px,40vh) + env(safe-area-inset-right,0px));bottom:calc(58px + env(safe-area-inset-bottom,0px))}
+#t-stair{right:calc(22px + min(160px,40vh) + env(safe-area-inset-right,0px));bottom:calc(58px + min(66px,16vh) + env(safe-area-inset-bottom,0px))}
+#t-map{left:calc(30px + min(132px,32vh) + env(safe-area-inset-left,0px));bottom:calc(62px + min(70px,17vh) + env(safe-area-inset-bottom,0px))}#t-emo{left:calc(30px + min(132px,32vh) + env(safe-area-inset-left,0px));bottom:calc(62px + env(safe-area-inset-bottom,0px))}
+body.touch #hb{pointer-events:auto;z-index:4;gap:4px;bottom:calc(6px + env(safe-area-inset-bottom,0px))}body.touch .slot{width:46px;height:46px;font-size:6px}body.touch .slot b{font-size:16px}body.touch .slot span{display:none}
+body.touch #bot{margin-left:0;transform:translateX(-50%);bottom:calc(60px + env(safe-area-inset-bottom,0px))}body.touch .vit .bar{width:min(400px,30vw);height:12px}body.touch .vit b{font-size:14px;min-width:34px}
+body.touch #br{bottom:auto;right:auto;left:50%;top:calc(42px + env(safe-area-inset-top,0px));transform:translateX(-50%);flex-direction:row;gap:6px}body.touch .card{font-size:13px;padding:2px 9px}body.touch .card small{display:none}body.touch #mm{width:min(104px,26vh);height:min(104px,26vh)}body.touch #tr .pill{font-size:12px}
+body.touch #feed{font-size:11px;max-width:36vw}body.touch #kt{font-size:18px}body.touch #prm{font-size:13px;top:auto;bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+@media (orientation:portrait){body.touch.playing #rot{display:flex;position:fixed;inset:0;z-index:20;align-items:center;justify-content:center;text-align:center;padding:24px;background:#14123af2;font-size:20px;color:#fff}}
 #ew{position:fixed;left:50%;top:50%;width:min(420px,92vw,78vh);aspect-ratio:1;transform:translate(-50%,-50%);display:none;z-index:6;pointer-events:none}
 #ew svg{width:100%;height:100%;overflow:visible}#ew .wg{fill:#14123acc;stroke:#ffffff55;stroke-width:2;transition:fill .08s}#ew .wg.sel{fill:#ffd23fdd;stroke:#fff}#ew .wg.lk{fill:#14123a99}
 #ew .ic{font-size:30px;text-anchor:middle;dominant-baseline:central}#ew .lb{font:700 12px Bungee,Impact,sans-serif;fill:#fff;text-anchor:middle;paint-order:stroke;stroke:#14123a;stroke-width:4px}#ew .lb.lk{fill:#b9bcc6}
@@ -77,12 +96,15 @@ canvas{display:block}
 #fbody .fr{display:flex;align-items:center;gap:6px}#fbody .fr span{flex:1;overflow:hidden;text-overflow:ellipsis}#fbody .fr button,#fbody .add button{font-size:12px;padding:4px 9px;box-shadow:none;border-width:2px}
 #fbody .add{display:flex;gap:6px}#fbody input{flex:1;min-width:0;font:inherit;padding:6px 8px;border:3px solid var(--ink);border-radius:6px}#fbody h3{margin:6px 0 0;font-size:11px;font-family:Bungee,Impact,sans-serif;font-weight:400;opacity:.8}
 .on-dot{width:9px;height:9px;border-radius:50%;background:#666;flex:none}.on-dot.on{background:#7dff8a}#fdot{display:none;width:8px;height:8px;border-radius:50%;background:var(--pink);margin-right:7px}
+#gorow{align-items:center}#ewbtn{font-size:14px;padding:10px 14px;background:#fff}
 #modes{display:flex;gap:6px}#modes .md{font-size:14px;padding:6px 18px;box-shadow:0 3px 0 var(--storm);background:#fff}#modes .md.on{background:var(--gold)}#party{margin:0;font-family:system-ui,sans-serif;font-size:13px;min-height:16px}
 #inv{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:12;display:none;width:min(340px,90vw)}#inv p{margin:0;font-family:system-ui,sans-serif}
 #mate{top:calc(170px + env(safe-area-inset-top,0px));left:14px;display:none;flex-direction:column;gap:4px;background:#14123acc;border:2px solid #7dff8a;border-radius:6px;padding:6px 10px;font-size:13px;min-width:150px}#mate .bar{height:8px;transform:none}#mate .bar div{height:100%;background:#7dff8a}
 #ov:not(.t-locker) #cust{display:none}#ov:not(.t-shop) #shopp{display:none}#roster{margin-left:auto}
-#shopp{width:min(460px,48vw)}.hint{font-size:12px;opacity:.8}
-#sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;max-height:38vh;overflow:auto;padding:2px}
+#shopp{width:min(580px,56vw)}#scat{display:flex;flex-wrap:wrap;gap:6px}#scat button{font-size:12px;padding:5px 11px;border-width:2px;box-shadow:none;background:#fff;color:var(--ink)}#scat button.on{background:var(--gold)}#scat button:active{transform:none}
+#sg h3{display:flex;justify-content:space-between;align-items:baseline;margin:10px 2px 6px;font-size:13px;color:#fff}#sg h3 small{font-family:system-ui,sans-serif;font-size:11px;opacity:.75}#sg h3:first-child{margin-top:2px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.card2.lock{opacity:.55;border-style:dashed}.hint{font-size:12px;opacity:.8}
+#sg{max-height:42vh;overflow:auto;padding:2px}
 .card2{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;font-family:system-ui,sans-serif;font-size:12px;background:#1f2f6a;color:#fff;border:2px solid #fff3;border-radius:8px;box-shadow:none}
 .card2:active{transform:none}.card2.on{border-color:var(--gold)}.card2 .ic{width:34px;height:34px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:18px}
 .card2 .pr{color:var(--gold);font-weight:700}.card2.own .pr{color:#7dff8a}
@@ -118,6 +140,11 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <div class="hud" id="br"><div class="card">🪵 <b id="wd">50</b></div><div class="card">🔹 <b id="am">90</b><small>MUNITIONS</small></div></div>
 <div class="bar hud" id="usew"><div id="use"></div></div>
 <div id="hb"></div>
+<div id="touch"><div id="joy"><div id="knob"></div></div>
+  <button type="button" class="tb" id="t-fire" aria-label="Tirer">🔥</button><button type="button" class="tb" id="t-aim" aria-label="Viser">🎯</button><button type="button" class="tb" id="t-jump" aria-label="Sauter">⤒</button>
+  <button type="button" class="tb" id="t-act" aria-label="Action">✋</button><button type="button" class="tb" id="t-wall" aria-label="Construire un mur">🧱</button><button type="button" class="tb" id="t-stair" aria-label="Construire un escalier">🪜</button>
+  <button type="button" class="tb sm" id="t-map" aria-label="Carte">🗺️</button><button type="button" class="tb sm" id="t-emo" aria-label="Emotes">💃</button></div>
+<div id="rot">📱↻ Tourne ton téléphone en mode paysage pour jouer</div>
 <div id="ov" class="t-play">
   <div id="nav"><span class="ni">▦</span><span class="ni">⌕</span>
     <button type="button" class="tab on" id="tab-play">JOUER</button><button type="button" class="tab" id="tab-locker">DRESSING</button><button type="button" class="tab" id="tab-shop"><i id="dot"></i>BOUTIQUE</button><button type="button" class="tab" id="tab-friends"><i id="fdot"></i>AMIS</button>
@@ -135,11 +162,11 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
       <h3>Emotes (roue sur B en partie)</h3><div class="sw txt" id="sw-e"></div>
       <p class="hint">Débloque d'autres objets dans la Boutique avec tes Kill Tokens.</p>
     </div>
-    <div class="panel" id="shopp"><h2>Boutique</h2><p class="hint">Dépense tes Kill Tokens : 1 token toutes les 3 éliminations. Skins à partir de 25 tokens.</p><div id="sg"></div><div id="sd"></div></div>
+    <div class="panel" id="shopp"><h2>Boutique</h2><p class="hint">Dépense tes Kill Tokens : 1 token toutes les 3 éliminations.</p><div id="scat" role="tablist" aria-label="Catégories de la boutique"></div><div id="sg"></div><div id="sd"></div></div>
     <div class="panel" id="friendsp"><h2>Amis</h2><div id="fbody"></div></div>
     <div class="panel" id="roster"><h2>Dans le lobby</h2><ul id="rl"></ul><p id="net"></p></div>
   </div>
-  <div id="bt"><div id="modes"><button type="button" class="md on" data-m="0">Solo</button><button type="button" class="md" data-m="1">Duo</button></div><p id="party"></p><button id="go">Jouer</button>
+  <div id="bt"><div id="modes"><button type="button" class="md on" data-m="0">Solo</button><button type="button" class="md" data-m="1">Duo</button></div><p id="party"></p><div class="row" id="gorow"><button id="go">Jouer</button><button type="button" id="ewbtn">💃 Emotes (B)</button></div>
   <p id="ctl"><b>ZQSD</b> bouger · <b>Souris</b> viser · <b>Clic</b> pioche / tirer · <b>Clic droit</b> viser · <b>1</b> pioche · <b>2-5</b> armes · <b>6·7·8</b> soins · <b>F</b> coffre / caisse · <b>E</b> voiture · <b>Espace</b> sauter · <b>A</b> (Q en QWERTY) mur · <b>R</b> escalier · <b>M</b> carte · <b>B</b> roue des emotes</p></div>
 </div>
 <div class="panel" id="inv"><p id="invt"></p><div class="row"><button type="button" id="inv-ok">Accepter</button><button type="button" id="inv-no">Refuser</button></div></div>
@@ -381,6 +408,7 @@ const POIS=(()=>{const N=['Pins Pointus','Bourg-Tranquille','Docks Rouillés','V
 let islT=0,myIslT=0,islMd=0;
 const islandPeers=()=>room?room.peers().filter(p=>p.kind==='viewer'&&!(p.isMe&&p.sameTab)&&(p.presence||{}).g===3):[];
 function enterIsland(){
+  document.body.classList.add("playing");
   myName=cleanName(document.getElementById('pseudo').value)||'Joueur'+(100+Math.floor(Math.random()*900));
   init();islT=0;myIslT=0;P.mode='island';const a=rnd(0,6.28),d=rnd(0,180);P.x=IX+Math.cos(a)*d;P.y=IY+Math.sin(a)*d;P.wood=500;yaw=rnd(0,6.28);
   ['pi','ar','sg','sn','pi','ar'].forEach((k,j)=>{const a2=j*1.05;addLoot(IX+Math.cos(a2)*260,IY+Math.sin(a2)*260,k,0);loot[loot.length-1].isl=1});
@@ -447,8 +475,8 @@ function buildWheel(){
 }
 function wheelPick(i){ewSel=i;EWS.forEach((s,j)=>s.el.classList.toggle('sel',j===i));const s=EWS[i];
   document.getElementById('ewn').textContent=s?s.n+(s.k===1?' ×'+wallet.cw:s.k===2?' ×'+(wallet.wins|0):''):'Emotes';document.getElementById('ewd').textContent=s?s.d:'Bouge la souris pour choisir'}
-function openWheel(){if(!run||!P||P.mode==='bus'||P.mode==='air')return;if(!ewBuilt)buildWheel();ewOpen=true;ewMoved=false;ewV={x:0,y:0};down=false;aim=false;wheelPick(-1);document.getElementById('ew').style.display='block'}
-function closeWheel(play){ewOpen=false;document.getElementById('ew').style.display='none';const s=EWS[ewSel];if(play&&s){if(s.lk)feed('🔒 Emote bientôt disponible en boutique');else emote(s.k)}ewSel=-1}
+function openWheel(){if(run&&(!P||P.mode==="bus"||P.mode==="air"))return;if(!ewBuilt)buildWheel();ewOpen=true;ewMoved=false;ewV={x:0,y:0};down=false;aim=false;wheelPick(-1);document.getElementById('ew').style.display='block'}
+function closeWheel(play){ewOpen=false;document.getElementById('ew').style.display='none';const s=EWS[ewSel];if(play&&s){if(s.lk){if(run)feed("🔒 Emote bientôt disponible en boutique")}else if(run)emote(s.k);else{lobbyEm={k:s.k,n:s.k===1?wallet.cw:wallet.wins*10000+Math.min(9999,wallet.cw),t0:performance.now()};chime()}}ewSel=-1}
 function wheelMove(e){
   let x,y;if(document.pointerLockElement===cv){ewV.x+=e.movementX;ewV.y+=e.movementY;const l=Math.hypot(ewV.x,ewV.y);if(l>120){ewV.x*=120/l;ewV.y*=120/l}x=ewV.x;y=ewV.y}
   else{x=e.clientX-innerWidth/2;y=e.clientY-innerHeight/2}
@@ -682,7 +710,7 @@ function update(dt,now){
   net();
   for(const c of chests)if(c.open&&c.t<1){c.t=Math.min(1,c.t+dt*2.5);c.lid.rotation.x=-c.t*1.4}
   const dx=-Math.sin(yaw),dy=-Math.cos(yaw),rx=Math.cos(yaw),ry=-Math.sin(yaw);
-  const f=(keys.KeyW||keys.KeyZ||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0),s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+  const f=Math.max(-1,Math.min(1,(keys.KeyW||keys.KeyZ||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y)),s=Math.max(-1,Math.min(1,(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x));
   let mx=dx*f+rx*s,my=dy*f+ry*s;const l=Math.hypot(mx,my)||1;
   const bp=busPos();
   if(bus){const d=(Date.now()-t0)/1000*BUS_V;bus.m.position.set(bus.sx+bus.dx*d,BUS_Z,bus.sy+bus.dy*d);bus.m.visible=d<bus.len+3000}
@@ -765,7 +793,7 @@ function update(dt,now){
   sendNet(now);
 }
 function end(win){
-  run=false;aim=false;showTab('play');
+  run=false;aim=false;document.body.classList.remove("playing");joy.x=joy.y=0;showTab('play');
   if(win&&Date.now()-P.born>20000){wallet.tk+=10;P.tok=(P.tok|0)+10;P.bonus=1;saveW();updateBal()}lastNet=0;sendNet(performance.now());document.exitPointerLock&&document.exitPointerLock();
   document.getElementById("ttl").textContent=win?(P.crowned?"Victoire couronnée !":"Victoire royale !"):"Éliminé";
   normCrown();let cm="";if(win){wallet.wins++;if(P.crowned){wallet.cw++;cm="<br>👑 Victoire couronnée n°<b>"+wallet.cw+"</b> cette saison"+(wallet.cw===1?" · <b>Badge Couronné débloqué !</b>":"")}cm+="<br>👑 Tu gardes une couronne pour ta prochaine partie."}else if(P.crowned)cm="<br>Tu as perdu ta couronne.";wallet.cr=win?1:0;try{localStorage.removeItem("ie_crown")}catch(e){}saveW();updateBal();pushLook();
@@ -842,7 +870,8 @@ function loop(t){
 const cv=renderer.domElement;
 document.getElementById('pseudo').value='Joueur'+(100+Math.floor(Math.random()*900));
 document.getElementById("go").onclick=()=>{if(!run)enterIsland()};
-addEventListener('keydown',e=>{keys[e.code]=true;if(!run)return;if(e.code==="KeyE"&&!e.repeat&&!liveOthers().some(o=>isMate(o)&&o.kn&&dist(o,P)<55))toggleCar();if(e.code==="KeyB"&&!e.repeat){if(ewOpen)closeWheel(false);else openWheel()}if(e.code==="Escape"&&ewOpen)closeWheel(false);if(e.code==="Space"){e.preventDefault();if(P.mode==="bus")P.exitReq=true}
+addEventListener("keydown",e=>{keys[e.code]=true;
+  if(!run){const typing=/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||"");if(e.code==="Escape"&&ewOpen)closeWheel(false);else if(e.code==="KeyB"&&!e.repeat&&!typing&&document.getElementById("acct").style.display!=="flex"){e.preventDefault();if(ewOpen)closeWheel(false);else openWheel()}return}if(e.code==="KeyE"&&!e.repeat&&!liveOthers().some(o=>isMate(o)&&o.kn&&dist(o,P)<55))toggleCar();if(e.code==="KeyB"&&!e.repeat){if(ewOpen)closeWheel(false);else openWheel()}if(e.code==="Escape"&&ewOpen)closeWheel(false);if(e.code==="Space"){e.preventDefault();if(P.mode==="bus")P.exitReq=true}
   if(e.code==='KeyQ'||(e.key&&e.key.toLowerCase()==='a'&&e.code!=='KeyA'))build(false);else if(e.code==='KeyR')build(true);
   if(e.code==='KeyF'&&P.z<40){const c=chests.find(c=>!c.open&&Math.hypot(c.x-P.x,c.y-P.y)<70);if(c)openChest(c,true)}
   const d=e.code.replace('Digit','').replace('Numpad','');
@@ -921,13 +950,24 @@ function updateBal(){if(typeof paintEmotes==="function")paintEmotes();$("cwn").t
 function refreshLocker(){cBtns.forEach((b,i)=>b.style.display=ownColor(OUT[i])?'':'none');hBtns.forEach((b,i)=>b.style.display=ownHat(i)?'':'none');kBtns.forEach((b,i)=>b.style.display=ownSkin(i)?'':'none');$('cc').style.display=own.pal?'':'none'}
 function equip(it){if(it.k==='c'){look.c=it.c;look.k=0}else if(it.k==='h'){look.h=it.i;look.k=0}else if(it.k==='s')look.k=it.i;pv=null;saveLook();refreshLocker();renderShop()}
 function buy(it){if(itOwned(it)||wallet.tk<it.p)return;wallet.tk-=it.p;if(it.k==='c')own.c.push(it.c);else if(it.k==='h')own.h.push(it.i);else if(it.k==='s')own.k.push(it.i);else own.pal=true;saveW();updateBal();equip(it)}
+const CATS=[{k:'s',n:'Skins',e:'🦸'},{k:'c',n:'Tenues',e:'👕'},{k:'h',n:'Accessoires',e:'🎩'},{k:'e',n:'Emotes',e:'💃'},{k:'p',n:'Outils',e:'🎨'}];
+const SOON=Array.from({length:6},(_,i)=>({k:'e',i,n:'Bientôt',e:'🔒',p:0,lk:1}));
+let shopCat='all';
 function renderShop(){
-  const box=$('sg'),sd=$('sd'),t=document.createElement('span');box.innerHTML='';sd.innerHTML='';
-  for(const it of ITEMS){const b=document.createElement('button'),ic=document.createElement('span'),nm=document.createElement('span'),pr=document.createElement('span'),o=itOwned(it);
-    b.type='button';b.className='card2'+(sel===it?' on':'')+(o?' own':'')+(it.k==='s'?' sk':'');ic.className='ic';if(it.c)ic.style.background=it.c;else ic.textContent=it.e;
-    nm.textContent=it.n;pr.className='pr';pr.textContent=o?'✔ Possédé':'🪙 '+it.p;
-    b.appendChild(ic);b.appendChild(nm);b.appendChild(pr);b.onclick=()=>{sel=it;pv=it.k==='c'?{c:it.c,k:0}:it.k==='h'?{h:it.i,k:0}:it.k==='s'?{k:it.i}:null;renderShop()};box.appendChild(b)}
+  const box=$('sg'),sd=$('sd'),cat=$('scat'),t=document.createElement('span');box.textContent='';sd.textContent='';cat.textContent='';
+  for(const c of[{k:'all',n:'Tout',e:'🛒'},...CATS]){const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-selected',shopCat===c.k);b.className=shopCat===c.k?'on':'';b.textContent=c.e+' '+c.n;b.onclick=()=>{shopCat=c.k;renderShop()};cat.appendChild(b)}
+  for(const c of CATS){
+    if(shopCat!=='all'&&shopCat!==c.k)continue;
+    const list=c.k==='e'?SOON:ITEMS.filter(it=>it.k===c.k).sort((a,b)=>a.p-b.p);if(!list.length)continue;
+    const h=document.createElement('h3'),cnt=document.createElement('small'),g=document.createElement('div');g.className='sgrid';
+    h.textContent=c.e+' '+c.n;cnt.textContent=c.k==='e'?'Bientôt en boutique':list.filter(itOwned).length+' / '+list.length+' possédés';h.appendChild(cnt);box.append(h,g);
+    for(const it of list){const b=document.createElement('button'),ic=document.createElement('span'),nm=document.createElement('span'),pr=document.createElement('span'),o=!it.lk&&itOwned(it);
+      b.type='button';b.className='card2'+(sel===it?' on':'')+(o?' own':'')+(it.k==='s'?' sk':'')+(it.lk?' lock':'');ic.className='ic';if(it.c)ic.style.background=it.c;else ic.textContent=it.e;
+      nm.textContent=it.n;pr.className='pr';pr.textContent=it.lk?'Bientôt':o?'✔ Possédé':'🪙 '+it.p;
+      b.append(ic,nm,pr);b.onclick=()=>{sel=it;pv=it.k==='c'?{c:it.c,k:0}:it.k==='h'?{h:it.i,k:0}:it.k==='s'?{k:it.i}:null;renderShop()};g.appendChild(b)}
+  }
   if(!sel){t.textContent="Choisis un objet pour l'essayer sur ton héros.";sd.appendChild(t);return}
+  if(sel.lk){t.textContent='De nouvelles emotes arrivent bientôt dans la boutique.';sd.appendChild(t);return}
   const o=itOwned(sel),b=document.createElement('button');b.type='button';t.textContent=sel.n+(o?' : déjà à toi':' : 🪙 '+sel.p);
   if(o){b.textContent='Équiper';b.onclick=()=>equip(sel)}
   else if(wallet.tk>=sel.p){b.textContent='Acheter · 🪙 '+sel.p;b.onclick=()=>buy(sel)}
@@ -936,6 +976,8 @@ function renderShop(){
 }
 function showTab(t){$("ov").className="t-"+t;if(t==="friends")refreshFriends();for(const x of["play","locker","shop","friends"])$('tab-'+x).className='tab'+(x===t?' on':'');pv=null;sel=null;if(t==='shop')renderShop()}
 ["play","locker","shop","friends"].forEach(t=>{$("tab-"+t).onclick=()=>showTab(t)});
+$("ewbtn").onclick=()=>{if(!ewOpen)openWheel()};
+addEventListener("mousedown",e=>{if(ewOpen&&!run){e.preventDefault();e.stopPropagation();closeWheel(e.button===0)}},true);
 document.querySelectorAll("#modes .md").forEach(b=>b.onclick=()=>setMode(+b.dataset.m));setMode(mode);
 $("inv-ok").onclick=()=>{$("inv").style.display="none";if(!invFrom)return;const f=invFrom;auth.social("pans",f,true).then(()=>setParty(hashNum(f.toLowerCase()),f)).catch(()=>{})};
 $("inv-no").onclick=()=>{$("inv").style.display="none";if(invFrom)auth.social("pans",invFrom,false).catch(()=>{})};
@@ -1001,6 +1043,37 @@ async function acctInit(){
         if(sn.exists&&sn.data().h===s.h){setAcct({u:sn.data().u,h:s.h,ref,p:sn.data().p});return}}}}catch(e){}
   openAcct();
 }
+const IS_TOUCH=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window;if(IS_TOUCH)document.body.classList.add('touch');
+const joy={x:0,y:0};
+(()=>{
+  const kd=(code,key)=>dispatchEvent(new KeyboardEvent('keydown',{code,key:key||''})),ku=(code,key)=>dispatchEvent(new KeyboardEvent('keyup',{code,key:key||''}));
+  const J=$('joy'),K=$('knob');let jid=null,lid=null,lx=0,ly=0;
+  const setJoy=t=>{const r=J.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,R=r.width/2;if(!(R>0))return;let dx=(t.clientX-cx)/R,dy=(t.clientY-cy)/R;const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}
+    K.style.transform='translate('+dx*R*.62+'px,'+dy*R*.62+'px)';joy.x=Math.abs(dx)<.18?0:dx;joy.y=Math.abs(dy)<.18?0:dy};
+  J.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];jid=t.identifier;setJoy(t)},{passive:false});
+  const T=$('touch');
+  T.addEventListener('touchstart',e=>{if(e.target!==T)return;e.preventDefault();if(lid===null){const t=e.changedTouches[0];lid=t.identifier;lx=t.clientX;ly=t.clientY}},{passive:false});
+  T.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches){
+    if(t.identifier===jid)setJoy(t);
+    else if(t.identifier===lid){const k=aim&&P?(P.sel===3?.3:.6):1;yaw-=(t.clientX-lx)*.006*k;pitch=Math.max(-1.1,Math.min(.5,pitch-(t.clientY-ly)*.005*k));lx=t.clientX;ly=t.clientY}}},{passive:false});
+  const endT=e=>{for(const t of e.changedTouches){if(t.identifier===jid){jid=null;joy.x=joy.y=0;K.style.transform=''}if(t.identifier===lid)lid=null}};
+  T.addEventListener('touchend',endT);T.addEventListener('touchcancel',endT);
+  const hold=(id,on,off)=>{const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();b.classList.add('on');on()},{passive:false});
+    const up=e=>{e.preventDefault();b.classList.remove('on');off&&off()};b.addEventListener('touchend',up);b.addEventListener('touchcancel',up)};
+  hold('t-fire',()=>{if(!ewOpen)down=true},()=>{down=false});
+  hold('t-aim',()=>{aim=!aim;$('t-aim').style.background=aim?'var(--gold)':''});
+  hold('t-jump',()=>kd('Space',' '),()=>ku('Space',' '));
+  hold('t-wall',()=>kd('KeyQ','q'),()=>ku('KeyQ','q'));
+  hold('t-stair',()=>kd('KeyR','r'),()=>ku('KeyR','r'));
+  hold('t-map',()=>kd('KeyM','m'),()=>ku('KeyM','m'));
+  hold('t-emo',()=>{if(!ewOpen)openWheel()});
+  let actCode='KeyE';
+  hold('t-act',()=>{actCode=P&&P.mode!=='bus'&&!P.drive&&chests.some(c=>!c.open&&Math.hypot(c.x-P.x,c.y-P.y)<70)?'KeyF':P&&P.mode==='bus'?'Space':'KeyE';kd(actCode,actCode==='Space'?' ':'')},()=>ku(actCode));
+  hbEls.forEach((el,i)=>el.addEventListener('touchstart',e=>{e.preventDefault();if(!run)return;const s=SLOTS[i];if(s.w!==undefined){if(P.own[s.w]){P.sel=s.w;P.use=null}}else useItem(s.i)},{passive:false}));
+  const wt=e=>{if(!ewOpen)return;e.preventDefault();e.stopPropagation();const t=e.changedTouches[0];if(e.type==='touchend'){closeWheel(ewMoved&&ewSel>=0);return}wheelMove({clientX:t.clientX,clientY:t.clientY})};
+  for(const ev of['touchstart','touchmove','touchend'])addEventListener(ev,wt,{capture:true,passive:false});
+  if(IS_TOUCH)$('ctl').textContent='Joystick à gauche pour bouger · glisse à droite pour viser · 🔥 tirer · 🎯 viser · ⤒ sauter · ✋ action (coffre, voiture, relever) · 🧱 mur · 🪜 escalier · 🗺️ carte · 💃 emotes · touche la barre du bas pour changer d’arme ou te soigner';
+})();
 function lobbyLoop(t){requestAnimationFrame(lobbyLoop);if(run)return;lobbyUpdate(t);renderer.render(ls,lc)}
 function netUI(){
   const el=document.getElementById('net');
