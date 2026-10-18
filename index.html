@@ -41,6 +41,11 @@ canvas{display:block}
 #pseudo:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #feed{top:calc(10px + env(safe-area-inset-top,0px));left:14px;display:flex;flex-direction:column;gap:4px;font-family:system-ui,sans-serif;font-size:13px;max-width:44vw}
 .fe{background:#14123acc;padding:3px 9px;border-radius:5px;transition:opacity .5s}
+#ew{position:fixed;left:50%;top:50%;width:min(420px,92vw,78vh);aspect-ratio:1;transform:translate(-50%,-50%);display:none;z-index:6;pointer-events:none}
+#ew svg{width:100%;height:100%;overflow:visible}#ew .wg{fill:#14123acc;stroke:#ffffff55;stroke-width:2;transition:fill .08s}#ew .wg.sel{fill:#ffd23fdd;stroke:#fff}#ew .wg.lk{fill:#14123a99}
+#ew .ic{font-size:30px;text-anchor:middle;dominant-baseline:central}#ew .lb{font:700 12px Bungee,Impact,sans-serif;fill:#fff;text-anchor:middle;paint-order:stroke;stroke:#14123a;stroke-width:4px}#ew .lb.lk{fill:#b9bcc6}
+#ewc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34%;aspect-ratio:1;border-radius:50%;background:#14123aee;border:3px solid #fff4;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;padding:8px;box-sizing:border-box}
+#ewn{font-weight:400;font-size:15px;color:var(--gold)}#ewd{font-family:system-ui,sans-serif;font-size:11px;opacity:.85}
 #bm{position:fixed;left:50%;top:50%;width:min(86vw,86vh);height:min(86vw,86vh);transform:translate(-50%,-50%);display:none;border:4px solid #fff;border-radius:10px;box-shadow:0 0 0 4px var(--ink),0 10px 40px #000a;z-index:5;pointer-events:none}
 #kt{top:24%;left:50%;transform:translateX(-50%);font-size:clamp(22px,4vw,36px);color:var(--gold);opacity:0;transition:opacity .2s;white-space:nowrap}
 #ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;padding:18px 20px calc(18px + env(safe-area-inset-bottom,0px));background:linear-gradient(#14123aee,#14123a00 26%,#14123a00 60%,#14123aee)}
@@ -108,6 +113,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <div class="hud" id="feed"></div>
 <div class="hud" id="mate"></div>
 <canvas id="bm" width="640" height="640"></canvas>
+<div id="ew"><svg id="ews" viewBox="-200 -200 400 400" aria-hidden="true"></svg><div id="ewc"><b id="ewn">Emotes</b><small id="ewd">Bouge la souris pour choisir</small></div></div>
 <div class="hud" id="bot"><div class="vit"><div class="bar"><div id="sh"></div></div><b id="shn">0</b></div><div class="vit"><div class="bar"><div id="hp"></div></div><b id="hpn">100</b></div></div>
 <div class="hud" id="br"><div class="card">🪵 <b id="wd">50</b></div><div class="card">🔹 <b id="am">90</b><small>MUNITIONS</small></div></div>
 <div class="bar hud" id="usew"><div id="use"></div></div>
@@ -126,7 +132,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
       <h3>Tenue</h3><div class="sw" id="sw-c"></div><input type="color" id="cc" value="#3da5ff" aria-label="Couleur de tenue personnalisée">
       <h3>Peau</h3><div class="sw" id="sw-s"></div>
       <h3>Accessoire</h3><div class="sw txt" id="sw-h"></div>
-      <h3>Emotes (B et N en partie)</h3><div class="sw txt" id="sw-e"></div>
+      <h3>Emotes (roue sur B en partie)</h3><div class="sw txt" id="sw-e"></div>
       <p class="hint">Débloque d'autres objets dans la Boutique avec tes Kill Tokens.</p>
     </div>
     <div class="panel" id="shopp"><h2>Boutique</h2><p class="hint">Dépense tes Kill Tokens : 1 token toutes les 3 éliminations. Skins à partir de 25 tokens.</p><div id="sg"></div><div id="sd"></div></div>
@@ -134,7 +140,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
     <div class="panel" id="roster"><h2>Dans le lobby</h2><ul id="rl"></ul><p id="net"></p></div>
   </div>
   <div id="bt"><div id="modes"><button type="button" class="md on" data-m="0">Solo</button><button type="button" class="md" data-m="1">Duo</button></div><p id="party"></p><button id="go">Jouer</button>
-  <p id="ctl"><b>ZQSD</b> bouger · <b>Souris</b> viser · <b>Clic</b> pioche / tirer · <b>Clic droit</b> viser · <b>1</b> pioche · <b>2-5</b> armes · <b>6·7·8</b> soins · <b>F</b> coffre / caisse · <b>E</b> voiture · <b>Espace</b> sauter · <b>A</b> (Q en QWERTY) mur · <b>R</b> escalier · <b>M</b> carte</p></div>
+  <p id="ctl"><b>ZQSD</b> bouger · <b>Souris</b> viser · <b>Clic</b> pioche / tirer · <b>Clic droit</b> viser · <b>1</b> pioche · <b>2-5</b> armes · <b>6·7·8</b> soins · <b>F</b> coffre / caisse · <b>E</b> voiture · <b>Espace</b> sauter · <b>A</b> (Q en QWERTY) mur · <b>R</b> escalier · <b>M</b> carte · <b>B</b> roue des emotes</p></div>
 </div>
 <div class="panel" id="inv"><p id="invt"></p><div class="row"><button type="button" id="inv-ok">Accepter</button><button type="button" id="inv-no">Refuser</button></div></div>
 <div id="acct"><div class="panel" id="acp">
@@ -429,6 +435,25 @@ function applyEmote(g,em,t){const u=g.userData;
   const s=emoteSprite(g,em.k,em.n);s.visible=true;s.position.y=110+Math.sin(t*4)*4;u.emo=1;
   u.arms.forEach((a,i)=>a.quaternion.setFromUnitVectors(DOWN,new THREE.Vector3(.25,1,(i?-1:1)*(.5+.25*Math.sin(t*9+i*3))).normalize()));
   g.position.y+=Math.abs(Math.sin(t*6))*6;g.rotation.y+=Math.sin(t*3)*.4}
+const EWS=[{k:1,n:'Couronnes',e:'👑',d:'Affiche tes victoires couronnées'},{k:2,n:'Palmarès',e:'🏆',d:'Affiche toutes tes victoires'},...Array.from({length:6},()=>({n:'Bientôt',e:'🔒',d:'Nouvelles emotes bientôt en boutique',lk:1}))];
+let ewOpen=false,ewSel=-1,ewMoved=false,ewV={x:0,y:0},ewBuilt=false;
+function buildWheel(){
+  ewBuilt=true;const svg=document.getElementById('ews'),NS='http://www.w3.org/2000/svg',r0=78,r1=170,half=Math.PI/8-.035;
+  const pt=(r,a)=>(r*Math.cos(a)).toFixed(1)+' '+(r*Math.sin(a)).toFixed(1);
+  EWS.forEach((s,i)=>{const a=-Math.PI/2+i*Math.PI/4,a0=a-half,a1=a+half,p=document.createElementNS(NS,'path');
+    p.setAttribute('d','M'+pt(r0,a0)+' L'+pt(r1,a0)+' A'+r1+' '+r1+' 0 0 1 '+pt(r1,a1)+' L'+pt(r0,a1)+' A'+r0+' '+r0+' 0 0 0 '+pt(r0,a0)+'Z');p.setAttribute('class','wg'+(s.lk?' lk':''));svg.append(p);s.el=p;
+    const ic=document.createElementNS(NS,'text');ic.setAttribute('x',(124*Math.cos(a)).toFixed(1));ic.setAttribute('y',(124*Math.sin(a)).toFixed(1));ic.setAttribute('class','ic');ic.textContent=s.e;svg.append(ic);
+    const lb=document.createElementNS(NS,'text');lb.setAttribute('x',(190*Math.cos(a)).toFixed(1));lb.setAttribute('y',(190*Math.sin(a)+4).toFixed(1));lb.setAttribute('class','lb'+(s.lk?' lk':''));lb.textContent=s.n;svg.append(lb)});
+}
+function wheelPick(i){ewSel=i;EWS.forEach((s,j)=>s.el.classList.toggle('sel',j===i));const s=EWS[i];
+  document.getElementById('ewn').textContent=s?s.n+(s.k===1?' ×'+wallet.cw:s.k===2?' ×'+(wallet.wins|0):''):'Emotes';document.getElementById('ewd').textContent=s?s.d:'Bouge la souris pour choisir'}
+function openWheel(){if(!run||!P||P.mode==='bus'||P.mode==='air')return;if(!ewBuilt)buildWheel();ewOpen=true;ewMoved=false;ewV={x:0,y:0};down=false;aim=false;wheelPick(-1);document.getElementById('ew').style.display='block'}
+function closeWheel(play){ewOpen=false;document.getElementById('ew').style.display='none';const s=EWS[ewSel];if(play&&s){if(s.lk)feed('🔒 Emote bientôt disponible en boutique');else emote(s.k)}ewSel=-1}
+function wheelMove(e){
+  let x,y;if(document.pointerLockElement===cv){ewV.x+=e.movementX;ewV.y+=e.movementY;const l=Math.hypot(ewV.x,ewV.y);if(l>120){ewV.x*=120/l;ewV.y*=120/l}x=ewV.x;y=ewV.y}
+  else{x=e.clientX-innerWidth/2;y=e.clientY-innerHeight/2}
+  if(Math.hypot(x,y)<28)return;ewMoved=true;wheelPick(((Math.round((Math.atan2(y,x)+Math.PI/2)/(Math.PI/4))%8)+8)%8);
+}
 function emote(k){if(!run||!(P.mode==='ground'||P.mode==='island')||P.knocked||P.drive)return;P.emote={k,t:0,n:k===1?wallet.cw:wallet.wins*10000+Math.min(9999,wallet.cw)};chime()}
 let fdata=null;
 async function refreshFriends(){
@@ -817,16 +842,17 @@ function loop(t){
 const cv=renderer.domElement;
 document.getElementById('pseudo').value='Joueur'+(100+Math.floor(Math.random()*900));
 document.getElementById("go").onclick=()=>{if(!run)enterIsland()};
-addEventListener('keydown',e=>{keys[e.code]=true;if(!run)return;if(e.code==="KeyE"&&!e.repeat&&!liveOthers().some(o=>isMate(o)&&o.kn&&dist(o,P)<55))toggleCar();if(e.code==="KeyB")emote(1);if(e.code==="KeyN")emote(2);if(e.code==="Space"){e.preventDefault();if(P.mode==="bus")P.exitReq=true}
+addEventListener('keydown',e=>{keys[e.code]=true;if(!run)return;if(e.code==="KeyE"&&!e.repeat&&!liveOthers().some(o=>isMate(o)&&o.kn&&dist(o,P)<55))toggleCar();if(e.code==="KeyB"&&!e.repeat){if(ewOpen)closeWheel(false);else openWheel()}if(e.code==="Escape"&&ewOpen)closeWheel(false);if(e.code==="Space"){e.preventDefault();if(P.mode==="bus")P.exitReq=true}
   if(e.code==='KeyQ'||(e.key&&e.key.toLowerCase()==='a'&&e.code!=='KeyA'))build(false);else if(e.code==='KeyR')build(true);
   if(e.code==='KeyF'&&P.z<40){const c=chests.find(c=>!c.open&&Math.hypot(c.x-P.x,c.y-P.y)<70);if(c)openChest(c,true)}
   const d=e.code.replace('Digit','').replace('Numpad','');
   if(/^[1-5]$/.test(d)){const w=SLOTS[+d-1].w;if(P.own[w]){P.sel=w;P.use=null}}else if(d==="6")useItem("mini");else if(d==="7")useItem("big");else if(d==="8")useItem("med");
   if(e.key&&e.key.toLowerCase()==="m"){bigMap=!bigMap;document.getElementById("bm").style.display=bigMap?"block":"none"}});
 addEventListener('wheel',e=>{if(!run)return;const o=[4,0,1,2,3].filter(i=>P.own[i]),j=o.indexOf(P.sel);P.sel=o[(j+(e.deltaY>0?1:-1)+o.length)%o.length];P.use=null});
-addEventListener('keyup',e=>keys[e.code]=false);
-addEventListener('mousemove',e=>{if(document.pointerLockElement===cv){const k=aim&&P?(P.sel===3?.3:.65):1;yaw-=e.movementX*.003*k;pitch=Math.max(-1.1,Math.min(.5,pitch-e.movementY*.003*k))}});
+addEventListener("keyup",e=>{keys[e.code]=false;if(e.code==="KeyB"&&ewOpen&&ewMoved&&ewSel>=0)closeWheel(true)});
+addEventListener("mousemove",e=>{if(ewOpen){wheelMove(e);return}if(document.pointerLockElement===cv){const k=aim&&P?(P.sel===3?.3:.65):1;yaw-=e.movementX*.003*k;pitch=Math.max(-1.1,Math.min(.5,pitch-e.movementY*.003*k))}});
 cv.addEventListener('mousedown',e=>{
+  if(ewOpen){closeWheel(true);return}
   if(!run)return;
   if(document.pointerLockElement!==cv){try{cv.requestPointerLock()}catch(x){}return}
   if(e.button===2)aim=true;else down=true});
