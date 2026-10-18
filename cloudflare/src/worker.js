@@ -2,7 +2,8 @@
 import { DurableObject } from 'cloudflare:workers';
 
 const MAX_PLAYERS = 12, MAX_ACCOUNTS = 5000;
-const TOPICS = new Set(['shot', 'bs', 'kill', 'wall', 'chest']);
+const TOPICS = new Set(['shot', 'bs', 'kill', 'wall', 'chest', 'rev']);
+const MAX_FRIENDS = 60;
 const UR = /^[A-Za-z0-9_-]{3,14}$/, HEX = /^#[0-9a-f]{6}$/i, KEY = /^[0-9a-f]{64}$/;
 const enc = new TextEncoder();
 const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
@@ -17,6 +18,7 @@ function cleanP(p) {
   const o = p.own || {}, l = p.look || {}, A = (a, f, n) => Array.isArray(a) ? a.filter(f).slice(0, n) : [];
   return {
     tk: int(p.tk, 0, 1e6), kp: int(p.kp, 0, 2),
+    cr: p.cr ? 1 : 0, cw: int(p.cw, 0, 1e6), wins: int(p.wins, 0, 1e6), cs: typeof p.cs === 'string' && /^\d{4}-\d{2}$/.test(p.cs) ? p.cs : '',
     own: { c: A(o.c, x => typeof x === 'string' && HEX.test(x), 30), h: A(o.h, Number.isInteger, 10), k: A(o.k, Number.isInteger, 10), pal: !!o.pal },
     look: { c: HEX.test(l.c) ? l.c : '#3da5ff', s: int(l.s, 0, 5), h: int(l.h, 0, 4), k: int(l.k, 0, 6) }
   };
@@ -28,8 +30,8 @@ function cleanPatch(p) {
     if (v === null) { if (k === 't' || k === 'b') out[k] = null; continue; }
     if (k === 'n') { if (typeof v === 'string') out.n = v.replace(/[\u0000-\u001f<>]/g, '').slice(0, 14); }
     else if (k === 'c') { if (typeof v === 'string' && HEX.test(v)) out.c = v; }
-    else if (['s', 'h', 'k', 'w', 'g'].includes(k)) { if (Number.isInteger(v) && v >= 0 && v <= 9) out[k] = v; }
-    else if (['x', 'y', 'z', 'a', 'hp', 't', 'v'].includes(k)) { if (num(v)) out[k] = v; }
+    else if (['s', 'h', 'k', 'w', 'g', 'cr', 'kn', 'em', 'md'].includes(k)) { if (Number.isInteger(v) && v >= 0 && v <= 9) out[k] = v; }
+    else if (['x', 'y', 'z', 'a', 'hp', 't', 'v', 'pt', 'tm', 'en'].includes(k)) { if (num(v)) out[k] = v; }
     else if (k === 'b') {
       if (Array.isArray(v) && v.length <= 128 && v.every(r => Array.isArray(r) && r.length <= 5 && r.every(z => num(z) || (typeof z === 'string' && z.length <= 40)))) out.b = v;
     }
@@ -52,6 +54,22 @@ export class Room extends DurableObject {
       if (a && a.id) { this.ids.set(ws, a.id); this.pres.set(a.id, a.pr || {}); this.meta.set(a.id, { key: a.key || null, ip: a.ip || '', saved: Date.now() }); }
     }
     ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS acc (k TEXT PRIMARY KEY, u TEXT, salt TEXT, hash TEXT, toks TEXT, p TEXT)');
+    ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS fr (a TEXT, b TEXT, st INTEGER, PRIMARY KEY (a, b))');   // a demande b ; st 0 = en attente, 1 = amis
+  }
+
+  socketsOf(key) { return this.ctx.getWebSockets().filter(w => { const m = this.meta.get(this.idOf(w)); return m && m.key === key; }); }
+  push(key, obj) { const s = JSON.stringify(obj); for (const w of this.socketsOf(key)) { try { w.send(s); } catch {} } }
+  nameOf(key) { const r = this.ctx.storage.sql.exec('SELECT u FROM acc WHERE k = ?', key).toArray()[0]; return r ? r.u : key; }
+  links(key) { return this.ctx.storage.sql.exec('SELECT a, b, st FROM fr WHERE a = ? OR b = ?', key, key).toArray(); }
+  notifyFriends(key) { for (const l of this.links(key)) this.push(l.a === key ? l.b : l.a, { t: 'fnote' }); }
+  flist(key) {
+    const out = { friends: [], inc: [], out: [] };
+    for (const l of this.links(key)) {
+      const o = l.a === key ? l.b : l.a, u = this.nameOf(o);
+      if (l.st === 1) { const w = this.socketsOf(o)[0]; out.friends.push({ u, on: !!w, pid: w ? this.idOf(w) : null }); }
+      else if (l.b === key) out.inc.push(u); else out.out.push(u);
+    }
+    return out;
   }
 
   idOf(ws) { let id = this.ids.get(ws); if (!id) { const a = ws.deserializeAttachment(); id = a && a.id; if (id) this.ids.set(ws, id); } return id; }
@@ -125,22 +143,41 @@ export class Room extends DurableObject {
         if (!same(await sha(a.salt + ':' + pw), a.hash)) { this.fail(meta.ip); return reply({ ok: false, err: bad }); }
         const token = rnd(24), toks = [...JSON.parse(a.toks || '[]'), await sha(token)].slice(-5);
         this.ctx.storage.sql.exec('UPDATE acc SET toks = ? WHERE k = ?', JSON.stringify(toks), key);
-        meta.key = key; this.meta.set(id, meta); this.persist(ws, id, true);
+        meta.key = key; this.meta.set(id, meta); this.persist(ws, id, true); this.notifyFriends(key);
         reply({ ok: true, u: a.u, token, p: JSON.parse(a.p) });
       } else if (m.t === 'resume') {
         const key = String(m.u || '').toLowerCase(), a = this.row(key);
         if (!a || !JSON.parse(a.toks || '[]').includes(await sha(String(m.token || '')))) { this.fail(meta.ip); return reply({ ok: false, err: 'Session expirée.' }); }
-        meta.key = key; this.meta.set(id, meta); this.persist(ws, id, true);
+        meta.key = key; this.meta.set(id, meta); this.persist(ws, id, true); this.notifyFriends(key);
         reply({ ok: true, u: a.u, p: JSON.parse(a.p) });
       } else if (m.t === 'save') {
         if (!meta.key || !this.row(meta.key)) return reply({ ok: false, err: 'Non connecté.' });
         this.ctx.storage.sql.exec('UPDATE acc SET p = ? WHERE k = ?', JSON.stringify(cleanP(m.p)), meta.key);
         reply({ ok: true });
+      } else if (['flist', 'fadd', 'facc', 'fdel', 'pinv', 'pans'].includes(m.t)) {
+        const me = meta.key; if (!me || !this.row(me)) return reply({ ok: false, err: 'Connecte-toi pour gérer tes amis.' });
+        if (m.t === 'flist') return reply({ ok: true, ...this.flist(me) });
+        const u = String(m.u || ''), o = u.toLowerCase(), sql = this.ctx.storage.sql;
+        if (!UR.test(u) || o === me) return reply({ ok: false, err: 'Nom invalide.' });
+        const mine = sql.exec('SELECT st FROM fr WHERE a = ? AND b = ?', me, o).toArray()[0], theirs = sql.exec('SELECT st FROM fr WHERE a = ? AND b = ?', o, me).toArray()[0];
+        if (m.t === 'fadd') {
+          if (!this.row(o)) return reply({ ok: false, err: 'Joueur introuvable.' });
+          if (mine || (theirs && theirs.st === 1)) return reply({ ok: true });
+          if (theirs) sql.exec('UPDATE fr SET st = 1 WHERE a = ? AND b = ?', o, me);
+          else { if (this.links(me).length >= MAX_FRIENDS) return reply({ ok: false, err: 'Liste d\'amis pleine.' }); sql.exec('INSERT INTO fr (a, b, st) VALUES (?, ?, 0)', me, o); }
+        } else if (m.t === 'facc') { if (!theirs) return reply({ ok: false, err: 'Aucune demande.' }); sql.exec('UPDATE fr SET st = 1 WHERE a = ? AND b = ?', o, me); }
+        else if (m.t === 'fdel') sql.exec('DELETE FROM fr WHERE (a = ? AND b = ?) OR (a = ? AND b = ?)', me, o, o, me);
+        else {
+          if (!((mine && mine.st === 1) || (theirs && theirs.st === 1))) return reply({ ok: false, err: 'Vous n\'êtes pas amis.' });
+          this.push(o, m.t === 'pinv' ? { t: 'pinv', from: this.nameOf(me), pid: id } : { t: 'pans', from: this.nameOf(me), ok: !!m.ok, pid: id });
+          return reply({ ok: true });
+        }
+        this.push(o, { t: 'fnote' }); reply({ ok: true });
       }
     } catch (e) { if (m.r) reply({ ok: false, err: 'Erreur serveur.' }); }
   }
 
-  leave(ws) { const id = this.idOf(ws); if (!id) return; this.pres.delete(id); this.meta.delete(id); this.buckets.delete(id); this.bcast(id, { t: 'leave', id }); }
+  leave(ws) { const id = this.idOf(ws); if (!id) return; const k = (this.meta.get(id) || {}).key; this.pres.delete(id); this.meta.delete(id); if (k) try { this.notifyFriends(k); } catch {} this.buckets.delete(id); this.bcast(id, { t: 'leave', id }); }
   async webSocketClose(ws, code, reason) { try { ws.close(code, reason); } catch {} this.leave(ws); }
   async webSocketError(ws) { this.leave(ws); }
 }

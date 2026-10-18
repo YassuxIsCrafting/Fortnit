@@ -25,6 +25,8 @@
       else if (m.t === 'pr') { var o = peers.get(m.id); if (!o) { o = {}; peers.set(m.id, o); } merge(o, m.patch || {}); notify(); }
       else if (m.t === 'ev') {
         (hs[m.topic] || []).forEach(function (f) { try { f({ topic: m.topic, data: m.data, peer: m.id, isMe: false, sameTab: false }); } catch (x) {} });
+      } else if (m.t === 'fnote' || m.t === 'pinv' || m.t === 'pans') {
+        var h = window.IE_onSocial; if (h) try { h(m); } catch (x) {}
       } else if (m.t === 'res') {
         var q = reqs.get(m.r); if (q) { reqs.delete(m.r); if (m.ok) q.res(m); else q.rej(m.err || 'Erreur'); }
       }
@@ -76,7 +78,9 @@
     register: function (u, pw, p) { return derive(u, pw).then(function (k) { return call({ t: 'reg', u: u, pw: k, p: p }); }); },
     login: function (u, pw) { return derive(u, pw).then(function (k) { return call({ t: 'login', u: u, pw: k }); }); },
     resume: function (u, token) { return call({ t: 'resume', u: u, token: token }); },
-    save: function (p) { return call({ t: 'save', p: p }); }
+    save: function (p) { return call({ t: 'save', p: p }); },
+    friends: function () { return call({ t: 'flist' }); },
+    social: function (t, u, ok) { return call({ t: t, u: u, ok: ok }); }
   };
 
   window.claude = {
