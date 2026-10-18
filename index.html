@@ -96,7 +96,8 @@ body.touch #feed{font-size:11px;max-width:36vw}body.touch #kt{font-size:18px}bod
 #fbody .fr{display:flex;align-items:center;gap:6px}#fbody .fr span{flex:1;overflow:hidden;text-overflow:ellipsis}#fbody .fr button,#fbody .add button{font-size:12px;padding:4px 9px;box-shadow:none;border-width:2px}
 #fbody .add{display:flex;gap:6px}#fbody input{flex:1;min-width:0;font:inherit;padding:6px 8px;border:3px solid var(--ink);border-radius:6px}#fbody h3{margin:6px 0 0;font-size:11px;font-family:Bungee,Impact,sans-serif;font-weight:400;opacity:.8}
 .on-dot{width:9px;height:9px;border-radius:50%;background:#666;flex:none}.on-dot.on{background:#7dff8a}#fdot{display:none;width:8px;height:8px;border-radius:50%;background:var(--pink);margin-right:7px}
-#gorow{align-items:center}#ewbtn{font-size:14px;padding:10px 14px;background:#fff}
+#gorow{align-items:center}#dev{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#14123ae6;z-index:15;padding:16px}#devp{width:min(360px,92vw)}#devp .row button{font-size:18px;padding:14px 8px}#devp .row button.sug{outline:3px solid var(--gold);outline-offset:2px}
+#ewbtn{font-size:14px;padding:10px 14px;background:#fff}
 #modes{display:flex;gap:6px}#modes .md{font-size:14px;padding:6px 18px;box-shadow:0 3px 0 var(--storm);background:#fff}#modes .md.on{background:var(--gold)}#party{margin:0;font-family:system-ui,sans-serif;font-size:13px;min-height:16px}
 #inv{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:12;display:none;width:min(340px,90vw)}#inv p{margin:0;font-family:system-ui,sans-serif}
 #mate{top:calc(170px + env(safe-area-inset-top,0px));left:14px;display:none;flex-direction:column;gap:4px;background:#14123acc;border:2px solid #7dff8a;border-radius:6px;padding:6px 10px;font-size:13px;min-width:150px}#mate .bar{height:8px;transform:none}#mate .bar div{height:100%;background:#7dff8a}
@@ -166,10 +167,11 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
     <div class="panel" id="friendsp"><h2>Amis</h2><div id="fbody"></div></div>
     <div class="panel" id="roster"><h2>Dans le lobby</h2><ul id="rl"></ul><p id="net"></p></div>
   </div>
-  <div id="bt"><div id="modes"><button type="button" class="md on" data-m="0">Solo</button><button type="button" class="md" data-m="1">Duo</button></div><p id="party"></p><div class="row" id="gorow"><button id="go">Jouer</button><button type="button" id="ewbtn">💃 Emotes (B)</button></div>
+  <div id="bt"><div id="modes"><button type="button" class="md on" data-m="0">Solo</button><button type="button" class="md" data-m="1">Duo</button></div><p id="party"></p><button type="button" class="link" id="devsw"></button><div class="row" id="gorow"><button id="go">Jouer</button><button type="button" id="ewbtn">💃 Emotes (B)</button></div>
   <p id="ctl"><b>ZQSD</b> bouger · <b>Souris</b> viser · <b>Clic</b> pioche / tirer · <b>Clic droit</b> viser · <b>1</b> pioche · <b>2-5</b> armes · <b>6·7·8</b> soins · <b>F</b> coffre / caisse · <b>E</b> voiture · <b>Espace</b> sauter · <b>A</b> (Q en QWERTY) mur · <b>R</b> escalier · <b>M</b> carte · <b>B</b> roue des emotes</p></div>
 </div>
 <div class="panel" id="inv"><p id="invt"></p><div class="row"><button type="button" id="inv-ok">Accepter</button><button type="button" id="inv-no">Refuser</button></div></div>
+<div id="dev" role="dialog" aria-modal="true" aria-labelledby="devt"><div class="panel" id="devp"><h2 id="devt">Tu joues sur…</h2><div class="row"><button type="button" id="dev-pc">🖥️ PC</button><button type="button" id="dev-mo">📱 Mobile</button></div><p class="hint">PC : clavier et souris. Mobile : commandes tactiles à l'écran. Tu pourras changer depuis le lobby.</p></div></div>
 <div id="acct"><div class="panel" id="acp">
   <h2 id="at">Connexion</h2>
   <div id="af">
@@ -1043,7 +1045,11 @@ async function acctInit(){
         if(sn.exists&&sn.data().h===s.h){setAcct({u:sn.data().u,h:s.h,ref,p:sn.data().p});return}}}}catch(e){}
   openAcct();
 }
-const IS_TOUCH=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window;if(IS_TOUCH)document.body.classList.add('touch');
+const GUESS_TOUCH=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window,CTL_PC=$('ctl').innerHTML;let IS_TOUCH=GUESS_TOUCH;
+const CTL_MO="Joystick à gauche pour bouger · glisse à droite pour viser · 🔥 tirer · 🎯 viser · ⤒ sauter · ✋ action (coffre, voiture, relever) · 🧱 mur · 🪜 escalier · 🗺️ carte · 💃 emotes · touche la barre du bas pour changer d'arme ou te soigner";
+function setDevice(d,save){IS_TOUCH=d==='mo';document.body.classList.toggle('touch',IS_TOUCH);if(save)try{localStorage.setItem('ie_device',d)}catch(e){}
+  if(IS_TOUCH)$('ctl').textContent=CTL_MO;else $('ctl').innerHTML=CTL_PC;$('devsw').textContent=(IS_TOUCH?'📱 Mobile':'🖥️ PC')+" · changer d'appareil";$('dev').style.display='none'}
+function askDevice(){$('dev-pc').className=GUESS_TOUCH?'':'sug';$('dev-mo').className=GUESS_TOUCH?'sug':'';$('dev').style.display='flex'}
 const joy={x:0,y:0};
 (()=>{
   const kd=(code,key)=>dispatchEvent(new KeyboardEvent('keydown',{code,key:key||''})),ku=(code,key)=>dispatchEvent(new KeyboardEvent('keyup',{code,key:key||''}));
@@ -1072,7 +1078,8 @@ const joy={x:0,y:0};
   hbEls.forEach((el,i)=>el.addEventListener('touchstart',e=>{e.preventDefault();if(!run)return;const s=SLOTS[i];if(s.w!==undefined){if(P.own[s.w]){P.sel=s.w;P.use=null}}else useItem(s.i)},{passive:false}));
   const wt=e=>{if(!ewOpen)return;e.preventDefault();e.stopPropagation();const t=e.changedTouches[0];if(e.type==='touchend'){closeWheel(ewMoved&&ewSel>=0);return}wheelMove({clientX:t.clientX,clientY:t.clientY})};
   for(const ev of['touchstart','touchmove','touchend'])addEventListener(ev,wt,{capture:true,passive:false});
-  if(IS_TOUCH)$('ctl').textContent='Joystick à gauche pour bouger · glisse à droite pour viser · 🔥 tirer · 🎯 viser · ⤒ sauter · ✋ action (coffre, voiture, relever) · 🧱 mur · 🪜 escalier · 🗺️ carte · 💃 emotes · touche la barre du bas pour changer d’arme ou te soigner';
+  $("dev-pc").onclick=()=>setDevice("pc",true);$("dev-mo").onclick=()=>setDevice("mo",true);$("devsw").onclick=askDevice;
+  {let d=null;try{d=localStorage.getItem("ie_device")}catch(e){}if(d==="pc"||d==="mo")setDevice(d,false);else{setDevice(GUESS_TOUCH?"mo":"pc",false);askDevice()}}
 })();
 function lobbyLoop(t){requestAnimationFrame(lobbyLoop);if(run)return;lobbyUpdate(t);renderer.render(ls,lc)}
 function netUI(){
