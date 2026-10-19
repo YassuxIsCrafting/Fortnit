@@ -22,6 +22,11 @@ sur PC et sur mobile.
 - **Construction** de murs et d'escaliers, dégâts de chute, soins (minipot, grosse potion, medkit).
 - **Modes Solo et Duo** : en Duo, on joue avec un ami (groupe) ou un coéquipier bot, on peut être à terre
   et se faire relever. Les bots jouent aussi en binômes.
+- **Mode Reload** : dans le lobby, glisse vers le haut sur le sélecteur de mode (molette, flèche haut ou
+  joystick vers le haut marchent aussi ; vers le bas pour revenir). Duo à 40 joueurs, zone de départ plus petite et
+  tempête plus rapide. Éliminé, tu réapparais en chute libre près de ton équipier au bout de 10 s (pioche, pistolet
+  commun, 60 munitions, 100 bois) tant qu’il est en vie. À partir de la 5e phase de tempête, les éliminations
+  sont définitives.
 - **Couronne** : un Top 1 donne une couronne pour la partie suivante (éliminations comptées double).
 - **Emotes** sur une roue (touche B), jouables en partie et dans le lobby.
 - **Amis** entre comptes, avec invitations en duo.
