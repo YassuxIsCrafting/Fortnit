@@ -11,6 +11,8 @@ sur PC et sur mobile.
 
 ## Le jeu
 
+- **Cinématique d'entrée** (environ 30 s, touche, clic ou manette pour passer) : survol de l'île, lieux, tempête, bus et saut, filmés dans le vrai décor.
+- **Skin Héros Éclair** offert : personnage 3D animé (`models/hero-eclair.glb`, maillage généré avec Higgsfield, squelette fait main).
 - **100 joueurs** par partie : les vrais joueurs (12 maximum), complétés par des bots.
 - **Île de départ** : 1 minute d'attente avec les autres joueurs, puis tout le monde monte dans le bus.
 - **Bus** qui traverse la carte : saute quand tu veux (Espace), chute libre puis planeur.
@@ -27,10 +29,12 @@ sur PC et sur mobile.
   tempête plus rapide. Éliminé, tu réapparais en chute libre près de ton équipier au bout de 10 s (pioche, pistolet
   commun, 60 munitions, 100 bois) tant qu’il est en vie. À partir de la 5e phase de tempête, les éliminations
   sont définitives.
+- **Rareté** des armes : Commun, Peu commun, Rare, Épique, Légendaire et Mythique (très rare, seulement dans
+  les coffres). Les cosmétiques ont aussi une rareté, purement visuelle.
 - **Couronne** : un Top 1 donne une couronne pour la partie suivante (éliminations comptées double).
 - **Emotes** sur une roue (touche B), jouables en partie et dans le lobby.
 - **Amis** entre comptes, avec invitations en duo.
-- **Paramètres** (touche P) : qualité des skins (Bien / Potato), ombres, résolution, distance d'affichage,
+- **Paramètres** (touche P) : qualité graphique (Élevée / Potato), ombres, résolution, distance d'affichage,
   sensibilité, champ de vision, axe inversé, volume général, musique et effets sonores.
 
 ## Commandes
@@ -60,45 +64,49 @@ couronne) et **10 Kill Tokens par Top 1** (partie de plus de 20 secondes).
 
 | Catégorie | Objets payants | Coût total |
 |---|---|---|
-| Skins | 24 | 1 000 |
+| Skins | 16 | 620 |
 | Emotes | 24 | 237 |
 | Accessoires | 4 | 15 |
 | Tenues (couleurs) | 9 | 14 |
 | Outils (palette libre) | 1 | 5 |
-| **Toute la boutique** | **62** | **1 271 Kill Tokens** |
+| **Toute la boutique** | **54** | **891 Kill Tokens** |
 
-Pour tout acheter, il faut donc 1 271 Kill Tokens, soit environ :
+Pour tout acheter, il faut donc 891 Kill Tokens, soit environ :
 
-- **3 813 éliminations** sans couronne (1 token pour 3 éliminations),
-- ou **128 Top 1** (10 tokens chacun),
-- ou un mélange des deux (par exemple 60 Top 1 + 2 013 éliminations).
+- **2 673 éliminations** sans couronne (1 token pour 3 éliminations),
+- ou **90 Top 1** (10 tokens chacun),
+- ou un mélange des deux (par exemple 60 Top 1 + 873 éliminations).
 
 Gratuits dès le départ : le skin Normal, la tenue bleue, les emotes Couronnes, Palmarès, Salut, Bravo et
 Pouce levé.
 
+## Passe de combat et quêtes
+
+- **XP de saison** : chaque partie rapporte de l'XP (partie jouée, temps de survie, 50 XP par élimination,
+  bonus de classement : top 25, top 10, top 5, Victoire royale), et les quêtes en rapportent beaucoup plus.
+  1 000 XP = 1 niveau, 50 niveaux par saison.
+- **Passe de combat** (onglet PASSE) : une piste gratuite (Kill Tokens, le skin Recrue Éclair, l'emote
+  La Vague) et une piste premium à 95 Kill Tokens (skins Chevalier Éclair, Agent Tempête, Roi des Cimes,
+  4 emotes et plus de Kill Tokens que son prix). Les récompenses arrivent automatiquement à chaque niveau,
+  y compris celles des niveaux déjà atteints quand on achète le passe premium.
+- **Quêtes** (onglet QUÊTES) :
+  - quêtes du jour : 3 emplacements au maximum, une nouvelle quête par jour, et une quête remplaçable
+    par jour ;
+  - quêtes de la semaine : 5 nouvelles quêtes chaque lundi ;
+  - paliers : objectifs de toute la saison en 5 étapes (éliminations, coffres, parties, victoires,
+    constructions, dégâts).
+
 ## Jouer en local
 
-Double-clique sur `index.html` pour jouer en solo. Pour voir les skins en modèles 3D, il faut un petit
-serveur local (le navigateur bloque le chargement des modèles sinon) :
-
-```bash
-npx serve .
-```
-
-Puis ouvre l'adresse indiquée (en général http://localhost:3000). En local, le multijoueur et les comptes
-sont désactivés : le serveur n'accepte que le site en ligne.
-
-## Skins en modèles 3D
-
-Les fichiers `.glb` vont dans `models/`. La liste des modèles, les liens de téléchargement et les
-noms de fichiers sont dans [models/README.md](models/README.md). Tant qu'un fichier manque, le skin
-s'affiche en version blocs. Les animations d'origine des modèles sont remplacées par celles du jeu.
+Double-clique sur `index.html` pour jouer en solo contre les bots. Pour le multijoueur en local
+(plusieurs joueurs sur le même réseau), lance `jouer-en-local.bat` : il démarre le serveur multijoueur
+local (port 8787) et le jeu sur http://localhost:3000. Les autres appareils du réseau ouvrent
+http://ADRESSE-DE-CE-PC:3000.
 
 ## Structure
 
 ```
 index.html, net.js, config.js   -> le jeu (publié par GitHub Pages)
-models/                         -> modèles 3D des skins (.glb) et leur liste
 cloudflare/                     -> serveur multijoueur, comptes et amis (Cloudflare Workers)
 android/                        -> appli Android (WebView) compilée par GitHub Actions
 .github/workflows/android.yml   -> compilation de l'APK et publication
@@ -129,10 +137,9 @@ autoriser l'installation depuis cette source.
 L'écran **📜 Crédits** du lobby liste tout le détail. En résumé :
 
 - Conception et direction : Yasser (YassuxIsCrafting). Code écrit avec l'aide de Claude (Anthropic).
-- Modèles 3D des skins : auteurs Sketchfab sous licence CC BY 4.0 (voir [models/README.md](models/README.md)).
 - [three.js](https://threejs.org) (licence MIT), police [Bungee](https://fonts.google.com/specimen/Bungee)
   (SIL Open Font License).
-- Services : GitHub (code, Pages, Actions), Cloudflare (Workers, Durable Objects), cdnjs, jsDelivr,
-  Google Fonts, Sketchfab.
-- Les autres skins, emotes, armes, véhicules, bâtiments, musiques et effets sonores sont des créations
+- Services : GitHub (code, Pages, Actions), Cloudflare (Workers, Durable Objects), cdnjs,
+  Google Fonts.
+- Les skins, emotes, armes, véhicules, bâtiments, musiques et effets sonores sont des créations
   originales du projet.
