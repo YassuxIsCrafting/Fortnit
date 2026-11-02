@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fortnit</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 172'><path d='M80 6 150 32V95C150 130 115 152 80 165 45 152 10 130 10 95V32Z' fill='%237b3fe4' stroke='%2314123a' stroke-width='10'/><path d='M94 26 46 98H76L62 148 116 70H84Z' fill='%23ffd23f' stroke='%2314123a' stroke-width='6' stroke-linejoin='round'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#14123a;--storm:#7b3fe4;--gold:#ffd23f;--pink:#ff5d8f;--paper:#fff;color-scheme:dark}
@@ -63,7 +64,7 @@ body.touch #feed{font-size:11px;max-width:36vw}body.touch #kt{font-size:18px}bod
 #cine{position:fixed;inset:0;z-index:40;display:none;overflow:hidden;cursor:pointer;touch-action:none}body.cine #cine{display:block}body.cine .hud,body.cine #hb,body.cine #xpt,body.cine #touch{visibility:hidden}
 #cine i{position:absolute;left:0;right:0;height:11vh;background:#05060f;transition:transform .7s ease}#cine .ct{top:0}#cine .cb{bottom:0}#cine.open .ct{transform:translateY(-100%)}#cine.open .cb{transform:translateY(100%)}
 #ccap{position:absolute;left:6vw;bottom:15vh;color:#fff;text-shadow:0 3px 0 #14123a,0 0 18px #000a;opacity:0}#ccap.in{animation:ccin 2.6s ease both}#ccap.big{left:0;right:0;bottom:auto;top:36vh;text-align:center}
-#cct{display:block;font-size:clamp(26px,5vw,58px);letter-spacing:1px}#ccap.big #cct{font-size:clamp(44px,10vw,120px);color:var(--gold)}#ccs{display:block;margin-top:6px;font-family:system-ui,sans-serif;font-size:clamp(14px,2vw,22px)}
+#cct{display:block;font-size:clamp(26px,5vw,58px);letter-spacing:1px}#ccap.big #cct{font-size:clamp(44px,10vw,120px);color:var(--gold)}#ccap .cl{display:none}#ccap.big{top:20vh;animation-duration:4.7s}#ccap.big .cl{display:block;width:min(76vw,760px);aspect-ratio:600/172;margin:0 auto 10px;filter:drop-shadow(0 8px 18px #000b)}#ccap.big #cct{font-size:clamp(24px,4.4vw,52px)}#ccs{display:block;margin-top:6px;font-family:system-ui,sans-serif;font-size:clamp(14px,2vw,22px)}
 @keyframes ccin{0%{opacity:0;transform:translateX(-30px)}14%{opacity:1;transform:none}82%{opacity:1}100%{opacity:0}}
 #cskip{position:absolute;right:20px;bottom:calc(11vh + 12px);color:#fffc;font-family:system-ui,sans-serif;font-size:13px;text-shadow:0 1px 3px #000}#cfade{position:absolute;inset:0;background:#000;pointer-events:none}
 #vig{position:fixed;inset:0;pointer-events:none;display:none;background:radial-gradient(ellipse at center,transparent 58%,rgba(8,16,40,.32))}body.hq.playing #vig{display:block}body.hq>canvas{filter:saturate(1.1) contrast(1.05)}
@@ -76,7 +77,7 @@ body.touch #feed{font-size:11px;max-width:36vw}body.touch #kt{font-size:18px}bod
 #kt{top:24%;left:50%;transform:translateX(-50%);font-size:clamp(22px,4vw,36px);color:var(--gold);opacity:0;transition:opacity .2s;white-space:nowrap}
 #ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;padding:18px 20px calc(18px + env(safe-area-inset-bottom,0px));background:linear-gradient(#14123aee,#14123a00 26%,#14123a00 60%,#14123aee)}
 #ov h1{font-size:clamp(24px,3.6vw,44px);margin:0;color:var(--gold);text-shadow:4px 4px 0 var(--storm);letter-spacing:2px}
-#lt{display:flex;flex-direction:column;align-items:center;gap:6px}
+#lt{display:flex;flex-direction:column;align-items:center;gap:6px}#lt .logo{width:clamp(210px,25vw,340px);aspect-ratio:600/172;filter:drop-shadow(0 6px 14px #000a)}@media (max-height:520px){#lt .logo{width:125px}}
 #lobby{width:100%;display:flex;justify-content:space-between;align-items:flex-start;flex:1;min-height:0;padding-top:10px;pointer-events:none}
 .panel{pointer-events:auto;background:#14123acc;border:3px solid #fff3;border-radius:10px;padding:14px;width:230px;box-sizing:border-box;text-align:left;display:flex;flex-direction:column;gap:8px}
 .panel h2{margin:0;font-size:16px;color:var(--gold);font-weight:400}.panel h3{margin:4px 0 0;font-size:11px;font-weight:400;opacity:.8}
@@ -200,13 +201,22 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
   <button type="button" class="tb" id="t-act" aria-label="Action">✋</button><button type="button" class="tb" id="t-wall" aria-label="Construire un mur">🧱</button><button type="button" class="tb" id="t-stair" aria-label="Construire un escalier">🪜</button>
   <button type="button" class="tb sm" id="t-map" aria-label="Carte">🗺️</button><button type="button" class="tb sm" id="t-emo" aria-label="Emotes">💃</button><button type="button" class="tb sm" id="t-cfg" aria-label="Paramètres">⚙️</button></div>
 <div id="rot">📱↻ Tourne ton téléphone en mode paysage pour jouer</div>
-<div id="cine"><div id="cfade"></div><i class="ct"></i><i class="cb"></i><div id="ccap"><b id="cct"></b><span id="ccs"></span></div><div id="cskip">Touche ou clic pour passer</div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="lgGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6b8"/><stop offset=".48" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff8a1f"/></linearGradient>
+<linearGradient id="lgShield" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b98bff"/><stop offset="1" stop-color="#4a1fb0"/></linearGradient>
+<linearGradient id="lgShine" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="120" y2="40"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/><animateTransform attributeName="gradientTransform" type="translate" values="-200 0;800 0;800 0" keyTimes="0;.45;1" dur="4.5s" repeatCount="indefinite"/></linearGradient>
+<g id="lgw" font-family="Bungee,Impact,sans-serif" font-size="100"><text x="170" y="118" textLength="296" lengthAdjust="spacingAndGlyphs">FORTN</text><path d="M504 38 470 88H490L478 128 518 72H496Z"/><text x="522" y="118" textLength="70" lengthAdjust="spacingAndGlyphs">T</text></g>
+<symbol id="logo" viewBox="0 0 600 172"><path d="M80 6 150 32V95C150 130 115 152 80 165 45 152 10 130 10 95V32Z" fill="url(#lgShield)" stroke="#14123a" stroke-width="10" stroke-linejoin="round"/><path d="M80 18 139 40V94C139 122 111 141 80 153 49 141 21 122 21 94V40Z" fill="none" stroke="#ffd23f" stroke-width="4"/>
+<path d="M94 26 46 98H76L62 148 116 70H84Z" fill="url(#lgGold)" stroke="#14123a" stroke-width="6" stroke-linejoin="round"><animate attributeName="opacity" values="1;1;.72;1;.86;1;1" keyTimes="0;.8;.83;.86;.89;.92;1" dur="5s" repeatCount="indefinite"/></path>
+<use href="#lgw" x="6" y="7" fill="#7b3fe4" stroke="#7b3fe4" stroke-width="12" stroke-linejoin="round"/><use href="#lgw" fill="#14123a" stroke="#14123a" stroke-width="12" stroke-linejoin="round"/><use href="#lgw" fill="url(#lgGold)"/><use href="#lgw" fill="url(#lgShine)"/>
+<text x="172" y="158" font-family="Bungee,Impact,sans-serif" font-size="33" textLength="416" fill="#fff" stroke="#14123a" stroke-width="5" paint-order="stroke">BATTLE ROYALE</text></symbol></defs></svg>
+<div id="cine"><div id="cfade"></div><i class="ct"></i><i class="cb"></i><div id="ccap"><svg class="cl" aria-hidden="true"><use href="#logo"/></svg><b id="cct"></b><span id="ccs"></span></div><div id="cskip">Touche ou clic pour passer</div></div>
 <div id="ov" class="t-play">
   <div id="nav"><span class="ni">▦</span><span class="ni">⌕</span>
     <button type="button" class="tab on" id="tab-play">JOUER</button><button type="button" class="tab" id="tab-locker">DRESSING</button><button type="button" class="tab" id="tab-shop"><i id="dot"></i>BOUTIQUE</button><button type="button" class="tab" id="tab-pass">PASSE</button><button type="button" class="tab" id="tab-quests"><i id="qdot"></i>QUÊTES</button><button type="button" class="tab" id="tab-friends"><i id="fdot"></i>AMIS</button>
     <button type="button" class="tab" id="tab-acct" style="display:none">👤 Invité</button>
     <span id="lvb" title="Niveau de saison"><span>⭐</span><b id="lvn">1</b><span class="xpbar"><i id="lvx"></i></span></span><span id="bal"><span class="coin">K</span>KILL TOKENS <b id="tk">0</b><small id="kp">0/3</small><small id="cwn"></small></span></div>
-  <div id="lt"><h1 id="ttl">Île Éclair 3D</h1><p id="msg">Personnalise ton héros pendant que tes amis arrivent.</p></div>
+  <div id="lt"><svg class="logo" role="img" aria-label="Fortnit"><use href="#logo"/></svg><h1 id="ttl"></h1><p id="msg"></p></div>
   <div id="lobby">
     <div class="panel" id="cust">
       <h2>Mon héros</h2>
