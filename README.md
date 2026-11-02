@@ -12,11 +12,24 @@ sur PC et sur mobile.
 ## Le jeu
 
 - **Cinématique d'entrée** (environ 30 s, touche, clic ou manette pour passer) : survol de l'île, lieux, tempête, bus et saut, filmés dans le vrai décor.
+- **Parapluies** : 8 planeurs à motifs dans la boutique, inspirés de l'ambiance des shonens (motifs originaux, sans nom ni logo repris).
 - **Skin Héros Éclair** offert : personnage 3D animé (`models/hero-eclair.glb`, maillage généré avec Higgsfield, squelette fait main).
+- **Ambiance** : la partie va du matin au crépuscule, le ciel vire au violet avec la tempête, pluie, orage et brouillard
+  au matin (tirés au sort, identiques pour tous les joueurs). Rendu cartoon, contours noirs, ombres de contact, éclat
+  lumineux, rayons et reflets du soleil (Paramètres, qualité Élevée ; tout est coupé en Potato).
+- **Décor** : collines et falaises, vrai lac au Lac Miroir, vagues et écume, plusieurs espèces d'arbres, herbe dense autour
+  du joueur, toits, fenêtres qui s'allument la nuit, enseignes, un style et un repère par lieu (grue et conteneurs aux Docks,
+  statue à Cité Éclair, moulin à la Ferme, colonnes aux Ruines, éoliennes à la Crête...), oiseaux, papillons, feuilles.
+- **Personnages** : les bots utilisent le modèle 3D de près, en blocs de loin ; course, recul, rechargement, atterrissage,
+  chute, chute du corps à l'élimination, clignement et grimace. Les autres skins restent en blocs.
+- **Effets** : flash, traînées, douilles, impacts selon la matière, murs qui apparaissent et volent en morceaux, chiffres de
+  dégâts, tremblement de caméra, éclairs dans la tempête, ralenti et cinématique de fin, poussière, sillage, traînée du planeur.
+- **Interface** : lobby en scène de concert, cartes de boutique selon la rareté, coffre doré dont les objets jaillissent,
+  écran de chargement avec astuces, carte dessinée à la main.
 - **100 joueurs** par partie : les vrais joueurs (12 maximum), complétés par des bots.
 - **Île de départ** : 1 minute d'attente avec les autres joueurs, puis tout le monde monte dans le bus.
 - **Bus** qui traverse la carte : saute quand tu veux (Espace), chute libre puis planeur.
-- **Carte de 8000 × 8000** : 225 bâtiments, 10 lieux nommés, arbres, coffres, caisses de munitions, 50 voitures.
+- **Carte de 8000 × 8000** : 247 bâtiments, 10 lieux nommés, arbres, coffres, caisses de munitions, 50 voitures.
 - **Tempête** en 9 phases : elle apparaît 1 minute après le saut, la zone se décale à chaque phase,
   se referme complètement à la fin et ignore le bouclier.
 - **Armes** à raretés (Commun → Légendaire) avec chargeurs : pistolet, fusil d'assaut, pompe, sniper,
@@ -34,10 +47,12 @@ sur PC et sur mobile.
 - **Couronne** : un Top 1 donne une couronne pour la partie suivante (éliminations comptées double).
 - **Emotes** sur une roue (touche B), jouables en partie et dans le lobby.
 - **Amis** entre comptes, avec invitations en duo.
-- **Paramètres** (touche P) : qualité graphique (Élevée / Potato), ombres, résolution, distance d'affichage,
+- **Paramètres** (touche P) : qualité graphique (Élevée / Potato), effets visuels, rendu cartoon, cycle jour / nuit, météo, tremblements de caméra, ombres, résolution, distance d'affichage,
   sensibilité, champ de vision, axe inversé, volume général, musique et effets sonores.
 
 ## Commandes
+
+**Sprint** : Maj sur PC, joystick poussé à fond vers l'avant sur mobile, clic du joystick gauche (L3) à la manette.
 
 **PC** : ZQSD bouger · Souris viser · Clic pioche / tirer · Clic droit viser · 1 pioche · 2-5 armes ·
 6-7-8 soins · F coffre / caisse · E voiture (ou relever un équipier) · Espace sauter (et quitter le bus) ·
@@ -67,15 +82,16 @@ couronne) et **10 Kill Tokens par Top 1** (partie de plus de 20 secondes).
 | Skins | 16 | 620 |
 | Emotes | 24 | 237 |
 | Accessoires | 4 | 15 |
+| Parapluies | 8 | 220 |
 | Tenues (couleurs) | 9 | 14 |
 | Outils (palette libre) | 1 | 5 |
-| **Toute la boutique** | **54** | **891 Kill Tokens** |
+| **Toute la boutique** | **62** | **1 111 Kill Tokens** |
 
-Pour tout acheter, il faut donc 891 Kill Tokens, soit environ :
+Pour tout acheter, il faut donc 1 111 Kill Tokens, soit environ :
 
-- **2 673 éliminations** sans couronne (1 token pour 3 éliminations),
-- ou **90 Top 1** (10 tokens chacun),
-- ou un mélange des deux (par exemple 60 Top 1 + 873 éliminations).
+- **3 333 éliminations** sans couronne (1 token pour 3 éliminations),
+- ou **112 Top 1** (10 tokens chacun),
+- ou un mélange des deux (par exemple 60 Top 1 + 1 533 éliminations).
 
 Gratuits dès le départ : le skin Normal, la tenue bleue, les emotes Couronnes, Palmarès, Salut, Bravo et
 Pouce levé.
