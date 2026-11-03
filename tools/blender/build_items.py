@@ -67,14 +67,25 @@ class Item:
         bm.free()
 
     # --- primitives (cotes jeu : w = X, h = Y, d = Z) ---
-    def box(self, w, h, d, x, y, z, col, rz=0.0, bev=0.45, **k):
+    def box(self, w, h, d, x, y, z, col, rz=0.0, bev=0.45, seg=2, **k):
         bm = bmesh.new()
         bmesh.ops.create_cube(bm, size=1)
         bmesh.ops.scale(bm, vec=(w, d, h), verts=bm.verts)
         b = min(bev, min(w, h, d) * 0.3)
         if b > 0.01:
-            bmesh.ops.bevel(bm, geom=bm.edges[:], offset=b, segments=2, affect="EDGES", profile=0.5, clamp_overlap=True)
+            bmesh.ops.bevel(bm, geom=bm.edges[:], offset=b, segments=seg, affect="EDGES", profile=0.5, clamp_overlap=True)
         self._add(bm, col, x, y, z, rz, **k)
+
+    def prism(self, pts, d, x, y, z, col, **k):
+        """Polygone (plan XY du jeu) extrudé sur l'épaisseur d (axe Z du jeu)."""
+        bm = bmesh.new()
+        f = bm.faces.new([bm.verts.new((px, 0, py)) for px, py in pts])
+        bmesh.ops.recalc_face_normals(bm, faces=[f])
+        ext = bmesh.ops.extrude_face_region(bm, geom=[f])
+        bmesh.ops.translate(bm, vec=(0, -d, 0), verts=[v for v in ext["geom"] if isinstance(v, bmesh.types.BMVert)])
+        bmesh.ops.translate(bm, vec=(0, d / 2, 0), verts=bm.verts)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        self._add(bm, col, x, y, z, **k)
 
     def cyl(self, r, l, x, y, z, col, axis="X", r2=None, seg=16, rz=0.0, bev=0.2, **k):
         bm = bmesh.new()
