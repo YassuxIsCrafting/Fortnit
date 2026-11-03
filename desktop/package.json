@@ -1,0 +1,30 @@
+{
+  "name": "fortnit-desktop",
+  "productName": "Fortnit",
+  "version": "1.0.0",
+  "description": "Fortnit pour Windows : ouvre le jeu en ligne, toujours à jour",
+  "author": "Yasser (YassuxIsCrafting)",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "icon": "electron icon.js",
+    "build": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "38.2.0",
+    "electron-builder": "26.0.12"
+  },
+  "build": {
+    "appId": "com.yassux.fortnit",
+    "productName": "Fortnit",
+    "files": ["main.js", "offline.html", "build/icon.png"],
+    "directories": { "output": "dist" },
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": true
+    },
+    "portable": { "artifactName": "Fortnit.exe" }
+  }
+}

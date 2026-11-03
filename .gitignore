@@ -16,3 +16,7 @@ models/medieval_chest.glb
 models/sg553_assault_rifle.glb
 models/shotgun.glb
 models/t77_handgun.glb
+
+# Appli Windows
+desktop/node_modules/
+desktop/dist/

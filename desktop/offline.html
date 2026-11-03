@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Fortnit</title>
+<style>
+html,body{margin:0;height:100%;background:#14123a;color:#fff;font-family:system-ui,sans-serif}
+body{display:flex;align-items:center;justify-content:center;text-align:center}
+button{font-size:20px;padding:12px 28px;border-radius:8px;border:0;background:#ffd23f;color:#14123a;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<div>
+  <h2>Pas de connexion</h2>
+  <p>Le jeu a besoin d'Internet.</p>
+  <button id="r">Réessayer</button>
+</div>
+<script>
+document.getElementById("r").onclick = () => { location.href = new URLSearchParams(location.search).get("u"); };
+</script>
+</body>
+</html>
