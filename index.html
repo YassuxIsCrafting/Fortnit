@@ -613,6 +613,7 @@ function init(st,n){
 let decorDone=false,tgrid=new Map(),solGrid=new Map(),mWinL=null,mWinD=null,SPIN=[],grassM=null,grassK='',birds=null,butter=null,ftT=0,leafT=0;
 const mLamp=new THREE.SpriteMaterial({map:null,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:0,color:0xffe0a0});
 function mergeParts(list){const g=new THREE.Group();for(const[geo,col,y]of list){const m=new THREE.Mesh(geo,L(col));m.position.y=y;g.add(m)}return mergeGroup(g)}
+const gRock=new THREE.DodecahedronGeometry(1,0),gBush=new THREE.IcosahedronGeometry(1,0);
 const cyl=(a,b,h)=>new THREE.CylinderGeometry(a,b,h,6,1,true),TW=0xffffff,TSP=[{g:mergeParts([[cyl(5,8,34),0x6b4423,17],[gLeaf,TW,62],[gLeaf2,TW,104]]),c:[0x2f9e44,0x27843a,0x1f7a3a]},
   {g:mergeParts([[cyl(6,9,46),0x6b4423,23],[new THREE.DodecahedronGeometry(38,0),TW,70],[new THREE.IcosahedronGeometry(25,0),TW,100]]),c:[0x3cb44f,0x4fbf4a,0x6cc24a,0xd8a032]},
   {g:mergeParts([[cyl(3,5.5,84),0x9a7b4f,42],[new THREE.ConeGeometry(50,20,8),TW,90],[new THREE.ConeGeometry(30,12,8),TW,100]]),c:[0x6cc24a,0x58b03c]},
@@ -675,11 +676,11 @@ function decor(){
   const at=(o,y)=>{const x=40+r()*(M-80),z=40+r()*(M-80),g=TH(x,z);o.position.set(x,y+g,z);o.rotation.set(0,r()*6.28,0);o.userData.skip=onPad(x,z)||g<-5||inPlz(x,z)};
   inst(new THREE.ConeGeometry(2.6,10,3,1,true),windify(new THREE.MeshLambertMaterial({color:0xffffff,side:THREE.DoubleSide}),1.6,-5,5),12000,(i,o,c)=>{at(o,4);o.scale.set(1,.7+r()*.8,1);c.setHex(0x5fae3e).offsetHSL((r()-.5)*.04,0,(r()-.5)*.12)},500,950,240);
   inst(new THREE.OctahedronGeometry(2.4,0),new THREE.MeshBasicMaterial({color:0xffffff}),4500,(i,o,c)=>{at(o,5);o.scale.setScalar(1);c.setHex([0xffffff,0xffe14d,0xff7bb0,0xb18cff,0xff8a3d][Math.floor(r()*5)])},500,950,240);
-  inst(new THREE.DodecahedronGeometry(1,0),new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true}),560,(i,o,c)=>{at(o,0);const s=5+r()*14;o.scale.set(s*(1+r()*.6),s*(.5+r()*.4),s);o.rotation.x=r();c.setHex(0x9aa1a8).offsetHSL(0,0,(r()-.5)*.12)},1000,2400,240,true);
-  inst(new THREE.IcosahedronGeometry(1,0),windify(new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true}),1.2,-1,1),2200,(i,o,c)=>{at(o,5);const s=10+r()*13;o.scale.set(s,s*.72,s);c.setHex(0x3f9a45).offsetHSL((r()-.5)*.05,0,(r()-.5)*.1)},1000,1700,240);
+  inst(gRock,new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true}),560,(i,o,c)=>{at(o,0);const s=5+r()*14;o.scale.set(s*(1+r()*.6),s*(.5+r()*.4),s);o.rotation.x=r();c.setHex(0x9aa1a8).offsetHSL(0,0,(r()-.5)*.12)},1000,2400,240,true);
+  inst(gBush,windify(new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true}),1.2,-1,1),2200,(i,o,c)=>{at(o,5);const s=10+r()*13;o.scale.set(s,s*.72,s);c.setHex(0x3f9a45).offsetHSL((r()-.5)*.05,0,(r()-.5)*.1)},1000,1700,240);
   const fl=POIS.find(p=>p.n==='Val Fleuri');inst(new THREE.OctahedronGeometry(2.6,0),new THREE.MeshBasicMaterial({color:0xffffff}),1700,(i,o,c)=>{const a=r()*6.28,d=Math.sqrt(r())*520,x=fl.x+Math.cos(a)*d,z=fl.y+Math.sin(a)*d;o.position.set(x,TH(x,z)+5,z);o.rotation.set(0,0,0);o.scale.setScalar(1);o.userData.skip=onPad(x,z)||inPlz(x,z);c.setHex([0xffffff,0xffe14d,0xff7bb0,0xb18cff,0xff5d5d][Math.floor(r()*5)])},500,950,240);
   const cl=[];for(let k=0;k<26000&&cl.length<420;k++){const x=40+r()*(M-80),z=40+r()*(M-80);gradH(x,z);if(Math.hypot(_gx,_gy)>.85&&!onPad(x,z))cl.push([x,z])}
-  if(cl.length)inst(new THREE.DodecahedronGeometry(1,0),new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true}),cl.length,(i,o,c)=>{const s=16+r()*22;o.position.set(cl[i][0],TH(cl[i][0],cl[i][1])+s*.2,cl[i][1]);o.rotation.set(r(),r()*6,r());o.scale.set(s*(1+r()*.5),s*(.7+r()*.6),s);o.userData.skip=false;c.setHex(0x8d8a80).offsetHSL(0,0,(r()-.5)*.1)},1000,2800,300,true);
+  if(cl.length)inst(gRock,new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true}),cl.length,(i,o,c)=>{const s=16+r()*22;o.position.set(cl[i][0],TH(cl[i][0],cl[i][1])+s*.2,cl[i][1]);o.rotation.set(r(),r()*6,r());o.scale.set(s*(1+r()*.5),s*(.7+r()*.6),s);o.userData.skip=false;c.setHex(0x8d8a80).offsetHSL(0,0,(r()-.5)*.1)},1000,2800,300,true);
   const gf=mergeBoxes([[4,20,4,-30,10,0,0x7a512b],[4,20,4,30,10,0,0x7a512b],[60,3,2,0,15,0,0x8b5a2b],[60,3,2,0,8,0,0x8b5a2b]]);inst(gf,new THREE.MeshLambertMaterial({vertexColors:true}),240,(i,o,c)=>{const b=BCEN[Math.floor(r()*BCEN.length)],x=b[0]+(r()<.5?-1:1)*(150+r()*60),z=b[1]+(r()-.5)*220;o.position.set(x,TH(x,z),z);o.rotation.set(0,r()<.5?0:Math.PI/2,0);o.scale.setScalar(1);o.userData.skip=false;c.setHex(0xffffff)},1000,1500,240);
   landmarks();
 }const TC=120,tKey=(x,y)=>Math.floor(x/TC)*1e4+Math.floor(y/TC);const _td=new THREE.Object3D();
@@ -710,10 +711,11 @@ function glider(g,on){const U=g.userData,i=U.ug|0;let m=U.gl;if(!on&&!m)return;
   if(!m||U.gli!==i){if(m)g.remove(m);m=U.gl=i?mkUmb(i):new THREE.Mesh(gGlider,mChest);U.gli=i;g.add(m)}m.visible=on;
   const up=on&&i>0;if(up){m.children[0].rotation.y+=.012;U.arms[0].quaternion.setFromUnitVectors(DOWN,_gu)}else if(U.glup)U.arms[0].quaternion.copy(U.aq[0]);U.glup=up}
 const mSail=(()=>{const m=new THREE.MeshLambertMaterial({color:0xff5d8f,side:THREE.DoubleSide});m.customProgramCacheKey=()=>'sail';m.onBeforeCompile=sh=>{sh.uniforms.uT=GT;sh.vertexShader='uniform float uT;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nfloat sk=(45.-position.x)/90.;transformed.z+=sin(position.x*.14+uT*11.)*8.*sk+sin(position.y*.2+uT*7.)*2.5*sk;')};return m})();
-function mkBus(){
-  const g=new THREE.Group(),bd=new THREE.Mesh(mergeBoxes([[220,70,84,0,0,0,0x2e7de0],[222,14,86,0,30,0,0xffd23f],[30,40,86,-95,6,0,0x2e7de0],[4,26,70,111,8,0,0x9fdcff],
+const gBusB=mergeBoxes([[220,70,84,0,0,0,0x2e7de0],[222,14,86,0,30,0,0xffd23f],[30,40,86,-95,6,0,0x2e7de0],[4,26,70,111,8,0,0x9fdcff],
     ...[-70,-35,0,35,70].flatMap(x=>[[26,22,2,x,10,43,0x9fdcff],[26,22,2,x,10,-43,0x9fdcff]]),
-    ...[-70,70].flatMap(x=>[[30,30,8,x,-36,44,0x222222],[30,30,8,x,-36,-44,0x222222]])]),mChest);
+    ...[-70,70].flatMap(x=>[[30,30,8,x,-36,44,0x222222],[30,30,8,x,-36,-44,0x222222]])]);
+function mkBus(){
+  const g=new THREE.Group(),bd=new THREE.Mesh(gBusB,mChest);
   const bl=new THREE.Mesh(new THREE.SphereGeometry(80,18,14),new THREE.MeshLambertMaterial({color:0x3da5ff,flatShading:true}));bl.position.y=200;bl.scale.y=1.15;
   const st=new THREE.Mesh(new THREE.CylinderGeometry(81,81,22,18,1,true),new THREE.MeshLambertMaterial({color:0xffd23f,side:THREE.DoubleSide}));st.position.y=190;
   const sail=new THREE.Mesh(new THREE.PlaneGeometry(90,46,18,6),mSail),mast=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,92,6),mDark);sail.position.set(-160,62,0);mast.position.set(-114,50,0);g.add(sail,mast);
@@ -1091,6 +1093,15 @@ function mkChest(i,x,y,ry){
 }
 const CARC=[0xe53935,0x1e88e5,0xfdd835,0x43a047,0xf5f5f5,0x8e24aa],gCars=CARC.map(c=>mergeBoxes([[72,14,36,0,15,0,c],[36,15,33,-6,29,0,c],[2,11,29,12.5,29,0,0x9fdcff],[30,10,2,-6,29,16.8,0x9fdcff],[30,10,2,-6,29,-16.8,0x9fdcff],[2,11,29,-24.5,29,0,0x9fdcff],[4,6,34,36,13,0,0x333333],[4,6,34,-36,13,0,0x333333],[2,4,8,37,17,11,0xfff6b0],[2,4,8,37,17,-11,0xfff6b0],
   ...[[22,19],[22,-19],[-22,19],[-22,-19]].map(([x,z])=>[13,13,6,x,7,z,0x1b1b1f])]));
+// Décor modélisé dans Blender (tools/blender/build_decor.py). Les géométries sont remplacées en place : les arbres et
+// rochers déjà instanciés partagent leurs attributs et changent donc aussi. La carrosserie magenta prend la couleur de CARC.
+function regeo(a,b){for(const k of Object.keys(a.attributes))if(!b.attributes[k])a.deleteAttribute(k);for(const k in b.attributes)a.setAttribute(k,b.attributes[k]);a.setIndex(null);a.computeBoundingSphere();a.computeBoundingBox()}
+function decorLoad(){if(!THREE.GLTFLoader)return;new THREE.GLTFLoader().load('models/decor.glb',m=>{
+  const D={},c=new THREE.Color();m.scene.children.forEach(n=>D[n.name]=itemGeo(n));
+  TSP.forEach((t,i)=>{if(D['T'+i])regeo(t.g,D['T'+i])});
+  for(const[k,g]of[['D_rock',gRock],['D_bush',gBush],['D_chestB',gChestB],['D_chestL',gChestL],['D_ammoB',gAmmoB],['D_ammoL',gAmmoL],['D_van',gVan],['D_bus',gBusB]])if(D[k])regeo(g,D[k]);
+  if(D.D_car)gCars.forEach((g,v)=>{const q=D.D_car.clone(),a=q.attributes.color.array;c.setHex(CARC[v]);for(let j=0;j<a.length;j+=3)if(a[j]>.99&&a[j+1]<.01&&a[j+2]>.99){a[j]=c.r;a[j+1]=c.g;a[j+2]=c.b}regeo(g,q)})},undefined,()=>{})}
+decorLoad();
 function mkCar(i,x,y,h,v){const m=new THREE.Mesh(gCars[v],mChest);m.castShadow=true;m.rotation.order='YXZ';blob(m,96,54);dyn.add(m);const c={i,x,y,h,v:0,r:30,z:0,m};carPose(c);return c}
 function carPose(c){const ch=Math.cos(c.h),sh=Math.sin(c.h),m=c.m;m.position.set(c.x,TH(c.x,c.y),c.y);m.rotation.y=-c.h;m.rotation.z=Math.atan((TH(c.x+ch*30,c.y+sh*30)-TH(c.x-ch*30,c.y-sh*30))/60);m.rotation.x=-Math.atan((TH(c.x-sh*18,c.y+ch*18)-TH(c.x+sh*18,c.y-ch*18))/36)}
 function driveCar(dt,f,s,now){

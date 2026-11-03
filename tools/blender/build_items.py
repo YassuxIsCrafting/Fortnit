@@ -118,7 +118,19 @@ class Item:
         bmesh.ops.transform(bm, matrix=m, verts=bm.verts)
         self._add(bm, col, x, y, z)
 
-    def horn(self, p0, p1, p2, r0, r1, col, depth=1.0, seg=10, sides=8, t0=0.0, t1=1.0):
+    def ico(self, r, x, y, z, col, sub=1, sx=1, sy=1, sz=1, jit=0.0, seed=0, flat=None):
+        """Boule facettée (feuillage, rochers) ; jit déforme les sommets de façon reproductible, flat aplatit le dessous."""
+        bm = bmesh.new()
+        bmesh.ops.create_icosphere(bm, subdivisions=sub, radius=r)
+        rnd = __import__("random").Random(seed)
+        for v in bm.verts:
+            v.co *= 1 + rnd.uniform(-jit, jit)
+            if flat is not None and v.co.z < -r * flat:
+                v.co.z = -r * flat
+        bmesh.ops.scale(bm, vec=(sx, sz, sy), verts=bm.verts)
+        self._add(bm, col, x, y, z)
+
+    def horn(self, p0, p1, p2, r0, r1, col, depth=1.0, seg=10, sides=8, t0=0.0, t1=1.0, at=(0, 0, 0), ry=0.0):
         """Pointe courbe (Bézier quadratique dans le plan XY du jeu), section qui s'affine."""
         bm = bmesh.new()
         P = [Vector((p[0], p[1], 0)) for p in (p0, p1, p2)]
@@ -138,7 +150,7 @@ class Item:
         bm.faces.new(rings[-1])
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
         bmesh.ops.transform(bm, matrix=G2B, verts=bm.verts)
-        self._add(bm, col, 0, 0, 0)
+        self._add(bm, col, *at, ry=ry)
 
     def done(self, coll, slot):
         me = bpy.data.meshes.new(self.name)
