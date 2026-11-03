@@ -436,10 +436,22 @@ const mWpn=new THREE.MeshLambertMaterial({vertexColors:true}),wmodel=i=>{if(!WM[
 function setWeapon(g,i){const s=g.children[2];if(s.userData.w===i)return;s.userData.w=i;s.clear();s.add(wmodel(i))}
 const gGlow=new THREE.SphereGeometry(20,10,8),mGlow=RAR.map(r=>new THREE.MeshBasicMaterial({color:r.c,transparent:true,opacity:.3,depthWrite:false}));
 function lootMesh(k,r){
-  const i=WI[k];if(i===undefined)return new THREE.Mesh(LG[k],mLoot[k]);
+  const i=WI[k];if(i===undefined)return IG[k]?new THREE.Mesh(IG[k],mWpn):new THREE.Mesh(LG[k],mLoot[k]);
   const g=new THREE.Group(),w=wmodel(i);w.scale.setScalar(1.5);w.position.x=-CT[i]*1.5;
   g.add(w,new THREE.Mesh(gGlow,mGlow[r|0]));return g;
 }
+// Armes et butin modélisés dans Blender (tools/blender/build_items.py) : un mesh par objet, couleurs des matériaux cuites en couleurs de sommets.
+// Tant que le fichier n'est pas chargé (ou s'il manque), les modèles procéduraux ci-dessus restent affichés.
+const IG={};
+function itemGeo(node){node.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(node.matrixWorld).invert(),c=new THREE.Color(),P=[],N=[],K=[];
+  node.traverse(o=>{if(!o.isMesh)return;const q=(o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone()).applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)),p=q.attributes.position.array,n=q.attributes.normal.array;c.copy(o.material.color).convertLinearToSRGB();
+    for(let j=0;j<p.length;j++){P.push(p[j]);N.push(n[j])}for(let j=0;j<p.length/3;j++)K.push(c.r,c.g,c.b)});
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));g.setAttribute('color',new THREE.Float32BufferAttribute(K,3));return g}
+function itemsLoad(){if(!THREE.GLTFLoader)return;new THREE.GLTFLoader().load('models/items.glb',m=>{
+  const swap=[];m.scene.children.forEach(n=>{const g=itemGeo(n);if(/^W\d$/.test(n.name)){const i=+n.name[1];if(WM[i])swap.push([WM[i],g]);WM[i]=g}else IG[n.name.slice(2)]=g});
+  for(const s of[scene,ls])s.traverse(o=>{if(o.isMesh)for(const[a,b]of swap)if(o.geometry===a)o.geometry=b});
+  for(const l of loot||[])if(IG[l.k]&&l.m.isMesh){l.m.geometry=IG[l.k];l.m.material=mWpn}},undefined,()=>{})}
+itemsLoad();
 const SKINS=['#ffe0bd','#f1c27d','#c68642','#8d5524','#4b2e1a','#8de07a'],OUT=['#3da5ff','#ff5d8f','#7dff8a','#ffd23f','#c27bff','#ff7a3d','#00e5ff','#f5f5f5','#2b2b3a','#ff4d4d'],HATS=['Aucun','Casquette','Couronne','Casque','Antenne'];
 const HEX=/^#[0-9a-f]{6}$/i,clampI=(v,n)=>Math.max(0,Math.min(n-1,v|0)),mGold=L(0xffd23f),mGrey=L(0x9aa3ad);
 // Parapluies-planeurs : motifs originaux inspirés de l'ambiance des grands shonens, sans nom, logo ni emblème repris.
