@@ -1,4 +1,4 @@
-/* Île Éclair : client réseau pour un hébergement statique (Netlify, GitHub Pages...).
+/* Île Éclair : client réseau pour un hébergement statique (site Cloudflare, Netlify...).
    Reproduit la petite API "room" + "auth" utilisée par le jeu, au-dessus d'un WebSocket. */
 (function () {
   var URL_ = window.IE_WS;

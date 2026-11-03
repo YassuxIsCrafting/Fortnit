@@ -2131,20 +2131,15 @@ function renderCredits(){
   p([{t:'three.js',href:'https://threejs.org'},' (moteur 3D) par mrdoob et les contributeurs, licence ',{t:'MIT',href:'https://github.com/mrdoob/three.js/blob/dev/LICENSE'},'.']);
   p(['Police ',{t:'Bungee',href:'https://fonts.google.com/specimen/Bungee'},' par David Jonathan Ross, licence ',{t:'SIL Open Font License',href:'https://openfontlicense.org'},', via Google Fonts.']);
   h('Services');
-  for(const s of SERVICES)if(s.on!==false)p([{t:s.n,href:s.url},' : '+s.d]);
+  for(const s of SERVICES)p([{t:s.n,href:s.url},' : '+s.d]);
 }
-// GITHUB_OK : passe à false si le projet quitte GitHub (compte non rétabli) pour retirer GitHub des crédits.
-const GITHUB_OK=true;
 const SERVICES=[
-  {n:'GitHub',url:'https://github.com',d:'hébergement du code source.',on:GITHUB_OK},
-  {n:'GitHub Pages',url:'https://pages.github.com',d:'hébergement du site du jeu.',on:GITHUB_OK},
-  {n:'GitHub Actions',url:'https://github.com/features/actions',d:'compilation automatique de l’appli Android (APK) et publication des versions.',on:GITHUB_OK},
-  {n:'Cloudflare Workers',url:'https://workers.cloudflare.com',d:'serveur multijoueur temps réel.'},
+  {n:'Cloudflare Workers',url:'https://workers.cloudflare.com',d:'hébergement du site du jeu et serveur multijoueur temps réel.'},
   {n:'Cloudflare Durable Objects',url:'https://developers.cloudflare.com/durable-objects/',d:'salle de jeu, comptes joueurs, amis et sauvegarde de la progression.'},
   {n:'cdnjs',url:'https://cdnjs.com',d:'diffusion de la bibliothèque three.js.'},
   {n:'Google Fonts',url:'https://fonts.google.com',d:'diffusion de la police Bungee.'},
   {n:'Node.js et npm',url:'https://nodejs.org',d:'outils de développement.'},
-  {n:'Wrangler',url:'https://developers.cloudflare.com/workers/wrangler/',d:'déploiement du serveur sur Cloudflare.'},
+  {n:'Wrangler',url:'https://developers.cloudflare.com/workers/wrangler/',d:'déploiement du site et du serveur sur Cloudflare.'},
   {n:'Android WebView, Gradle et Eclipse Temurin',url:'https://developer.android.com',d:'construction de l’appli Android.'}
 ];
 $('credbtn').onclick=()=>{renderCredits();$('cred').style.display='flex'};$('credx').onclick=()=>{$('cred').style.display='none'};

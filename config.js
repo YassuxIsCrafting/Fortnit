@@ -1,5 +1,5 @@
 // Adresse du serveur temps réel d'Île Éclair.
-//  - En ligne (GitHub Pages, appli Android) : le serveur Cloudflare.
+//  - En ligne (site Cloudflare, applis Android et Windows) : le serveur Cloudflare.
 //  - En local (localhost, réseau de la maison, ou fichier ouvert par double-clic) : le serveur local
 //    lancé par jouer-en-local.bat (wrangler dev, port 8787).
 //  - Mets '' pour forcer le mode solo contre les bots.

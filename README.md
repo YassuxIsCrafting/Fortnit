@@ -6,8 +6,9 @@ sur PC et sur mobile.
 > Projet de fan non officiel, gratuit et sans but commercial. Il n'est ni affilié, ni approuvé, ni
 > sponsorisé par Epic Games ou Fortnite.
 
-- Jeu en ligne : https://yassuxiscrafting.github.io/Fortnit/
-- Appli Android : `HesseFortnite.apk` dans la version « Application Android » du dépôt (voir plus bas).
+- Jeu en ligne : https://fortnit-jeu.yasser-mobiarchitects.workers.dev/
+- Appli Android : `HesseFortnite.apk`, à compiler depuis le dossier `android/` (voir plus bas).
+- Appli Windows : `Fortnit.exe`, à compiler depuis le dossier `desktop/`, toujours à jour (voir plus bas).
 
 ## Le jeu
 
@@ -122,10 +123,21 @@ http://ADRESSE-DE-CE-PC:3000.
 ## Structure
 
 ```
-index.html, net.js, config.js   -> le jeu (publié par GitHub Pages)
+index.html, net.js, config.js   -> le jeu (site publié sur Cloudflare Workers, worker fortnit-jeu)
+models/                         -> modèles 3D du jeu (générés par tools/blender)
 cloudflare/                     -> serveur multijoueur, comptes et amis (Cloudflare Workers)
-android/                        -> appli Android (WebView) compilée par GitHub Actions
-.github/workflows/android.yml   -> compilation de l'APK et publication
+android/                        -> appli Android (WebView)
+desktop/                        -> appli Windows (Electron)
+```
+
+## Site du jeu (Cloudflare)
+
+Le site est le worker `fortnit-jeu`, qui ne sert que des fichiers statiques. Pour le mettre à jour, copier
+`index.html`, `config.js`, `net.js` et les modèles utilisés par le jeu (`models/*.glb` sauf les fichiers bruts
+listés dans `.gitignore`) dans un dossier, puis :
+
+```bash
+npx wrangler deploy --name fortnit-jeu --assets <dossier> --compatibility-date 2026-11-02
 ```
 
 ## Serveur multijoueur (Cloudflare)
@@ -143,10 +155,23 @@ serveur n'accepte que les connexions venant du site (`ALLOWED_ORIGINS`).
 
 ## Appli Android
 
-À chaque modification du dossier `android/`, GitHub Actions compile l'APK et le publie dans la version
-`android-latest` du dépôt (« Application Android »). L'appli ouvre le jeu en ligne en plein écran ;
-il faut Internet. Pour l'installer : télécharger `HesseFortnite.apk` sur le téléphone, l'ouvrir et
+L'appli ouvre le jeu en ligne (https://fortnit-jeu.yasser-mobiarchitects.workers.dev/) en plein écran ;
+il faut Internet. Pour la compiler : ouvrir le dossier `android/` dans Android Studio, puis
+Build > Build APK(s). Pour l'installer : copier `HesseFortnite.apk` sur le téléphone, l'ouvrir et
 autoriser l'installation depuis cette source.
+
+## Appli Windows
+
+`Fortnit.exe` (dossier `desktop/`, Electron) ouvre en plein écran le jeu en ligne
+https://fortnit-jeu.yasser-mobiarchitects.workers.dev/. Le jeu n'est pas dans l'exe : chaque mise à jour du site
+arrive toute seule au prochain lancement, sans rien retélécharger. Il faut Internet.
+
+- Pas d'installation : double-clic sur `Fortnit.exe` pour jouer.
+- L'exe n'est pas signé : au premier lancement, Windows affiche « Windows a protégé votre ordinateur ».
+  Cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
+- Dans l'appli : F11 plein écran, F5 recharger.
+- Compiler soi-même : `cd desktop`, `npm install`, `npm run build` → `desktop/dist/Fortnit.exe`.
+  `npm run icon` régénère l'icône à partir de `desktop/build/icon.svg`.
 
 ## Crédits
 
@@ -155,7 +180,7 @@ L'écran **📜 Crédits** du lobby liste tout le détail. En résumé :
 - Conception et direction : Yasser (YassuxIsCrafting). Code écrit avec l'aide de Claude (Anthropic).
 - [three.js](https://threejs.org) (licence MIT), police [Bungee](https://fonts.google.com/specimen/Bungee)
   (SIL Open Font License).
-- Services : GitHub (code, Pages, Actions), Cloudflare (Workers, Durable Objects), cdnjs,
-  Google Fonts.
-- Les skins, emotes, armes, véhicules, bâtiments, musiques et effets sonores sont des créations
-  originales du projet.
+- Services : Cloudflare (Workers pour le site et le serveur, Durable Objects), cdnjs, Google Fonts.
+- Les skins, emotes, véhicules, bâtiments, musiques et effets sonores sont des créations originales du
+  projet. Le pistolet, le fusil d'assaut, le pompe et le coffre sont des modèles Sketchfab sous licence
+  CC BY 4.0, crédités dans le jeu.

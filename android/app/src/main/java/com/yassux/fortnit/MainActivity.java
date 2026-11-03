@@ -15,8 +15,8 @@ import android.webkit.WebViewClient;
 
 /** Ouvre le jeu en plein écran, en paysage, avec les commandes tactiles. */
 public class MainActivity extends Activity {
-    private static final String HOST = "yassuxiscrafting.github.io";
-    private static final String GAME_URL = "https://" + HOST + "/Fortnit/?app=1";
+    private static final String HOST = "fortnit-jeu.yasser-mobiarchitects.workers.dev";
+    private static final String GAME_URL = "https://" + HOST + "/?app=1";
     private static final String OFFLINE = "<html><body style='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;"
             + "background:#14123a;color:#fff;font-family:sans-serif;text-align:center'><div><h2>Pas de connexion</h2>"
             + "<p>Le jeu a besoin d'Internet.</p><button onclick=\"location.href='" + GAME_URL + "'\" "
