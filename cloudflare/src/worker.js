@@ -2,7 +2,7 @@
 import { DurableObject } from 'cloudflare:workers';
 
 const MAX_PLAYERS = 12, MAX_ACCOUNTS = 5000;
-const TOPICS = new Set(['shot', 'bs', 'kill', 'wall', 'chest', 'rev']);
+const TOPICS = new Set(['shot', 'bs', 'kill', 'wall', 'chest', 'rev', 'chat']);
 const MAX_FRIENDS = 60;
 const UR = /^[A-Za-z0-9_-]{3,14}$/, HEX = /^#[0-9a-f]{6}$/i, KEY = /^[0-9a-f]{64}$/;
 const enc = new TextEncoder();

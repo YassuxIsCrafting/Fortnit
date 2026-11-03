@@ -135,6 +135,17 @@ body.touch #feed{font-size:11px;max-width:36vw}body.touch #kt{font-size:18px}bod
 #cfgb .opt{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#ffffff0d;border-radius:6px;padding:6px 10px}#cfgb .opt span{flex:1}#cfgb select,#cfgb input[type=range]{font:inherit;max-width:52%}#cfgb select{padding:4px 6px;border-radius:6px}#cfgb .val{min-width:44px;text-align:right;color:var(--gold)}
 #cfgb input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold)}#cfgb .keys{font-size:12px;line-height:1.6;opacity:.9}
 #fps{bottom:calc(8px + env(safe-area-inset-bottom,0px));left:10px;font-family:system-ui,sans-serif;font-size:12px;color:#7dff8a;display:none}
+#chat{position:fixed;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px));width:min(380px,40vw);z-index:40;font-family:system-ui,sans-serif;font-size:14px;pointer-events:none}
+#chl{max-height:9.6em;overflow:hidden;display:flex;flex-direction:column;gap:3px}
+.cm{align-self:flex-start;max-width:100%;box-sizing:border-box;background:#14123acc;padding:3px 9px;border-radius:6px;color:#fff;overflow-wrap:anywhere;transition:opacity .6s;animation:cmin .25s ease-out}
+.cm b{font-weight:700}.cm.sys{color:var(--gold);font-style:italic}.cm.old{opacity:0}
+@keyframes cmin{from{transform:translateX(-14px);opacity:0}}
+#chat.on #chl{max-height:16em;overflow-y:auto;pointer-events:auto;background:#05060f99;border-radius:8px;padding:6px}#chat.on .cm.old{opacity:1}
+#chf{display:none;margin:6px 0 0}#chat.on #chf{display:block;pointer-events:auto}
+#chi{width:100%;box-sizing:border-box;font:inherit;padding:8px 12px;border:3px solid var(--ink);border-radius:6px;background:#fff;color:var(--ink);box-shadow:0 3px 0 var(--storm)}
+#chi:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+body:not(.playing) #chat{bottom:auto;top:calc(96px + env(safe-area-inset-top,0px))}body.touch #chat{bottom:auto;top:calc(130px + env(safe-area-inset-top,0px));width:min(320px,44vw);font-size:12px}
+#t-chat{left:calc(30px + min(132px,32vh) + min(54px,13vh) + env(safe-area-inset-left,0px));bottom:calc(62px + min(70px,17vh) + env(safe-area-inset-bottom,0px))}
 #t-cfg{left:calc(30px + min(132px,32vh) + min(54px,13vh) + env(safe-area-inset-left,0px));bottom:calc(62px + env(safe-area-inset-bottom,0px))}
 #cred{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#14123ae6;z-index:14;padding:16px}#credp{width:min(560px,94vw);max-height:86vh}
 #credb{overflow:auto;font-family:system-ui,sans-serif;font-size:13px;line-height:1.5;display:flex;flex-direction:column;gap:4px}#credb h3{margin:10px 0 2px;font-family:Bungee,Impact,sans-serif;font-weight:400;font-size:13px;color:var(--gold)}#credb a{color:#8de0ff}#credb p{margin:0}#credb .lic{opacity:.75;font-size:12px}
@@ -204,6 +215,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <div class="hud" id="kt"></div>
 <div class="hud" id="feed"></div>
 <div id="xpt" aria-live="polite"></div>
+<div id="chat"><div id="chl" aria-live="polite"></div><form id="chf" autocomplete="off"><input id="chi" maxlength="120" enterkeyhint="send" aria-label="Message" placeholder="Message · Entrée envoyer · Échap fermer"></form></div>
 <div class="hud" id="fps"></div>
 <div class="hud" id="mate"></div>
 <canvas id="bm" width="640" height="640"></canvas>
@@ -215,7 +227,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <div id="touch"><div id="joy"><div id="knob"></div></div>
   <button type="button" class="tb" id="t-fire" aria-label="Tirer">🔥</button><button type="button" class="tb" id="t-aim" aria-label="Viser">🎯</button><button type="button" class="tb" id="t-jump" aria-label="Sauter">⤒</button>
   <button type="button" class="tb" id="t-act" aria-label="Action">✋</button><button type="button" class="tb" id="t-wall" aria-label="Construire un mur">🧱</button><button type="button" class="tb" id="t-stair" aria-label="Construire un escalier">🪜</button>
-  <button type="button" class="tb sm" id="t-map" aria-label="Carte">🗺️</button><button type="button" class="tb sm" id="t-emo" aria-label="Emotes">💃</button><button type="button" class="tb sm" id="t-cfg" aria-label="Paramètres">⚙️</button></div>
+  <button type="button" class="tb sm" id="t-map" aria-label="Carte">🗺️</button><button type="button" class="tb sm" id="t-emo" aria-label="Emotes">💃</button><button type="button" class="tb sm" id="t-chat" aria-label="Chat">💬</button><button type="button" class="tb sm" id="t-cfg" aria-label="Paramètres">⚙️</button></div>
 <div id="rot">📱↻ Tourne ton téléphone en mode paysage pour jouer</div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <linearGradient id="lgGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6b8"/><stop offset=".48" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff8a1f"/></linearGradient>
@@ -259,7 +271,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
       <button type="button" class="md on" data-m="0" role="radio" style="--bg:linear-gradient(135deg,#2b6cff,#14123a 85%)"><i>🪂</i><b>Battle Royale</b><small>Solo ou duo · 100 joueurs</small></button>
       <button type="button" class="md" data-m="2" role="radio" style="--bg:linear-gradient(135deg,#ff5d8f,#7b3dff 55%,#14123a)"><i>🔁</i><b>Reload</b><small>Duo · 40 joueurs · réapparition</small></button>
     </div>
-  <p id="ctl"><b>ZQSD</b> bouger · <b>Souris</b> viser · <b>Clic</b> pioche / tirer · <b>Clic droit</b> viser · <b>1</b> pioche · <b>2-5</b> armes · <b>6·7·8</b> soins · <b>F</b> coffre / caisse · <b>E</b> voiture · <b>Espace</b> sauter · <b>A</b> (Q en QWERTY) mur · <b>R</b> escalier · <b>M</b> carte · <b>B</b> roue des emotes · <b>Échap</b> pause (en solo)</p></div>
+  <p id="ctl"><b>ZQSD</b> bouger · <b>Souris</b> viser · <b>Clic</b> pioche / tirer · <b>Clic droit</b> viser · <b>1</b> pioche · <b>2-5</b> armes · <b>6·7·8</b> soins · <b>F</b> coffre / caisse · <b>E</b> voiture · <b>Espace</b> sauter · <b>A</b> (Q en QWERTY) mur · <b>R</b> escalier · <b>M</b> carte · <b>B</b> roue des emotes · <b>G</b> chat · <b>Échap</b> pause (en solo)</p></div>
 </div>
 <div class="panel" id="inv"><p id="invt"></p><div class="row"><button type="button" id="inv-ok">Accepter</button><button type="button" id="inv-no">Refuser</button></div></div>
 <div id="dev" role="dialog" aria-modal="true" aria-labelledby="devt"><div class="panel" id="devp"><h2 id="devt">Tu joues sur…</h2><div class="row"><button type="button" id="dev-pc">🖥️ PC</button><button type="button" id="dev-mo">📱 Mobile</button></div><p class="hint">PC : clavier et souris. Mobile : commandes tactiles à l'écran. Tu pourras changer depuis le lobby.</p></div></div>
@@ -1636,7 +1648,18 @@ document.getElementById('pseudo').value='Joueur'+(100+Math.floor(Math.random()*9
 const TIPS=['<b>Maj</b> pour sprinter, mais pas en tirant ni en visant.','Les <b>falaises</b> se contournent : cherche la pente douce pour monter.','Ouvre les coffres dorés : ils donnent les <b>meilleures raretés</b>.','La <b>tempête</b> ignore le bouclier : surveille le cercle blanc sur la carte.','Construis un <b>mur</b> pour te couvrir avant de te soigner.','Le ciel devient violet quand la zone se referme : <b>ne traîne pas</b>.','Dans l’<b>eau</b> du Lac Miroir, tu avances moins vite.','Le <b>sniper</b> fait mal de loin mais recharge lentement.','Appuie sur <b>M</b> pour ouvrir la carte et repérer les lieux.','Saute du bus <b>tard</b> pour atterrir loin des autres.'];
 let loading=false;document.getElementById("go").onclick=()=>{if(run||loading)return;loading=true;$('ltip').innerHTML='💡 '+TIPS[Math.floor(Math.random()*TIPS.length)];$('load').classList.add('on');setTimeout(()=>{try{enterIsland()}finally{loading=false;$('load').classList.remove('on')}},1100)};
 document.getElementById('cine').addEventListener('pointerdown',()=>{if(finale){if(finale.t>1.3)finDone();return}endCine();try{cv.requestPointerLock()}catch(x){}});
-addEventListener("keydown",e=>{if(finale){if(!e.repeat&&finale.t>1.3)finDone();return}if(cine){if(!e.repeat)endCine();return}if(paused){if(cfgOpen()&&(e.code==="Escape"||e.code==="KeyP"))closeCfg();else if(e.code==="KeyP"&&!e.repeat)openCfg();return}keys[e.code]=true;
+// Chat (G) : messages à tout le salon, qui s'effacent au bout de 8 s ; l'historique revient quand le chat est ouvert.
+let chatOn=false,chatLast=0,chatSolo=false;
+const chatHue=s=>{let h=0;for(const c of String(s))h=h*31+c.charCodeAt(0)|0;return Math.abs(h)%360};
+const chatTxt=v=>String(v||'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,120);
+function chatAdd(name,txt,me,sys){const box=$('chl'),d=document.createElement('div');d.className='cm'+(sys?' sys':'');if(!sys){const b=document.createElement('b');b.textContent=name;b.style.color=me?'var(--gold)':'hsl('+chatHue(name)+' 90% 72%)';d.append(b,' ')}d.append(txt);box.append(d);while(box.children.length>40)box.firstChild.remove();box.scrollTop=box.scrollHeight;setTimeout(()=>d.classList.add('old'),8000)}
+function openChat(){if(chatOn||finale||cine)return;chatOn=true;keys={};down=aim=false;$('chat').classList.add('on');const i=$('chi');i.value='';i.focus();$('chl').scrollTop=1e9;if(!room&&!chatSolo){chatSolo=true;chatAdd('','Mode solo : seuls les vrais joueurs connectés peuvent lire le chat.',0,1)}}
+function closeChat(send){if(!chatOn)return;const i=$('chi'),t=chatTxt(i.value);chatOn=false;keys={};$('chat').classList.remove('on');i.blur();
+  if(send&&t){const now=Date.now();if(now-chatLast<900)chatAdd('','Doucement : un message par seconde.',0,1);else{chatLast=now;chatAdd(myName,t,1);if(room)room.emit('chat',{n:myName,t}).catch(()=>{})}}
+  if(run&&!IS_TOUCH&&!paused&&document.pointerLockElement!==cv)try{cv.requestPointerLock()}catch(x){}}
+$('chf').addEventListener('submit',e=>{e.preventDefault();closeChat(true)});$('chi').addEventListener('blur',()=>closeChat(false));
+addEventListener("keydown",e=>{if(chatOn){if(e.code==="Enter"||e.code==="NumpadEnter"||e.key==="Enter"){e.preventDefault();closeChat(true)}else if(e.code==="Escape")closeChat(false);return}if(finale){if(!e.repeat&&finale.t>1.3)finDone();return}if(cine){if(!e.repeat)endCine();return}if(paused){if(cfgOpen()&&(e.code==="Escape"||e.code==="KeyP"))closeCfg();else if(e.code==="KeyP"&&!e.repeat)openCfg();return}
+  if(e.code==="KeyG"&&!e.repeat&&!ewOpen&&!cfgOpen()&&!/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||"")&&$("acct").style.display!=="flex"){e.preventDefault();openChat();return}keys[e.code]=true;
   if(!run){const typing=/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||"");if(e.code==="Escape"&&cfgOpen())closeCfg();else if(e.code==="Escape"&&ewOpen)closeWheel(false);else if(e.code==="KeyB"&&!e.repeat&&!typing&&document.getElementById("acct").style.display!=="flex"){e.preventDefault();if(ewOpen)closeWheel(false);else openWheel()}return}if(e.code==="KeyE"&&!e.repeat&&!liveOthers().some(o=>isMate(o)&&o.kn&&dist(o,P)<55)&&!(P.carry&&vans.some(v=>Math.hypot(v.x-P.x,v.y-P.y)<75)))toggleCar();if(e.code==="KeyB"&&!e.repeat){if(ewOpen)closeWheel(false);else openWheel()}if(e.code==="Escape"&&ewOpen)closeWheel(false);if(e.code==="KeyP"&&!e.repeat){if(cfgOpen())closeCfg();else openCfg()}if(e.code==="Escape"&&cfgOpen())closeCfg();if(e.code==="Space"){e.preventDefault();if(P.mode==="bus")P.exitReq=true}
   if(e.code==='KeyQ'||(e.key&&e.key.toLowerCase()==='a'&&e.code!=='KeyA'))build(false);else if(e.code==='KeyR')build(true);
   if(e.code==='KeyF'&&P.z<40){const c=chests.find(c=>!c.open&&Math.hypot(c.x-P.x,c.y-P.y)<70);if(c)openChest(c,true)}
@@ -1969,6 +1992,7 @@ const joy={x:0,y:0};
   hold('t-map',()=>kd('KeyM','m'),()=>ku('KeyM','m'));
   hold('t-emo',()=>{if(!ewOpen)openWheel()});
   hold("t-cfg",()=>openCfg());
+  hold("t-chat",()=>{},()=>openChat());
   let actCode='KeyE';
   hold('t-act',()=>{actCode=P&&P.mode!=='bus'&&!P.drive&&chests.some(c=>!c.open&&Math.hypot(c.x-P.x,c.y-P.y)<70)?'KeyF':P&&P.mode==='bus'?'Space':'KeyE';kd(actCode,actCode==='Space'?' ':'')},()=>ku(actCode));
   hbEls.forEach((el,i)=>el.addEventListener('touchstart',e=>{e.preventDefault();if(!run)return;const s=SLOTS[i];if(s.w!==undefined){if(P.own[s.w]){P.sel=s.w;P.use=null}}else useItem(s.i)},{passive:false}));
@@ -2089,7 +2113,7 @@ function setPause(on){
   else{paused=false;pOff+=Date.now()-pauseAt;last=performance.now();closeCfg();$('pause').classList.remove('on');if(!IS_TOUCH)try{cv.requestPointerLock()}catch(x){}}
 }
 $('pausego').onclick=()=>setPause(false);$('pausecfg').onclick=openCfg;
-document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&!ewOpen)setPause(true)});
+document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&!ewOpen&&!chatOn)setPause(true)});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)setPause(true)});
 $('cfgbtn').onclick=openCfg;$('cfgx').onclick=closeCfg;$('cfgreset').onclick=()=>{CFG=Object.assign({},CFG_DEF);saveCfg();applyCfg();renderCfg()};
 let fpsN=0,fpsT=0;function fpsTick(dt){if(!CFG.fps)return;fpsN++;fpsT+=dt;if(fpsT>=.5){$('fps').textContent=Math.round(fpsN/fpsT)+' FPS';fpsN=0;fpsT=0}}
@@ -2187,6 +2211,7 @@ function wire(){
   room.on('shot',m=>{const d=m.data||{};if(m.sameTab||!run||!isFinite(d.x+d.y)||!Array.isArray(d.a))return;const bw=WEAPONS[d.w|0]||WEAPONS[0],w=isFinite(d.m)&&d.m!==1?Object.assign({},bw,{d:bw.d*Math.max(1,Math.min(1.3,d.m))}):bw;if(!bw.melee)flash(d.x,d.y,isFinite(d.z)?d.z:32);if(!bw.melee)sfx("shot",d.w|0,Math.hypot(d.x-P.x,d.y-P.y));for(const a of d.a.slice(0,8))if(isFinite(a))spawn(d.x,d.y,a,others.get(m.peer)||null,w,d.z,d.s)});
   room.on('bs',m=>{if(m.sameTab||!run||!Array.isArray(m.data))return;for(const d of m.data.slice(0,20))if(Array.isArray(d)&&isFinite(d[1]+d[2]+d[3])){flash(d[1],d[2],32);sfx("shot",1,Math.hypot(d[1]-P.x,d[2]-P.y));spawn(d[1],d[2],d[3],botsAll[d[0]]||null,BOTW,32,d[4])}});
   room.on("rev",m=>{const d=m.data||{};if(m.sameTab||!run)return;if(d.to===myId()&&d.van!==undefined){if(P.mode==="dead")rebootSelf(d.van|0);return}if(d.to===myId()&&P.knocked){P.knocked=false;P.hp=30;feed("🙌 Tu as été relevé !")}});
+  room.on('chat',m=>{const d=m.data||{},t=chatTxt(d.t);if(m.sameTab||!t)return;const e=others.get(m.peer);chatAdd((e&&isMate(e)?'🤝 ':'')+(cleanName(d.n)||e&&e.n||'Joueur'),t,0)});
   room.on('kill',m=>{if(m.sameTab||!run)return;if(m.data&&m.data.k===myId())addKill()});
   room.on('chest',m=>{const d=m.data||{};if(m.sameTab||!run)return;const c=chests[d.i|0];if(c)openChest(c,false)});
   room.on('wall',m=>{const d=m.data||{};if(m.sameTab||!run||!isFinite(d.x+d.y))return;const gx=Math.floor(d.x/WS)*WS,gy=Math.floor(d.y/WS)*WS,b=Math.max(0,Math.min(TOPB,Math.round((+d.b||0)/WS)*WS));if(taken(gx,gy,b))return;if(d.s)addStair(gx,gy,b,(d.d|0)&3);else addWall(gx,gy,b)});

@@ -56,7 +56,7 @@ sur PC et sur mobile.
 
 **PC** : ZQSD bouger · Souris viser · Clic pioche / tirer · Clic droit viser · 1 pioche · 2-5 armes ·
 6-7-8 soins · F coffre / caisse · E voiture (ou relever un équipier) · Espace sauter (et quitter le bus) ·
-A (Q en QWERTY) mur · R escalier · M carte · B roue des emotes · P paramètres
+A (Q en QWERTY) mur · R escalier · M carte · B roue des emotes · G chat · P paramètres
 
 **Mobile** : joystick à gauche pour bouger, glisser à droite pour viser, boutons 🔥 tirer · 🎯 viser ·
 ⤒ sauter · ✋ action · 🧱 mur · 🪜 escalier · 🗺️ carte · 💃 emotes · ⚙️ paramètres. Touche la barre du
