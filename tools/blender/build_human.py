@@ -13,7 +13,8 @@ from mathutils import Vector
 OUT_HUMAN = r"C:/Repos/Fortnit/models/human.glb"
 COLL_HUMAN = "Fortnit_Human"
 COLS = {"Skin": 0xf1c27d, "Shirt": 0x3da5ff, "Pants": 0x2b2b3a, "Belt": 0x1b1b22, "Shoes": 0xf5f5f5,
-        "Hair": 0x3b2a1e, "EyeW": 0xffffff, "EyeD": 0x1b1b22}
+        "Hair": 0x3b2a1e, "EyeW": 0xffffff, "EyeD": 0x1b1b22, "Cap": 0x4b5320, "Gear": 0x3d4a2a}
+BOOT = [0.13]  # hauteur des chaussures (0.22 : rangers du soldat)
 HEAD_C, HEAD_R = Vector((0.01, 0, 1.64)), 0.115
 
 
@@ -81,7 +82,7 @@ def body_mesh(coll):
     # coupes nettes aux ourlets (chaussures, ceinture, manches) avant d'attribuer les matériaux par zone
     bm = bmesh.new()
     bm.from_mesh(me)
-    for co, no in (((0, 0, 0.13), (0, 0, 1)), ((0, 0, 0.965), (0, 0, 1)), ((0, 0, 1.02), (0, 0, 1)),
+    for co, no in (((0, 0, BOOT[0]), (0, 0, 1)), ((0, 0, 0.965), (0, 0, 1)), ((0, 0, 1.02), (0, 0, 1)),
                    ((0, 0.36, 0), (0, 1, 0)), ((0, -0.36, 0), (0, 1, 0)),
                    ((0, 0, 1.445), (0, 0, 1)), ((0, 0.11, 0), (0, 1, 0)), ((0, -0.11, 0), (0, 1, 0))):
         bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=co, plane_no=no)
@@ -91,7 +92,7 @@ def body_mesh(coll):
         me.materials.append(mat(m))
     for f in me.polygons:
         c = f.center
-        if c.z < 0.13:
+        if c.z < BOOT[0]:
             k = "Shoes"
         elif 0.965 < c.z < 1.02 and abs(c.y) < 0.2:
             k = "Belt"
@@ -135,6 +136,14 @@ def jaw(bm):
         v.co.x += 0.014 * t * max(0.0, v.co.x - HEAD_C.x) / HEAD_R * 3
 
 
+def cap_cut(bm):
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().z < HEAD_C.z + 0.035], context="FACES")
+
+
+def visor_cut(bm):
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().x < 0.085], context="FACES")
+
+
 def hair_cut(bm):
     gone = [f for f in bm.faces if (lambda c: (c.x > 0.045 and c.z < 1.705) or c.z < 1.60 or (abs(c.y) > 0.09 and c.z < 1.64 and c.x > -0.03))(f.calc_center_median())]
     bmesh.ops.delete(bm, geom=gone, context="FACES")
@@ -151,6 +160,9 @@ def head_parts(coll):
                 part(coll, "H_eyeD", "sphere", (0.119, 0.037 * s, 1.654), (0.006, 0.009, 0.009), "EyeD", u=10, v=6),
                 part(coll, "H_brow", "cube", (0.117, 0.038 * s, 1.684), (0.004, 0.017, 0.0035), "Hair")]
     obs.append(part(coll, "H_mouth", "cube", (0.13, 0, 1.584), (0.003, 0.017, 0.0028), "EyeD"))
+    # casquette (matériau Cap) : masquée par le jeu sauf pour les skins qui la portent
+    obs.append(part(coll, "H_cap", "sphere", hc + Vector((-0.004, 0, 0.03)), (r * 1.13, r * 1.05, r * 0.92), "Cap", u=24, v=16, cut=cap_cut))
+    obs.append(part(coll, "H_visor", "sphere", (0.118, 0, 1.676), (0.062, 0.092, 0.009), "Cap", u=20, v=8, cut=visor_cut))
     return obs
 
 
@@ -183,7 +195,23 @@ def weights(co):
     return {"Hips": 1 - t, "Spine": t}
 
 
-def build_human():
+def gear_parts(coll):
+    """Équipement du soldat (matériau Gear) : gilet, poches, bretelles, sac, genouillères, ceinturon."""
+    obs = [part(coll, "G_vest_f", "cube", (0.112, 0, 1.25), (0.032, 0.15, 0.14), "Gear"),
+           part(coll, "G_vest_b", "cube", (-0.108, 0, 1.26), (0.03, 0.15, 0.14), "Gear"),
+           part(coll, "G_pack", "cube", (-0.165, 0, 1.24), (0.045, 0.12, 0.15), "Gear"),
+           part(coll, "G_packtop", "sphere", (-0.165, 0, 1.39), (0.05, 0.12, 0.03), "Gear", u=16, v=8)]
+    for y in (-0.075, 0, 0.075):
+        obs.append(part(coll, "G_pouch", "cube", (0.152, y, 1.17), (0.016, 0.03, 0.04), "Gear"))
+    for s in (1, -1):
+        obs += [part(coll, "G_strap", "cube", (0.0, 0.1 * s, 1.425), (0.13, 0.03, 0.012), "Gear"),
+                part(coll, "G_knee", "sphere", (0.055, 0.095 * s, 0.50), (0.022, 0.05, 0.055), "Gear", u=14, v=10),
+                part(coll, "G_hip", "cube", (0.02, 0.15 * s, 0.97), (0.04, 0.025, 0.045), "Gear")]
+    return obs
+
+
+def build_human(soldier=False):
+    BOOT[0] = 0.22 if soldier else 0.13
     coll = bpy.data.collections.get(COLL_HUMAN) or bpy.data.collections.new(COLL_HUMAN)
     if coll.name not in bpy.context.scene.collection.children:
         bpy.context.scene.collection.children.link(coll)
@@ -195,13 +223,21 @@ def build_human():
     if bpy.context.object and bpy.context.object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     body = body_mesh(coll)
-    parts = head_parts(coll)
-    for o in bpy.context.view_layer.objects:
-        o.select_set(o in [body] + parts)
-    bpy.context.view_layer.objects.active = body
-    bpy.ops.object.join()
+    parts = head_parts(coll) + (gear_parts(coll) if soldier else [])
+    # fusion par l'API de données (l'opérateur join ne marche pas toujours en arrière-plan) ;
+    # chaque pièce porte les matériaux dans l'ordre de MATS, donc les index restent justes
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    for o in parts:
+        o.data.transform(o.matrix_world)
+        bm.from_mesh(o.data)
+        d = o.data
+        bpy.data.objects.remove(o)
+        bpy.data.meshes.remove(d)
+    bm.to_mesh(body.data)
+    bm.free()
     body.name = body.data.name = "Human"
-    me = body.data  # chaque pièce porte les matériaux dans l'ordre de MATS : la jointure garde les index
+    me = body.data
 
     arm = bpy.data.armatures.new("Armature")
     rig = link(coll, bpy.data.objects.new("Armature", arm))
@@ -230,16 +266,16 @@ def build_human():
     return coll, {"verts": len(me.vertices), "tris": sum(len(p.vertices) - 2 for p in me.polygons)}
 
 
-def export_human(coll):
+def export_human(coll, out=OUT_HUMAN):
     rig = next(o for o in coll.objects if o.type == "ARMATURE")
     loc = tuple(rig.location)
     rig.location = (0, 0, 0)
     bpy.ops.object.select_all(action="DESELECT")
     for ob in coll.objects:
         ob.select_set(True)
-    bpy.ops.export_scene.gltf(filepath=OUT_HUMAN, export_format="GLB", use_selection=True, export_apply=False,
+    bpy.ops.export_scene.gltf(filepath=out, export_format="GLB", use_selection=True, export_apply=False,
                               export_yup=True, export_normals=True, export_texcoords=False, export_animations=False,
                               export_skins=True)
     rig.location = loc
     bpy.ops.object.select_all(action="DESELECT")
-    return os.path.getsize(OUT_HUMAN)
+    return os.path.getsize(out)

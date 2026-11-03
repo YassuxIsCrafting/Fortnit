@@ -7,3 +7,12 @@ android/local.properties
 models/originaux/
 .claude/
 android/.idea/
+
+# Modèles bruts téléchargés (sources lourdes ou non utilisables) : seules les versions préparées par tools/blender sont versionnées
+models/battle_bus.glb
+models/fortnite_bolt-action_rifle.glb
+models/jonesy_fortnite_rigged.glb
+models/medieval_chest.glb
+models/sg553_assault_rifle.glb
+models/shotgun.glb
+models/t77_handgun.glb
