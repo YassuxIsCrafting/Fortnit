@@ -432,7 +432,7 @@ function mkWeapon(i){
 }
 function mergeGroup(g){g.updateMatrixWorld(true);const pos=[],nor=[],col=[],c=new THREE.Color();g.traverse(o=>{if(!o.isMesh)return;const q=(o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone()).applyMatrix4(o.matrixWorld);pos.push(...q.attributes.position.array);nor.push(...q.attributes.normal.array);c.copy(o.material.color);for(let k=0;k<q.attributes.position.count;k++)col.push(c.r,c.g,c.b)});
   const r=new THREE.BufferGeometry();r.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));r.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));r.setAttribute('color',new THREE.Float32BufferAttribute(col,3));return r}
-const mWpn=new THREE.MeshLambertMaterial({vertexColors:true}),wmodel=i=>{if(!WM[i])WM[i]=mergeGroup(mkWeapon(i));const m=new THREE.Mesh(WM[i],mWpn);m.castShadow=true;return m};
+const mWpn=new THREE.MeshLambertMaterial({vertexColors:true}),WMAT=[],wmodel=i=>{if(!WM[i])WM[i]=mergeGroup(mkWeapon(i));const m=new THREE.Mesh(WM[i],WMAT[i]||mWpn);m.castShadow=true;return m};
 function setWeapon(g,i){const s=g.children[2];if(s.userData.w===i)return;s.userData.w=i;s.clear();s.add(wmodel(i))}
 const gGlow=new THREE.SphereGeometry(20,10,8),mGlow=RAR.map(r=>new THREE.MeshBasicMaterial({color:r.c,transparent:true,opacity:.3,depthWrite:false}));
 function lootMesh(k,r){
@@ -448,10 +448,17 @@ function itemGeo(node){node.updateMatrixWorld(true);const inv=new THREE.Matrix4(
     for(let j=0;j<p.length;j++){P.push(p[j]);N.push(n[j])}for(let j=0;j<p.length/3;j++)K.push(c.r,c.g,c.b)});
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));g.setAttribute('color',new THREE.Float32BufferAttribute(K,3));return g}
 function itemsLoad(){if(!THREE.GLTFLoader)return;new THREE.GLTFLoader().load('models/items.glb',m=>{
-  const swap=[];m.scene.children.forEach(n=>{const g=itemGeo(n);if(/^W\d$/.test(n.name)){const i=+n.name[1];if(WM[i])swap.push([WM[i],g]);WM[i]=g}else IG[n.name.slice(2)]=g});
+  const swap=[];m.scene.children.forEach(n=>{const g=itemGeo(n);if(/^W\d$/.test(n.name)){const i=+n.name[1];if(WMAT[i])return;if(WM[i])swap.push([WM[i],g]);WM[i]=g}else IG[n.name.slice(2)]=g});
   for(const s of[scene,ls])s.traverse(o=>{if(o.isMesh)for(const[a,b]of swap)if(o.geometry===a)o.geometry=b});
   for(const l of loot||[])if(IG[l.k]&&l.m.isMesh){l.m.geometry=IG[l.k];l.m.material=mWpn}},undefined,()=>{})}
 itemsLoad();
+// Armes texturées (Sketchfab, CC-BY-4.0, voir les crédits) préparées par tools/blender/build_weapons_hd.py :
+// pistolet, fusil d'assaut et pompe ; poignée à l'origine comme les autres armes, texture affichée en Lambert.
+function weaponsHdLoad(){if(!THREE.GLTFLoader)return;new THREE.GLTFLoader().load('models/weapons_hd.glb',m=>{
+  m.scene.children.forEach(n=>{if(!/^W\d$/.test(n.name)||!n.isMesh)return;const i=+n.name[1],old=WM[i],g=n.geometry,mp=n.material.map;if(mp)mp.encoding=THREE.LinearEncoding;
+    const mt=WMAT[i]=new THREE.MeshLambertMaterial({map:mp,color:mp?0xffffff:n.material.color});g.computeBoundingBox();CT[i]=(g.boundingBox.min.x+g.boundingBox.max.x)/2;WM[i]=g;
+    for(const sc of[scene,ls])sc.traverse(o=>{if(o.isMesh&&old&&o.geometry===old){o.geometry=g;o.material=mt;if(o.scale.x!==1)o.position.x=-CT[i]*o.scale.x}})})},undefined,()=>{})}
+weaponsHdLoad();
 const SKINS=['#ffe0bd','#f1c27d','#c68642','#8d5524','#4b2e1a','#8de07a'],OUT=['#3da5ff','#ff5d8f','#7dff8a','#ffd23f','#c27bff','#ff7a3d','#00e5ff','#f5f5f5','#2b2b3a','#ff4d4d'],HATS=['Aucun','Casquette','Couronne','Casque','Antenne'];
 const HEX=/^#[0-9a-f]{6}$/i,clampI=(v,n)=>Math.max(0,Math.min(n-1,v|0)),mGold=L(0xffd23f),mGrey=L(0x9aa3ad);
 // Parapluies-planeurs : motifs originaux inspirés de l'ambiance des grands shonens, sans nom, logo ni emblème repris.
@@ -484,8 +491,9 @@ const ownColor=c=>OUT.includes(c)?(COLP[OUT.indexOf(c)]===0||own.c.includes(c)):
 const saveU=()=>{try{localStorage.setItem('ie_u',JSON.stringify({o:own.u,c:look.u}))}catch(e){}},loadU=()=>{let d={};try{d=JSON.parse(localStorage.getItem('ie_u')||'{}')}catch(e){}own.u=[...new Set([...own.u,...(Array.isArray(d.o)?d.o:[])])].filter(i=>Number.isInteger(i)&&i>0&&i<GLD.length);if(!look.u&&d.c)look.u=clampI(d.c,GLD.length);if(!ownGlid(look.u))look.u=0};loadU();
 if(!ownColor(look.c))look.c=OUT[0];if(!ownHat(look.h))look.h=0;if(!ownSkin(look.k))look.k=0;
 const lookOf=(pr,id)=>({u:clampI(pr.u,GLD.length),c:HEX.test(pr.c)?pr.c:'#'+hue(id).getHexString(),sk:SKINS[clampI(pr.s,SKINS.length)],h:clampI(pr.h,HATS.length),k:clampI(pr.k,40)});
+const hatG=g=>{if(!g.userData.hat){g.userData.hat=new THREE.Group();g.add(g.userData.hat)}return g.userData.hat};
 function addHat(g,i,col){
-  const m=(geo,mat,x,y,z)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);g.add(o)},c=L(col);
+  const m=(geo,mat,x,y,z)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);hatG(g).add(o)},c=L(col);
   if(i===1){m(new THREE.CylinderGeometry(11.5,11.5,6,12),c,0,55,0);m(new THREE.BoxGeometry(12,2,16),c,9,52,0)}
   else if(i===2)m(new THREE.CylinderGeometry(11,8,10,6),mGold,0,58,0);
   else if(i===3)m(new THREE.SphereGeometry(13,12,8,0,6.2832,0,1.5708),mGrey,0,47,0);
@@ -554,7 +562,7 @@ function mkChar(col,bar,name,sk,hat,w,k){
   g.userData.fc=h.userData.fc||null;g.userData.blob=blob(g,40);
   if(bar){const U=g.userData,fm=new THREE.Mesh(gFar,mFar[col]||(mFar[col]=new THREE.MeshLambertMaterial({color:col,vertexColors:true})));fm.visible=false;g.add(fm);U.fm=fm;
     g.updateMatrixWorld=function(f){if(!g.visible)return;if(!U.far||(U.gl&&U.gl.visible)||U.mk)return THREE.Object3D.prototype.updateMatrixWorld.call(g,f);g.updateMatrix();g.matrixWorld.multiplyMatrices(g.parent.matrixWorld,g.matrix);g.matrixWorldNeedsUpdate=false;fm.matrixWorld.copy(g.matrixWorld)}}
-  if(k===HK)heroAttach(g,b,h,u);
+  if(k===HK)heroAttach(g,b,h,u);else if(!k&&!bar)realAttach(g,b,h,u);
   return g;
 }
 // Skin 3D : le squelette recopie les poses des membres en blocs, donc marche, emotes et planeur marchent sans code à part.
@@ -562,20 +570,27 @@ function mkChar(col,bar,name,sk,hat,w,k){
 let heroP=null;const HERO_S=34,_hv=new THREE.Vector3(),_hz=new THREE.Vector3(),AX_Y=new THREE.Vector3(0,1,0);
 let heroSrc=null,heroOn=0;const HT={},HERO_MAX=12,HERO_R=650,FAR_R=800;
 function heroLoad(){return heroP||(heroP=new Promise((ok,no)=>{if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return no();new THREE.GLTFLoader().load('models/hero-eclair.glb',m=>ok(heroSrc=m.scene),undefined,no)}).catch(()=>null))}
-function heroBuild(g,src,b,h,u,tint){
-  const H=THREE.SkeletonUtils.clone(src),box=new THREE.Group(),B={};let sk=null;H.traverse(o=>{if(o.isSkinnedMesh)sk=o;if(o.isBone)B[o.name]=o});if(!sk)return;
-  const key=tint===undefined?'x':tint;if(!HT[key]){const mp=sk.material.map;if(mp)mp.encoding=THREE.LinearEncoding;HT[key]=new THREE.MeshLambertMaterial({map:mp,skinning:true});if(tint!==undefined)HT[key].color.setHex(tint).lerp(new THREE.Color(0xffffff),.45)}
-  sk.material=HT[key];sk.castShadow=true;sk.frustumCulled=false;
-  box.scale.setScalar(HERO_S);box.add(H);g.add(box);
-  const U=g.userData,armP=_hz.set(0,0,1).clone(),armN=_hz.set(0,0,-1).clone(),arm=(a,up,fo,rest)=>{const d=_hv.copy(DOWN).applyQuaternion(a.quaternion);up.quaternion.setFromUnitVectors(rest,d);const bend=1-Math.max(0,Math.min(1,d.y+1));fo.rotation.set(0,0,0);fo.rotateOnAxis(AX_Y,(rest.z>0?1:-1)*bend*-.5)};
+function heroBuild(g,src,b,h,u,tint,real){
+  const H=THREE.SkeletonUtils.clone(src),box=new THREE.Group(),B={},sks=[];H.traverse(o=>{if(o.isSkinnedMesh)sks.push(o);if(o.isBone)B[o.name]=o});if(!sks.length)return;const sk=sks[0];
+  if(real)realPaint(sks,b.material.color,h.material.color);else{const key=tint===undefined?'x':tint;if(!HT[key]){const mp=sk.material.map;if(mp)mp.encoding=THREE.LinearEncoding;HT[key]=new THREE.MeshLambertMaterial({map:mp,skinning:true});if(tint!==undefined)HT[key].color.setHex(tint).lerp(new THREE.Color(0xffffff),.45)}sk.material=HT[key]}
+  for(const o of sks){o.castShadow=true;o.frustumCulled=false}
+  box.scale.setScalar(real?REAL_S:HERO_S);box.add(H);g.add(box);
+  const U=g.userData,armP=_hz.set(0,0,1).clone(),armN=_hz.set(0,0,-1).clone(),arm=(a,up,fo,rest)=>{const d=_hv.copy(DOWN).applyQuaternion(a.quaternion);if(real){d.z*=RA.in;d.x+=RA.fw;d.normalize()}up.quaternion.setFromUnitVectors(rest,d);const bend=1-Math.max(0,Math.min(1,d.y+1));fo.rotation.set(0,0,0);fo.rotateOnAxis(AX_Y,(rest.z>0?1:-1)*bend*(real?RA.bend:-.5))};
   U.heroSync=()=>{const l0=U.legs[0].rotation.z,l1=U.legs[1].rotation.z;B.LegN.rotation.z=l0;B.LegP.rotation.z=l1;B.ShinN.rotation.z=-Math.abs(l0)*.9;B.ShinP.rotation.z=-Math.abs(l1)*.9;arm(U.arms[0],B.ArmP,B.ForeP,armP);arm(U.arms[1],B.ArmN,B.ForeN,armN)};
   const umw=g.updateMatrixWorld;g.updateMatrixWorld=function(f){if(U.hon)U.heroSync();umw.call(g,f)};
-  U.heroSet=on=>{U.hon=on;box.visible=on;b.visible=h.visible=!on;for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;u.position.set(on?13:10,on?31:27,5)};U.heroSet(true);
+  U.heroSet=on=>{U.hon=on;box.visible=on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;u.position.set(on?(real?RA.gx:13):10,on?(real?RA.gy:31):27,5)};U.heroSet(true);
 }
 function heroAttach(g,b,h,u){heroLoad().then(src=>{if(src)heroBuild(g,src,b,h,u)})}
+// Personnage réaliste (tools/blender/build_human.py), même squelette que le Héros Éclair : tenue par défaut des joueurs et bots proches.
+// T-shirt = couleur de la tenue, peau = teinte choisie ; sans le fichier, le corps en pièces reste affiché.
+let realP=null,realSrc=null;const REAL_S=33,RA={in:.35,fw:.3,bend:-1.2,gx:15,gy:39},RM={},RCOL={Pants:0x2b2b3a,Belt:0x1b1b22,Shoes:0xf5f5f5,Hair:0x3b2a1e,EyeW:0xffffff,EyeD:0x1b1b22};
+function realLoad(){return realP||(realP=new Promise((ok,no)=>{if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return no();new THREE.GLTFLoader().load('models/human.glb',m=>ok(realSrc=m.scene),undefined,no)}).catch(()=>null))}
+function realPaint(sks,shirt,skin){for(const o of sks){const n=o.material.name.replace(/^H_/,''),c=n==='Shirt'?shirt.getHex():n==='Skin'?skin.getHex():RCOL[n]!==undefined?RCOL[n]:0xffffff,k=n+c;o.material=RM[k]||(RM[k]=new THREE.MeshLambertMaterial({color:c,skinning:true}))}}
+function realAttach(g,b,h,u){realLoad().then(src=>{if(src&&!g.userData.heroSet)heroBuild(g,src,b,h,u,undefined,true)})}
+realLoad();
 // Bots : vrai modèle de près (avec leur couleur), blocs de loin pour rester fluide.
 function setFar(g,on){const U=g.userData;if(!!U.far===on)return;U.far=on;for(const c of g.children)c.visible=on?c===U.fm||c===U.mk:c!==U.fm;if(!on){if(U.heroSet)U.heroSet(!!U.hon);g.matrixWorldNeedsUpdate=true}}
-function botLod(b,d){const U=b.m.userData,hq=HQ();setFar(b.m,d>(hq?FAR_R:450));const want=hq&&d<HERO_R;if(want&&!U.heroSet&&heroSrc&&heroOn<HERO_MAX){heroBuild(b.m,heroSrc,b.m.children[0],b.m.children[1],b.m.children[2],BOTC[b.i%BOTC.length]);heroOn++;return}if(!U.heroSet)return;if(want!==!!U.hon){if(want&&heroOn>=HERO_MAX)return;heroOn+=want?1:-1;U.heroSet(want)}}
+function botLod(b,d){const U=b.m.userData,hq=HQ();setFar(b.m,d>(hq?FAR_R:450));const want=hq&&d<HERO_R;if(want&&!U.heroSet&&(realSrc||heroSrc)&&heroOn<HERO_MAX){const c=b.m.children;if(realSrc)heroBuild(b.m,realSrc,c[0],c[1],c[2],undefined,true);else heroBuild(b.m,heroSrc,c[0],c[1],c[2],BOTC[b.i%BOTC.length]);heroOn++;return}if(!U.heroSet)return;if(want!==!!U.hon){if(want&&heroOn>=HERO_MAX)return;heroOn+=want?1:-1;U.heroSet(want)}}
 const BOTC=[0xff7a3d,0x3da5ff,0xff5d8f,0x7dff8a,0xc27bff,0xffd23f,0x00e5ff,0xff4d4d,0xf5f5f5];
 let cars=[];
 // Horloge de jeu : Date.now() moins le temps passé en pause (solo). On rajoute pOff quand une date part sur le réseau.
@@ -1005,7 +1020,7 @@ window.IE_onSocial=m=>{
 };
 const crownHeld=()=>!!wallet.cr;let lastPh=-1,actx=null;
 function chime(){sfx("chime")}
-function addCrown(g){const c=new THREE.Mesh(new THREE.CylinderGeometry(11,8,10,6),mGold);c.position.y=61;c.castShadow=true;g.add(c)}
+function addCrown(g){const c=new THREE.Mesh(new THREE.CylinderGeometry(11,8,10,6),mGold);c.position.y=61;c.castShadow=true;hatG(g).add(c)}
 // Fourgons de relance (mode Duo) : un équipier éliminé laisse une carte de relance ; son coéquipier la ramasse
 // et l'apporte à un fourgon pour le faire revenir (sans ses objets). Modèle et noms originaux du projet.
 const VAN_CD=60000,CARD_TTL=90000,REBOOT_T=5;let vans=[],cards=[];
@@ -1113,6 +1128,12 @@ function bldLoad(){if(!THREE.GLTFLoader)return;new THREE.GLTFLoader().load('mode
     for(let j=0;j<p.length;j+=3){for(let a=0;a<3;a++){p[j+a]/=S[a];n[j+a]/=S[a]}const l=Math.hypot(n[j],n[j+1],n[j+2])||1;n[j]/=l;n[j+1]/=l;n[j+2]/=l}regeo(g,q);roof=1}
   if(roof){mRoof.vertexColors=true;mRoof.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <color_vertex>','vColor=color*mix(vec3(1.),instanceColor.xyz,step(.99,color.g));')};mRoof.customProgramCacheKey=()=>'roofTint';mRoof.needsUpdate=true}},undefined,()=>{})}
 bldLoad();
+// Corps des personnages (tools/blender/build_character.py) : mêmes centres et encombrements que les pièces animées de mkChar,
+// donc skins, chapeaux, visage et animations s'y ajustent sans changement.
+function charLoad(){if(!THREE.GLTFLoader)return;new THREE.GLTFLoader().load('models/character.glb',m=>{
+  const D={};m.scene.children.forEach(n=>D[n.name]=itemGeo(n));
+  for(const[k,g]of[['C_body',gBody],['C_head',gHead],['C_leg',gLeg],['C_foot',gFoot],['C_arm',gArm],['C_hand',gHand]])if(D[k]){D[k].deleteAttribute('color');regeo(g,D[k])}},undefined,()=>{})}
+charLoad();
 function mkCar(i,x,y,h,v){const m=new THREE.Mesh(gCars[v],mChest);m.castShadow=true;m.rotation.order='YXZ';blob(m,96,54);dyn.add(m);const c={i,x,y,h,v:0,r:30,z:0,m};carPose(c);return c}
 function carPose(c){const ch=Math.cos(c.h),sh=Math.sin(c.h),m=c.m;m.position.set(c.x,TH(c.x,c.y),c.y);m.rotation.y=-c.h;m.rotation.z=Math.atan((TH(c.x+ch*30,c.y+sh*30)-TH(c.x-ch*30,c.y-sh*30))/60);m.rotation.x=-Math.atan((TH(c.x-sh*18,c.y+ch*18)-TH(c.x+sh*18,c.y-ch*18))/36)}
 function driveCar(dt,f,s,now){
@@ -2031,7 +2052,10 @@ function renderCredits(){
   b.textContent='';
   h('Le jeu');p(['Hesse Fortnite : conception et direction par Yasser (YassuxIsCrafting).']);p(['Code écrit avec l’aide de Claude (Anthropic).']);
   p(['Projet de fan non officiel, gratuit et sans but commercial. Il n’est ni affilié, ni approuvé, ni sponsorisé par Epic Games ou Fortnite.'],'lic');
-  p(['Les skins, armes, véhicules, bâtiments et décors sont des créations originales du projet.'],'lic');
+  p(['Les skins, véhicules, bâtiments et décors sont des créations originales du projet, ainsi que le sniper et la pioche.'],'lic');
+  h('Modèles 3D');
+  for(const[t,u,a,au]of[['T77 Handgun','https://sketchfab.com/3d-models/t77-handgun-7e6a5ffc9deb4994a4092ccdba85c965','4d_Bob','https://sketchfab.com/3d_Bob'],['SG553 Assault Rifle','https://sketchfab.com/3d-models/sg553-assault-rifle-92a2efa3086b4eec8ee93b910ce77aa1','wburton','https://sketchfab.com/wburton95'],['Shotgun','https://sketchfab.com/3d-models/shotgun-2f5b48d9904145a39c1c2fcc6e5579b7','DJMaesen','https://sketchfab.com/bumstrum']])
+    p([{t,href:u},' par ',{t:a,href:au},', licence ',{t:'CC BY 4.0',href:'http://creativecommons.org/licenses/by/4.0/'},'. Modifié : pièces retirées, orientation, échelle et textures réduites.']);
   h('Bibliothèques et outils');
   p([{t:'three.js',href:'https://threejs.org'},' (moteur 3D) par mrdoob et les contributeurs, licence ',{t:'MIT',href:'https://github.com/mrdoob/three.js/blob/dev/LICENSE'},'.']);
   p(['Police ',{t:'Bungee',href:'https://fonts.google.com/specimen/Bungee'},' par David Jonathan Ross, licence ',{t:'SIL Open Font License',href:'https://openfontlicense.org'},', via Google Fonts.']);

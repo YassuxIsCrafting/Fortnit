@@ -76,6 +76,29 @@ class Item:
             bmesh.ops.bevel(bm, geom=bm.edges[:], offset=b, segments=seg, affect="EDGES", profile=0.5, clamp_overlap=True)
         self._add(bm, col, x, y, z, rz, **k)
 
+    def lathe(self, prof, x, y, z, col, seg=20, sz=1.0, **k):
+        """Surface de révolution autour de l'axe Y du jeu ; prof = [(rayon, y)], bouts fermés si le rayon vaut 0."""
+        bm = bmesh.new()
+        rings = []
+        for r, py in prof:
+            if r <= 1e-6:
+                rings.append([bm.verts.new((0, 0, py))])
+            else:
+                rings.append([bm.verts.new((r * math.cos(a), r * sz * math.sin(a), py))
+                              for a in (2 * math.pi * j / seg for j in range(seg))])
+        for A, B in zip(rings, rings[1:]):
+            if len(A) == 1:
+                for j in range(seg):
+                    bm.faces.new((A[0], B[(j + 1) % seg], B[j]))
+            elif len(B) == 1:
+                for j in range(seg):
+                    bm.faces.new((A[j], A[(j + 1) % seg], B[0]))
+            else:
+                for j in range(seg):
+                    bm.faces.new((A[j], A[(j + 1) % seg], B[(j + 1) % seg], B[j]))
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        self._add(bm, col, x, y, z, **k)
+
     def prism(self, pts, d, x, y, z, col, **k):
         """Polygone (plan XY du jeu) extrudé sur l'épaisseur d (axe Z du jeu)."""
         bm = bmesh.new()
