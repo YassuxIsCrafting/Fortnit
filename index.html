@@ -473,7 +473,30 @@ for(let i=17;i<25;i++)SKN.push({n:'',old:1});   // emplacements des anciens skin
 SKN.push({n:'Recrue Éclair',e:'⚡',p:0,bp:1},{n:'Chevalier Éclair',e:'🛡️',p:0,bp:1},{n:'Agent Tempête',e:'🌀',p:0,bp:1},{n:'Roi des Cimes',e:'🏔️',p:0,bp:1});
 SKN.push({n:'Héros Éclair',e:'🦸'});const HK=SKN.length-1;
 // Skins sur le modèle réaliste : palette par matériau (la peau reste celle choisie), Cap = casquette visible.
-SKN.push({n:'Soldat',e:'🪖',p:30});const SK_SOLD=SKN.length-1,KIT={[SK_SOLD]:{src:'models/soldier.glb',Shirt:0x5b6b3a,Pants:0x4b5320,Belt:0x2b2418,Shoes:0x1f1f1f,Cap:0x4b5320,Gear:0x3d4a2a}};   // modèle 3D riggé (models/hero-eclair.glb), offert à tous
+SKN.push({n:'Soldat',e:'🪖',p:30});const SK_SOLD=SKN.length-1,KIT={},HEAD=['Hair','EyeW','EyeD'];
+// acc = accessoires de human.glb à afficher (A_<acc>_...), hide = parties du corps masquées, autres clés = couleur par matériau.
+Object.assign(KIT,{
+  1:{acc:'robot',hide:HEAD,Skin:0x8a95a5,Shirt:0xaab4c2,Pants:0x6b7280,Belt:0x2a2a33,Shoes:0x2a2a33},
+  2:{acc:'ninja',hide:['Hair'],Shirt:0x15151f,Pants:0x15151f,Belt:0x00e5ff,Shoes:0x15151f},
+  3:{acc:'astro',hide:['Hair'],Shirt:0xf2f2f2,Pants:0xf2f2f2,Belt:0xff7a3d,Shoes:0xbfbfbf},
+  4:{acc:'knight',hide:HEAD,Shirt:0xd9a520,Pants:0xb8891c,Belt:0x5a3a24,Shoes:0x8a6a1a},
+  5:{acc:'dino',hide:['Hair'],Shirt:0x3fae49,Pants:0x3fae49,Belt:0x2e7d32,Shoes:0x2e7d32},
+  6:{acc:'ghost',hide:HEAD,Skin:0xf5f7ff,Shirt:0xf5f7ff,Pants:0xf5f7ff,Belt:0xf5f7ff,Shoes:0xf5f7ff},
+  7:{acc:'pirate',Shirt:0xf2efe6,Pants:0x1b1b22,Belt:0xc0392b,Shoes:0x1b1b22},
+  8:{acc:'chef',Shirt:0xffffff,Pants:0x3a3a3a,Belt:0xffffff,Shoes:0x1b1b22},
+  9:{acc:'fire',Shirt:0xd8a400,Pants:0xd8a400,Belt:0x1b1b22,Shoes:0x1b1b22},
+  10:{acc:'mummy',hide:['Hair'],Skin:0xe8dcc0,Shirt:0xe8dcc0,Pants:0xe8dcc0,Belt:0xcfc2a2,Shoes:0xd8ccb0},
+  11:{acc:'pumpkin',hide:HEAD,Shirt:0x2b2b3a,Pants:0x2b2b3a,Belt:0xf28c28,Shoes:0x1b1b22},
+  12:{acc:'bee',Shirt:0xffd23f,Pants:0x1b1b22,Belt:0x1b1b22,Shoes:0x1b1b22,Hair:0x1b1b22},
+  13:{acc:'yeti',hide:['Hair'],Skin:0xb9d0e2,Shirt:0xeef6ff,Pants:0xeef6ff,Belt:0xcfe0ee,Shoes:0xcfe0ee},
+  14:{acc:'viking',Shirt:0x8b5a2b,Pants:0x5a3a24,Belt:0x3a2a1a,Shoes:0x3a2a1a,Hair:0xc0602b},
+  15:{acc:'crystal',hide:['Hair'],Skin:0xb388ff,Shirt:0x7c4dff,Pants:0x5e35b1,Belt:0xd1c4ff,Shoes:0x4527a0},
+  16:{acc:'golem',hide:HEAD,Skin:0x2a2424,Shirt:0x2a2424,Pants:0x2a2424,Belt:0xff7a1a,Shoes:0x1b1515},
+  25:{acc:'recruit',Shirt:0xffd23f,Pants:0x2e6fd6,Belt:0x2e6fd6,Shoes:0xffffff},
+  26:{acc:'bknight',hide:HEAD,Shirt:0x3d6fd6,Pants:0x2b4c9a,Belt:0xffd23f,Shoes:0xc9d3e0},
+  27:{acc:'agent',Shirt:0x4b2a8f,Pants:0x1b1430,Belt:0xc27bff,Shoes:0x1b1430,Hair:0x1b1430},
+  28:{acc:'king',Shirt:0xf5f7ff,Pants:0xd62828,Belt:0xffd23f,Shoes:0x5a3a24},
+  [SK_SOLD]:{acc:'soldier',Shirt:0x5b6b3a,Pants:0x4b5320,Belt:0x2b2418,Shoes:0x1f1f1f}});   // modèle 3D riggé (models/hero-eclair.glb), offert à tous
 // Qualité graphique : "good" = effets complets, "potato" = réglages légers pour PC modeste / mobile.
 const CFG_DEF={gfx:"good",shadows:true,res:1,view:"normal",auto:true,fps:false,toon:true,post:true,day:true,wx:true,shake:true,sens:1,fov:70,invY:false,vol:1,mus:.6,sfx:1},VIEW={short:1800,normal:2900,long:4200};
 let CFG=Object.assign({},CFG_DEF),viewK=1;try{Object.assign(CFG,JSON.parse(localStorage.getItem("ie_cfg")||"{}"));if(localStorage.getItem("ie_gfx")==="potato")CFG.gfx="potato"}catch(e){}
@@ -554,7 +577,7 @@ function mkChar(col,bar,name,sk,hat,w,k){
     mk(gArm,b.material,0,-8,0,p);hands.push(mk(gHand,h.material,0,-16.5,0,p));return p});
   g.userData.legs=legs;g.userData.arms=arms;g.userData.aq=arms.map(a=>a.quaternion.clone());
   if(bar){const s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xff5d8f}));s.position.y=70;s.scale.set(36,5,1);g.userData.bar=s;g.add(s)}
-  addHat(g,k?0:hat,col);addSkin(g,k|0,b,h);
+  addHat(g,k?0:hat,col);const nc=g.children.length;addSkin(g,k|0,b,h);g.userData.skinParts=g.children.slice(nc);
   if(!k||k===8||k===25||k===28)addFace(h);
   for(const a of arms)a.children[0].material=b.material;
   if(k){for(const m of limb)m.material=b.material;for(const m of hands)m.material=b.material}
@@ -577,17 +600,30 @@ function heroBuild(g,src,b,h,u,tint,real){
   if(real)realPaint(sks,b.material.color,h.material.color,real);else{const key=tint===undefined?'x':tint;if(!HT[key]){const mp=sk.material.map;if(mp)mp.encoding=THREE.LinearEncoding;HT[key]=new THREE.MeshLambertMaterial({map:mp,skinning:true});if(tint!==undefined)HT[key].color.setHex(tint).lerp(new THREE.Color(0xffffff),.45)}sk.material=HT[key]}
   for(const o of sks){o.castShadow=true;o.frustumCulled=false}
   box.scale.setScalar(real?REAL_S:HERO_S);box.add(H);g.add(box);
-  const U=g.userData,armP=_hz.set(0,0,1).clone(),armN=_hz.set(0,0,-1).clone(),arm=(a,up,fo,rest)=>{const d=_hv.copy(DOWN).applyQuaternion(a.quaternion);if(real){d.z*=RA.in;d.x+=RA.fw;d.normalize()}up.quaternion.setFromUnitVectors(rest,d);const bend=1-Math.max(0,Math.min(1,d.y+1));fo.rotation.set(0,0,0);fo.rotateOnAxis(AX_Y,(rest.z>0?1:-1)*bend*(real?RA.bend:-.5))};
-  U.heroSync=()=>{const l0=U.legs[0].rotation.z,l1=U.legs[1].rotation.z;B.LegN.rotation.z=l0;B.LegP.rotation.z=l1;B.ShinN.rotation.z=-Math.abs(l0)*.9;B.ShinP.rotation.z=-Math.abs(l1)*.9;arm(U.arms[0],B.ArmP,B.ForeP,armP);arm(U.arms[1],B.ArmN,B.ForeN,armN)};
+  const U=g.userData,armP=_hz.set(0,0,1).clone(),armN=_hz.set(0,0,-1).clone(),arm=(a,up,fo,rest)=>{const d=_hv.copy(DOWN).applyQuaternion(a.quaternion);up.quaternion.setFromUnitVectors(rest,d);const bend=1-Math.max(0,Math.min(1,d.y+1));fo.rotation.set(0,0,0);fo.rotateOnAxis(AX_Y,(rest.z>0?1:-1)*bend*-.5)};
+  U.heroSync=()=>{const l0=U.legs[0].rotation.z,l1=U.legs[1].rotation.z;B.LegN.rotation.z=l0;B.LegP.rotation.z=l1;B.ShinN.rotation.z=-Math.abs(l0)*.9;B.ShinP.rotation.z=-Math.abs(l1)*.9;if(real){realArm(U.arms[0],B.ArmP,B.ForeP,armP,1);realArm(U.arms[1],B.ArmN,B.ForeN,armN,-1)}else{arm(U.arms[0],B.ArmP,B.ForeP,armP);arm(U.arms[1],B.ArmN,B.ForeN,armN)}};
   const umw=g.updateMatrixWorld;g.updateMatrixWorld=function(f){if(U.hon)U.heroSync();umw.call(g,f)};
-  U.heroSet=on=>{U.hon=on;box.visible=on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;u.position.set(on?(real?RA.gx:13):10,on?(real?RA.gy:31):27,5)};U.heroSet(true);
+  U.heroSet=on=>{U.hon=on;box.visible=on;if(real)for(const c of U.skinParts||[])c.visible=!on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;u.position.set(on?(real?10*RA.k:13):10,on?(real?RA.sy+(27-35)*RA.k:31):27,5)};U.heroSet(true);
 }
 function heroAttach(g,b,h,u){heroLoad().then(src=>{if(src)heroBuild(g,src,b,h,u)})}
 // Personnage réaliste (tools/blender/build_human.py), même squelette que le Héros Éclair : tenue par défaut des joueurs et bots proches.
 // T-shirt = couleur de la tenue, peau = teinte choisie ; sans le fichier, le corps en pièces reste affiché.
-let realP=null,realSrc=null;const REAL_S=33,RA={in:.35,fw:.3,bend:-1.2,gx:15,gy:39},RM={},RCOL={Gear:0x3d4a2a,Pants:0x2b2b3a,Belt:0x1b1b22,Shoes:0xf5f5f5,Hair:0x3b2a1e,EyeW:0xffffff,EyeD:0x1b1b22};
-const RP={};function realLoad(f){f=f||'models/human.glb';return RP[f]||(RP[f]=new Promise((ok,no)=>{if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return no();new THREE.GLTFLoader().load(f,m=>{if(f==='models/human.glb')realSrc=m.scene;ok(m.scene)},undefined,no)}).catch(()=>null))}
-function realPaint(sks,shirt,skin,kit){const K=kit&&kit!==true?kit:{};for(const o of sks){const n=o.material.name.replace(/^H_/,'');o.visible=n!=='Cap'||K.Cap!==undefined;const c=K[n]!==undefined?K[n]:n==='Shirt'?shirt.getHex():n==='Skin'?skin.getHex():RCOL[n]!==undefined?RCOL[n]:0xffffff,k=n+c;o.material=RM[k]||(RM[k]=new THREE.MeshLambertMaterial({color:c,skinning:true}))}}
+let realP=null,realSrc=null;const REAL_S=33,RA={sy:1.42*REAL_S,sz:.17*REAL_S,k:1.15,l1:.27*REAL_S,l2:.345*REAL_S},RM={},RCOL={Pants:0x2b2b3a,Belt:0x1b1b22,Shoes:0xf5f5f5,Hair:0x3b2a1e,EyeW:0xffffff,EyeD:0x1b1b22};
+const RP={};// Bras du modèle réaliste : la main va là où le corps en blocs pose la sienne (arme, emotes), ramené au gabarit réaliste
+// (épaules plus hautes et plus serrées), puis cinématique inverse à deux os avec le coude vers le bas et l'extérieur.
+const _ik={s:new THREE.Vector3(),t:new THREE.Vector3(),e:new THREE.Vector3(),d:new THREE.Vector3(),p:new THREE.Vector3(),f:new THREE.Vector3(),q:new THREE.Quaternion()};
+function realArm(a,up,fo,rest,side){const I=_ik,L1=RA.l1,L2=RA.l2;
+  I.t.copy(DOWN).multiplyScalar(16.5).applyQuaternion(a.quaternion).add(a.position);I.t.set(I.t.x*RA.k,RA.sy+(I.t.y-35)*RA.k,I.t.z);
+  I.s.set(0,RA.sy,side*RA.sz);I.d.subVectors(I.t,I.s);const L=Math.min(Math.max(I.d.length(),2),L1+L2-.01);I.d.normalize();
+  const a1=(L1*L1-L2*L2+L*L)/(2*L),h=Math.sqrt(Math.max(0,L1*L1-a1*a1));
+  I.p.set(-.25,-1,side*.6);I.p.addScaledVector(I.d,-I.p.dot(I.d)).normalize();
+  I.e.copy(I.s).addScaledVector(I.d,a1).addScaledVector(I.p,h);
+  I.f.copy(I.s).addScaledVector(I.d,L).sub(I.e).normalize();I.e.sub(I.s).normalize();
+  up.quaternion.setFromUnitVectors(rest,I.e);fo.quaternion.copy(up.quaternion).invert().multiply(I.q.setFromUnitVectors(rest,I.f))}
+function realLoad(f){f=f||'models/human.glb';return RP[f]||(RP[f]=new Promise((ok,no)=>{if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return no();new THREE.GLTFLoader().load(f,m=>{if(f==='models/human.glb')realSrc=m.scene;ok(m.scene)},undefined,no)}).catch(()=>null))}
+function realPaint(sks,shirt,skin,kit){const K=kit&&kit!==true?kit:{};for(const o of sks){const n=o.material.name.replace(/^H_/,''),a=n.split('_');
+  if(a[0]==='A'?a[1]!==K.acc:K.hide&&K.hide.includes(n)){o.parent.remove(o);continue}// accessoires des autres skins retirés du clone
+  const c=a[0]==='A'?parseInt(a[2],16):K[n]!==undefined?K[n]:n==='Shirt'?shirt.getHex():n==='Skin'?skin.getHex():RCOL[n]!==undefined?RCOL[n]:0xffffff,k=n+c;o.material=RM[k]||(RM[k]=new THREE.MeshLambertMaterial({color:c,skinning:true}))}}
 function realAttach(g,b,h,u,kit){realLoad(kit&&kit.src).then(src=>{if(src&&!g.userData.heroSet)heroBuild(g,src,b,h,u,undefined,kit||true)})}
 realLoad();
 // Bots : vrai modèle de près (avec leur couleur), blocs de loin pour rester fluide.
