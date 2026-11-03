@@ -615,7 +615,7 @@ function heroBuild(g,src,b,h,u,tint,real){
   const U=g.userData,armP=_hz.set(0,0,1).clone(),armN=_hz.set(0,0,-1).clone(),arm=(a,up,fo,rest)=>{const d=_hv.copy(DOWN).applyQuaternion(a.quaternion);up.quaternion.setFromUnitVectors(rest,d);const bend=1-Math.max(0,Math.min(1,d.y+1));fo.rotation.set(0,0,0);fo.rotateOnAxis(AX_Y,(rest.z>0?1:-1)*bend*-.5)};
   U.heroSync=()=>{const l0=U.legs[0].rotation.z,l1=U.legs[1].rotation.z;B.LegN.rotation.z=l0;B.LegP.rotation.z=l1;B.ShinN.rotation.z=-Math.abs(l0)*.9;B.ShinP.rotation.z=-Math.abs(l1)*.9;if(real){realArm(U.arms[0],B.ArmP,B.ForeP,armP,1);realArm(U.arms[1],B.ArmN,B.ForeN,armN,-1)}else{arm(U.arms[0],B.ArmP,B.ForeP,armP);arm(U.arms[1],B.ArmN,B.ForeN,armN)}};
   const umw=g.updateMatrixWorld;g.updateMatrixWorld=function(f){if(U.hon)U.heroSync();umw.call(g,f)};
-  U.heroSet=on=>{U.hon=on;box.visible=on;if(real)for(const c of U.skinParts||[])c.visible=!on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;u.position.set(on?(real?10*RA.k:13):10,on?(real?RA.sy+(27-35)*RA.k:31):27,5)};U.heroSet(true);
+  U.real=!!real;U.heroSet=on=>{U.hon=on;box.visible=on;if(real)for(const c of U.skinParts||[])c.visible=!on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0;for(const c of U.hat.children)if(c.userData.crown)c.position.y=on?CROWN_RY:61}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;u.position.set(on?(real?10*RA.k:13):10,on?(real?RA.sy+(27-35)*RA.k:31):27,5)};U.heroSet(true);
 }
 function heroAttach(g,b,h,u){heroLoad().then(src=>{if(src)heroBuild(g,src,b,h,u)})}
 // Personnage réaliste (tools/blender/build_human.py), même squelette que le Héros Éclair : tenue par défaut des joueurs et bots proches.
@@ -1070,7 +1070,13 @@ window.IE_onSocial=m=>{
 };
 const crownHeld=()=>!!wallet.cr;let lastPh=-1,actx=null;
 function chime(){sfx("chime")}
-function addCrown(g){const c=new THREE.Mesh(new THREE.CylinderGeometry(11,8,10,6),mGold);c.position.y=61;c.castShadow=true;hatG(g).add(c)}
+// Couronne des gagnants modélisée dans Blender (tools/blender/build_crown.py) ; cylindre doré tant qu'elle n'est pas chargée.
+let gCrown=null;const CROWN_RY=55;// sur la tête plus étroite du modèle réaliste
+const mCrown=new THREE.MeshLambertMaterial({vertexColors:true,emissive:0x2a1a00});
+function addCrown(g){const c=gCrown?new THREE.Mesh(gCrown,mCrown):new THREE.Mesh(new THREE.CylinderGeometry(11,8,10,6),mGold);const on=g.userData.hon&&g.userData.real;c.userData.crown=1;c.position.y=on?CROWN_RY:61;c.castShadow=true;const H=hatG(g);H.add(c);if(on){H.scale.setScalar(.42);H.position.y=REAL_S*1.64-46*.42}}
+function crownLoad(){if(!THREE.GLTFLoader)return;new THREE.GLTFLoader().load('models/crown.glb',m=>{const n=m.scene.getObjectByName('CROWN');if(!n)return;gCrown=itemGeo(n);
+  for(const sc of[scene,ls])sc.traverse(o=>{if(o.userData.crown){o.geometry=gCrown;o.material=mCrown}})},undefined,()=>{})}
+crownLoad();
 // Fourgons de relance (mode Duo) : un équipier éliminé laisse une carte de relance ; son coéquipier la ramasse
 // et l'apporte à un fourgon pour le faire revenir (sans ses objets). Modèle et noms originaux du projet.
 const VAN_CD=60000,CARD_TTL=90000,REBOOT_T=5;let vans=[],cards=[];
