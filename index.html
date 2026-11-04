@@ -636,24 +636,24 @@ function heroClone(src,b,h,tint,real){
   if(real)realPaint(sks,b.material.color,h.material.color,real);else{const key=tint===undefined?'x':tint;if(!HT[key]){const mp=sk.material.map;if(mp)mp.encoding=THREE.LinearEncoding;HT[key]=new THREE.MeshLambertMaterial({map:mp,skinning:true});if(tint!==undefined)HT[key].color.setHex(tint).lerp(new THREE.Color(0xffffff),.45)}sk.material=HT[key]}
   for(const o of sks){o.castShadow=true;o.frustumCulled=false}
   box.scale.setScalar(real?REAL_S:HERO_S);box.add(H);return{H,box,B}}
-// Déplacements (attente, course, sprint, recul, pas de côté) : anciennes animations, recopiées des membres en blocs sur l'ancien squelette.
-// Le reste (emotes, planeur, chute) : clips Mixamo. Un perso Mixamo garde donc aussi un clone de l'ancien modèle, affiché à la place.
+// Un seul squelette (celui de human.glb / hero-eclair.glb). Déplacements (attente, course, sprint, recul, pas de côté) :
+// anciennes animations, recopiées des membres en blocs. Le reste (emotes, planeur, chute) : clips Mixamo retranscrits sur ce
+// même squelette (tools/blender/build_anims.py), joués par un AnimationMixer.
 const LOCO=new Set(['idle','run','sprint','back','strafeL','strafeR']);
 function heroBuild(g,src,b,h,u,tint,real){
-  const mx=!!(MX&&(src===MX.human||src===MX.hero));
   const c0=heroClone(src,b,h,tint,real);if(!c0)return;const{H,box,B}=c0;g.add(box);
-  const U=g.userData;let O=mx?null:c0;// O = clone de l'ancien squelette (os LegN, ArmP...)
-  const show=()=>{box.visible=!!U.hon&&!(mx&&U.loco);if(mx&&O)O.box.visible=!!U.hon&&!!U.loco};
-  if(mx){box.rotation.y=Math.PI/2;U.mxSrc=src;U.mixer=new THREE.AnimationMixer(H);U.mxCur=U.mxAct=null;U.mxR=B.mixamorigRightHand;U.mxL=B.mixamorigLeftHand;
-    (real?realLoad(real!==true?real.src:undefined):heroLoad()).then(s=>{if(!s||O)return;const o=heroClone(s,b,h,tint,real);if(!o)return;o.box.visible=false;g.add(o.box);O=o;show()})}
+  const U=g.userData,rest=Object.values(B).map(o=>[o,o.position.clone(),o.quaternion.clone()]);U.mxSrc=src;U.loco=true;
+  const toRest=()=>{for(const[o,p,q]of rest){o.position.copy(p);o.quaternion.copy(q)}};
   const armP=_hz.set(0,0,1).clone(),armN=_hz.set(0,0,-1).clone(),arm=(a,up,fo,rest)=>{const d=_hv.copy(DOWN).applyQuaternion(a.quaternion);up.quaternion.setFromUnitVectors(rest,d);const bend=1-Math.max(0,Math.min(1,d.y+1));fo.rotation.set(0,0,0);fo.rotateOnAxis(AX_Y,(rest.z>0?1:-1)*bend*-.5)};
-  U.heroSync=()=>{if(!O)return;const B=O.B,l0=U.legs[0].rotation.z,l1=U.legs[1].rotation.z;B.LegN.rotation.z=l0;B.LegP.rotation.z=l1;B.ShinN.rotation.z=-Math.abs(l0)*.9;B.ShinP.rotation.z=-Math.abs(l1)*.9;if(real){realArm(U.arms[0],B.ArmP,B.ForeP,armP,1);realArm(U.arms[1],B.ArmN,B.ForeN,armN,-1)}else{arm(U.arms[0],B.ArmP,B.ForeP,armP);arm(U.arms[1],B.ArmN,B.ForeN,armN)}};
-  const umw=g.updateMatrixWorld;g.updateMatrixWorld=function(f){if(U.hon){if(U.mixer){const now=performance.now()/1000,dt=Math.min(.1,now-(U.mxT||now));U.mxT=now;
-        const n=mxState(g,dt,!!O),lo=!!O&&LOCO.has(n);if(lo!==!!U.loco){U.loco=lo;show();if(lo){u.quaternion.identity();if(U.uPos)u.position.copy(U.uPos);U.mxCur=null}}
-        if(lo)U.heroSync();umw.call(g,f);if(!lo&&!(U.emo&&U.emoId))mxWeapon(g);return}U.heroSync()}umw.call(g,f)};
-  U.real=!!real;U.heroSet=on=>{U.hon=on;show();if(real)for(const c of U.skinParts||[])c.visible=!on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0;for(const c of U.hat.children)if(c.userData.crown)c.position.y=c.userData.crown-(on?6:0)}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;if(!on)u.quaternion.identity();u.position.set(on?(real?10*RA.k:13):10,on?(real?RA.sy+(27-35)*RA.k:31):27,5);U.uPos=u.position.clone()};U.heroSet(true);
+  U.heroSync=()=>{const l0=U.legs[0].rotation.z,l1=U.legs[1].rotation.z;B.LegN.rotation.z=l0;B.LegP.rotation.z=l1;B.ShinN.rotation.z=-Math.abs(l0)*.9;B.ShinP.rotation.z=-Math.abs(l1)*.9;if(real){realArm(U.arms[0],B.ArmP,B.ForeP,armP,1);realArm(U.arms[1],B.ArmN,B.ForeN,armN,-1)}else{arm(U.arms[0],B.ArmP,B.ForeP,armP);arm(U.arms[1],B.ArmN,B.ForeN,armN)}};
+  const umw=g.updateMatrixWorld;g.updateMatrixWorld=function(f){if(U.hon){
+      if(MX&&!U.mixer){U.mixer=new THREE.AnimationMixer(H);U.mxCur=U.mxAct=null}
+      if(U.mixer){const now=performance.now()/1000,dt=Math.min(.1,now-(U.mxT||now));U.mxT=now;const n=mxState(g,dt),lo=LOCO.has(n);
+        if(lo!==U.loco){U.loco=lo;if(lo){U.mixer.stopAllAction();U.mxCur=U.mxAct=null;toRest();u.quaternion.identity();if(U.uPos)u.position.copy(U.uPos)}}
+        if(lo)U.heroSync()}else U.heroSync()}umw.call(g,f)};
+  U.real=!!real;U.heroSet=on=>{U.hon=on;box.visible=on;if(real)for(const c of U.skinParts||[])c.visible=!on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0;for(const c of U.hat.children)if(c.userData.crown)c.position.y=c.userData.crown-(on?6:0)}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;if(!on)u.quaternion.identity();u.position.set(on?(real?10*RA.k:13):10,on?(real?RA.sy+(27-35)*RA.k:31):27,5);U.uPos=u.position.clone()};U.heroSet(true);
 }
-function heroAttach(g,b,h,u){mxP.then(ok=>ok?heroBuild(g,MX.hero,b,h,u):heroLoad().then(src=>{if(src)heroBuild(g,src,b,h,u)}))}
+function heroAttach(g,b,h,u){heroLoad().then(src=>{if(src&&!g.userData.heroSet)heroBuild(g,src,b,h,u)})}
 // Personnage réaliste (tools/blender/build_human.py), même squelette que le Héros Éclair : tenue par défaut des joueurs et bots proches.
 // T-shirt = couleur de la tenue, peau = teinte choisie ; sans le fichier, le corps en pièces reste affiché.
 let realP=null,realSrc=null;const REAL_S=33,RA={sy:1.42*REAL_S,sz:.17*REAL_S,k:1.15,l1:.27*REAL_S,l2:.345*REAL_S},RM={},RCOL={Pants:0x2b2b3a,Belt:0x1b1b22,Shoes:0xf5f5f5,Hair:0x3b2a1e,EyeW:0xffffff,EyeD:0x1b1b22};
@@ -672,33 +672,28 @@ function realLoad(f){f=f||'models/human.glb';return RP[f]||(RP[f]=new Promise((o
 function realPaint(sks,shirt,skin,kit){const K=kit&&kit!==true?kit:{};for(const o of sks){const n=o.material.name.replace(/^H_/,''),a=n.split('_');
   if(a[0]==='A'?a[1]!==K.acc:K.hide&&K.hide.includes(n)){o.parent.remove(o);continue}// accessoires des autres skins retirés du clone
   const c=a[0]==='A'?parseInt(a[2],16):K[n]!==undefined?K[n]:n==='Shirt'?shirt.getHex():n==='Skin'?skin.getHex():RCOL[n]!==undefined?RCOL[n]:0xffffff,k=n+c;o.material=RM[k]||(RM[k]=new THREE.MeshLambertMaterial({color:c,skinning:true}))}}
-function realAttach(g,b,h,u,kit){mxP.then(ok=>{if(g.userData.heroSet)return;if(ok)heroBuild(g,MX.human,b,h,u,undefined,kit||true);else realLoad(kit&&kit.src).then(src=>{if(src&&!g.userData.heroSet)heroBuild(g,src,b,h,u,undefined,kit||true)})})}
-// Animations Mixamo (tools/blender/build_rig.py) : perso réaliste et Héros Éclair riggés sur le squelette Mixamo, clips partagés
-// (models/anims.glb). L'animation jouée est déduite du personnage : emote, planeur, chute, course (avant, arrière, côté), attente.
-let MX=null;const mxP=new Promise(ok=>{if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return ok(false);const L=u=>new Promise(r=>new THREE.GLTFLoader().load(u,r,undefined,()=>r(null)));
-  Promise.all([L('models/anims.glb'),L('models/human_rig.glb'),L('models/hero_rig.glb')]).then(([a,h,e])=>{if(!a||!h||!e)return ok(false);const clips={};for(const c of a.animations)clips[c.name]=c;
-    const hip=x=>{let q=null;x.scene.traverse(o=>{if(!q&&o.isBone&&o.name==='mixamorigHips')q=o.position.clone()});return q};MX={clips,human:h.scene,hero:e.scene,hipA:hip(a),hipE:hip(e),heroClips:{}};ok(true)})});
+function realAttach(g,b,h,u,kit){realLoad(kit&&kit.src).then(src=>{if(src&&!g.userData.heroSet)heroBuild(g,src,b,h,u,undefined,kit||true)})}
+// Clips (models/anims.glb, tools/blender/build_anims.py) : emotes, planeur, chute, sur le squelette de human.glb et hero-eclair.glb.
+// L'état est déduit du personnage : emote, planeur, chute, sinon déplacement (joué par les anciennes animations).
+let MX=null;const mxP=new Promise(ok=>{if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return ok(false);
+  Promise.all([new Promise(r=>new THREE.GLTFLoader().load('models/anims.glb',r,undefined,()=>r(null))),realLoad(),heroLoad()]).then(([a,h,e])=>{if(!a||!h||!e)return ok(false);const clips={};for(const c of a.animations)clips[c.name]=c;
+    const hip=x=>{let q=null;x.traverse(o=>{if(!q&&o.isBone&&o.name==='Hips')q=o.position.clone()});return q};MX={clips,human:h,hero:e,hipA:hip(a.scene),hipE:hip(e),heroClips:{}};ok(!!(MX.hipA&&MX.hipE))})});
 // Héros Éclair est plus petit : la piste de position du bassin est ramenée à sa taille.
-function mxClip(src,n){const c=MX.clips[n];if(!c||src!==MX.hero)return c;if(MX.heroClips[n])return MX.heroClips[n];const k=c.clone(),t=k.tracks.find(t=>t.name==='mixamorigHips.position');
+function mxClip(src,n){const c=MX.clips[n];if(!c||src!==MX.hero)return c;if(MX.heroClips[n])return MX.heroClips[n];const k=c.clone(),t=k.tracks.find(t=>t.name==='Hips.position');
   if(t){const A=MX.hipA,E=MX.hipE,f=E.y/A.y,v=t.values;for(let i=0;i<v.length;i+=3){v[i]=E.x+(v[i]-A.x)*f;v[i+1]=E.y+(v[i+1]-A.y)*f;v[i+2]=E.z+(v[i+2]-A.z)*f}}return MX.heroClips[n]=k}
 const EMOCLIP={crown:'e_victory',trophy:'e_cheer',wave:'e_waveh',clap:'e_clap',thumb:'e_victory',salute:'e_salute',shrug:'e_think',palm:'e_laugh',champ:'e_cheer',flex:'e_macho',stretch:'e_squat',march:'walk',robot:'e_robot',twist:'e_twist',chicken:'e_chicken',guitar:'e_swing',drums:'e_jazz',mill:'e_break',disco:'e_hiphop',shuffle:'e_shuffle',diag:'e_taunt',ninja:'e_kick',jump:'jump',spin:'e_flair',zen:'e_sit',push:'e_pushup',gold:'e_samba',rocket:'e_backflip',bp_wave:'e_wave',bp_hero:'e_macho',bp_dance:'e_tut',bp_storm:'e_capoeira',bp_cloud:'e_rumba',star:'e_salsa'};
 const MXONCE=new Set(['jump','land','hit','death','melee','reload','fire','e_bow','e_backflip','e_victory','e_cheer','e_salute','e_think']);
 function mxPlay(U,n){if(U.mxCur===n)return;const c=mxClip(U.mxSrc,n)||mxClip(U.mxSrc,'idle');if(!c)return;const a=U.mixer.clipAction(c);a.reset();a.setLoop(MXONCE.has(n)?THREE.LoopOnce:THREE.LoopRepeat);a.clampWhenFinished=true;a.play();
   if(U.mxAct&&U.mxAct!==a)U.mxAct.crossFadeTo(a,.22,false);U.mxAct=a;U.mxCur=n}
-// Renvoie l'état choisi ; avec old, les états de déplacement (LOCO) ne font pas tourner le mixer (l'ancien squelette les joue).
-function mxState(g,dt,old){const U=g.userData,px=g.position.x,pz=g.position.z,k=1/Math.max(dt,1e-3);if(U.mpx===undefined){U.mpx=px;U.mpz=pz;U.spd=0}
+// Renvoie l’état choisi ; les états de déplacement (LOCO) ne font pas tourner le mixer (les anciennes animations les jouent).
+function mxState(g,dt){const U=g.userData,px=g.position.x,pz=g.position.z,k=1/Math.max(dt,1e-3);if(U.mpx===undefined){U.mpx=px;U.mpz=pz;U.spd=0}
   const vx=(px-U.mpx)*k,vz=(pz-U.mpz)*k,sp=Math.hypot(vx,vz);U.mpx=px;U.mpz=pz;if(dt>0)U.spd+=(Math.min(sp,900)-U.spd)*Math.min(1,dt*8);
   let n='idle',rate=1;const em=U.emo&&U.emoId;
   if(em){const d=EMO[EMI[U.emoId]];n=(d&&d.clip)||EMOCLIP[U.emoId]||'e_hiphop'}
   else if(U.gl&&U.gl.visible)n='glide';else if(U.air)n='fall';
   else if(U.spd>25){const a=-g.rotation.y,f=(vx*Math.cos(a)+vz*Math.sin(a))/(sp||1),sd=(-vx*Math.sin(a)+vz*Math.cos(a))/(sp||1);
     n=f<-.45?'back':Math.abs(sd)>.75?(sd>0?'strafeR':'strafeL'):U.spd>330?'sprint':'run';rate=Math.max(.6,Math.min(1.6,U.spd/(n==='sprint'?380:230)))}
-  if(old&&LOCO.has(n))return n;mxPlay(U,n);U.mixer.timeScale=rate;U.mixer.update(dt);return n}
-// Arme : dans la main droite, pointée vers la main gauche (qui la tient dans les animations de visée).
-const _mm=new THREE.Matrix4(),_mr=new THREE.Vector3(),_ml=new THREE.Vector3(),_ma=new THREE.Vector3(),_mb=new THREE.Vector3(),_mc=new THREE.Vector3(),UPW=new THREE.Vector3(0,1,0);
-function mxWeapon(g){const U=g.userData,u=g.children[2];if(!U.mxR||!U.mxL||!u.visible)return;U.mxR.getWorldPosition(_mr);U.mxL.getWorldPosition(_ml);g.worldToLocal(_mr);g.worldToLocal(_ml);
-  _ma.subVectors(_ml,_mr);if(_ma.lengthSq()<1)_ma.set(1,0,0);_ma.normalize();_mc.crossVectors(_ma,UPW).normalize();_mb.crossVectors(_mc,_ma);_mm.makeBasis(_ma,_mb,_mc);
-  u.quaternion.setFromRotationMatrix(_mm);u.position.copy(_mr);u.updateMatrix();u.updateMatrixWorld(true)}
+  if(LOCO.has(n))return n;mxPlay(U,n);U.mixer.timeScale=rate;U.mixer.update(dt);return n}
 realLoad();
 // Bots : vrai modèle de près (avec leur couleur), blocs de loin pour rester fluide.
 function setFar(g,on){const U=g.userData;if(!!U.far===on)return;U.far=on;for(const c of g.children)c.visible=on?c===U.fm||c===U.mk:c!==U.fm;if(!on){if(U.heroSet)U.heroSet(!!U.hon);g.matrixWorldNeedsUpdate=true}}
