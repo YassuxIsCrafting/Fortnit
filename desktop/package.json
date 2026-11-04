@@ -1,5 +1,5 @@
 {
-  "name": "fortnit-desktop",
+  "name": "ile-eclair-desktop",
   "productName": "Île Éclair",
   "version": "1.0.0",
   "description": "Île Éclair pour Windows : ouvre le jeu en ligne, toujours à jour",
@@ -16,7 +16,7 @@
     "electron-builder": "26.0.12"
   },
   "build": {
-    "appId": "com.yassux.fortnit",
+    "appId": "com.yassux.ileeclair",
     "productName": "Île Éclair",
     "electronDist": "node_modules/electron/dist",
     "files": [

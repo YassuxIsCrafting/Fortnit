@@ -11,7 +11,7 @@ import bpy, math, os
 exec(open(r"C:/Repos/Fortnit/tools/blender/build_items.py", encoding="utf-8").read(), globals())
 
 OUT_CHR = r"C:/Repos/Fortnit/models/character.glb"
-COLL_CHR = "Fortnit_Character"
+COLL_CHR = "IleEclair_Character"
 W = 0xffffff
 
 

@@ -10,7 +10,7 @@ import bpy, bmesh, math, os
 from mathutils import Matrix, Vector
 
 OUT = r"C:/Repos/Fortnit/models/items.glb"
-COLL = "Fortnit_Items"
+COLL = "IleEclair_Items"
 
 DARK, DARK2, STEEL, GREY, BLACK = 0x2a2a33, 0x3a3d47, 0x4a4f5a, 0x9aa3ad, 0x16161c
 WOOD, WOOD_L, WOOD_D, LENS, GOLD = 0x7a512b, 0x9c6b3c, 0x5e3b1c, 0x66ccff, 0xd9a441

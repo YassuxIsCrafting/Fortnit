@@ -15,7 +15,7 @@ import bpy, bmesh, math, os
 from mathutils import Vector, Euler
 
 OUT_HUMAN = r"C:/Repos/Fortnit/models/human.glb"
-COLL_HUMAN = "Fortnit_Human"
+COLL_HUMAN = "IleEclair_Human"
 COLS = {"Skin": 0xf1c27d, "Shirt": 0x3da5ff, "Pants": 0x2b2b3a, "Belt": 0x1b1b22, "Shoes": 0xf5f5f5,
         "Hair": 0x3b2a1e, "EyeW": 0xffffff, "EyeD": 0x1b1b22}
 HEAD_C, HEAD_R = Vector((0.01, 0, 1.64)), 0.115

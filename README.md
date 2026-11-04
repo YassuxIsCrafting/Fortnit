@@ -158,7 +158,7 @@ serveur n'accepte que les connexions venant du site (`ALLOWED_ORIGINS`).
 
 ## Appli Android
 
-L'appli ouvre le jeu en ligne (https://fortnit-jeu.yasser-mobiarchitects.workers.dev/) en plein écran ;
+L'appli ouvre le jeu en ligne (https://ile-eclair.yasser-mobiarchitects.workers.dev/) en plein écran ;
 il faut Internet. Pour la compiler : ouvrir le dossier `android/` dans Android Studio, puis
 Build > Build APK(s). Pour l'installer : copier `IleEclair.apk` sur le téléphone, l'ouvrir et
 autoriser l'installation depuis cette source.
@@ -166,7 +166,7 @@ autoriser l'installation depuis cette source.
 ## Appli Windows
 
 `IleEclair.exe` (dossier `desktop/`, Electron) ouvre en plein écran le jeu en ligne
-https://fortnit-jeu.yasser-mobiarchitects.workers.dev/. Le jeu n'est pas dans l'exe : chaque mise à jour du site
+https://ile-eclair.yasser-mobiarchitects.workers.dev/. Le jeu n'est pas dans l'exe : chaque mise à jour du site
 arrive toute seule au prochain lancement, sans rien retélécharger. Il faut Internet.
 
 - Pas d'installation : double-clic sur `IleEclair.exe` pour jouer.

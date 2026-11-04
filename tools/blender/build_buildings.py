@@ -14,7 +14,7 @@ import bpy, math, os
 exec(open(r"C:/Repos/Fortnit/tools/blender/build_items.py", encoding="utf-8").read(), globals())
 
 OUT_BLD = r"C:/Repos/Fortnit/models/buildings.glb"
-COLL_BLD = "Fortnit_Buildings"
+COLL_BLD = "IleEclair_Buildings"
 TINT, TRIM, FRAME = 0xffffff, 0x5a3a24, 0xf5f5f5
 RW, RH = 129, 46  # demi-largeur et hauteur des toits
 

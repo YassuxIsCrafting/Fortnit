@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.yassux.fortnit'
+    namespace 'com.yassux.ileeclair'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.yassux.fortnit'
+        applicationId 'com.yassux.ileeclair'
         minSdk 24
         targetSdk 34
         versionCode 1

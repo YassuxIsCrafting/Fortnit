@@ -3,7 +3,7 @@
 const { app, BrowserWindow, shell, Menu } = require("electron");
 const path = require("path");
 
-const HOST = "fortnit-jeu.yasser-mobiarchitects.workers.dev";
+const HOST = "ile-eclair.yasser-mobiarchitects.workers.dev";
 const GAME_URL = "https://" + HOST + "/";
 
 // Une seule fenêtre du jeu à la fois : relancer l'exe remet la fenêtre existante devant.

@@ -1,4 +1,4 @@
-package com.yassux.fortnit;
+package com.yassux.ileeclair;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -15,7 +15,7 @@ import android.webkit.WebViewClient;
 
 /** Ouvre le jeu en plein écran, en paysage, avec les commandes tactiles. */
 public class MainActivity extends Activity {
-    private static final String HOST = "fortnit-jeu.yasser-mobiarchitects.workers.dev";
+    private static final String HOST = "ile-eclair.yasser-mobiarchitects.workers.dev";
     private static final String GAME_URL = "https://" + HOST + "/?app=1";
     private static final String OFFLINE = "<html><body style='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;"
             + "background:#14123a;color:#fff;font-family:sans-serif;text-align:center'><div><h2>Pas de connexion</h2>"

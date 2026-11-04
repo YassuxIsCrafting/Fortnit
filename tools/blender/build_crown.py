@@ -37,7 +37,7 @@ def crown():
 
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
-coll = bpy.data.collections.new("Fortnit_Crown")
+coll = bpy.data.collections.new("IleEclair_Crown")
 bpy.context.scene.collection.children.link(coll)
 it = crown()
 ob = it.done(coll, (0, 0))

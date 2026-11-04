@@ -13,7 +13,7 @@ import bpy, math, os
 exec(open(r"C:/Repos/Fortnit/tools/blender/build_items.py", encoding="utf-8").read(), globals())
 
 OUT_DECOR = r"C:/Repos/Fortnit/models/decor.glb"
-COLL_DECOR = "Fortnit_Decor"
+COLL_DECOR = "IleEclair_Decor"
 LEAF, BARK, BODY = 0xffffff, 0x6b4423, 0xff00ff
 GLASS, TYRE = 0x9fdcff, 0x1b1b1f
 

@@ -28,12 +28,12 @@ jobs:
         run: gradle -p android assembleDebug --no-daemon
 
       - name: Renommer
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk HesseFortnite.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk IleEclair.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: HesseFortnite-apk
-          path: HesseFortnite.apk
+          name: IleEclair-apk
+          path: IleEclair.apk
 
       - name: Publier en téléchargement
         uses: softprops/action-gh-release@v2
@@ -41,8 +41,8 @@ jobs:
           tag_name: android-latest
           name: Application Android
           body: |
-            APK Android de Hesse Fortnite (version de test, signée en mode debug).
-            Sur le téléphone : télécharge HesseFortnite.apk, ouvre-le et autorise l'installation depuis cette source.
+            APK Android de Île Éclair (version de test, signée en mode debug).
+            Sur le téléphone : télécharge IleEclair.apk, ouvre-le et autorise l'installation depuis cette source.
             L'appli charge le jeu en ligne : une connexion Internet est nécessaire.
-          files: HesseFortnite.apk
+          files: IleEclair.apk
           make_latest: true
