@@ -5,8 +5,7 @@ sur PC et sur mobile.
 
 > Jeu indépendant, gratuit et sans but commercial, sans lien avec Epic Games ni avec aucun autre éditeur.
 
-- Jeu en ligne : https://ile-eclair.yasser-mobiarchitects.workers.dev/ (l'ancienne adresse
-  https://fortnit-jeu.yasser-mobiarchitects.workers.dev/ reste en ligne pour les applis déjà installées)
+- Jeu en ligne : https://ile-eclair.yasser-mobiarchitects.workers.dev/
 - Appli Android : `IleEclair.apk`, à compiler depuis le dossier `android/` (voir plus bas).
 - Appli Windows : `IleEclair.exe`, à compiler depuis le dossier `desktop/`, toujours à jour (voir plus bas).
 
@@ -123,7 +122,7 @@ http://ADRESSE-DE-CE-PC:3000.
 ## Structure
 
 ```
-index.html, net.js, config.js   -> le jeu (site publié sur Cloudflare Workers : ile-eclair et fortnit-jeu)
+index.html, net.js, config.js   -> le jeu (site publié sur Cloudflare Workers : ile-eclair)
 models/                         -> modèles 3D du jeu (générés par tools/blender)
 cloudflare/                     -> serveur multijoueur, comptes et amis (Cloudflare Workers)
 android/                        -> appli Android (WebView)
@@ -132,15 +131,14 @@ desktop/                        -> appli Windows (Electron)
 
 ## Site du jeu (Cloudflare)
 
-Le site est servi par deux workers qui ne contiennent que des fichiers statiques : `ile-eclair` (adresse
-principale) et `fortnit-jeu` (ancienne adresse, encore ouverte par les applis Android et Windows déjà
-compilées). Le serveur et les comptes gardent leur nom technique `fortnit`. Pour mettre le site à jour,
-copier `index.html`, `config.js`, `net.js` et les modèles utilisés par le jeu (`models/*.glb` sauf les
-fichiers bruts listés dans `.gitignore`) dans un dossier, puis publier sur les deux :
+Le site est servi par le worker `ile-eclair`, qui ne contient que des fichiers statiques (l'ancien worker
+`fortnit-jeu` a été supprimé : les applis compilées avant le renommage ne marchent plus). Le serveur et les
+comptes gardent leur nom technique `fortnit`. Pour mettre le site à jour, copier `index.html`, `config.js`,
+`net.js` et les modèles utilisés par le jeu (`models/*.glb` sauf les fichiers bruts listés dans `.gitignore`)
+dans un dossier, puis publier :
 
 ```bash
 npx wrangler deploy --name ile-eclair --assets <dossier> --compatibility-date 2026-11-02
-npx wrangler deploy --name fortnit-jeu --assets <dossier> --compatibility-date 2026-11-02
 ```
 
 ## Serveur multijoueur (Cloudflare)
