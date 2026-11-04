@@ -20,3 +20,6 @@ models/t77_handgun.glb
 # Appli Windows
 desktop/node_modules/
 desktop/dist/
+
+# Fichiers échangés avec Mixamo (envoi pour l auto-rig, téléchargements bruts)
+tools/mixamo/
