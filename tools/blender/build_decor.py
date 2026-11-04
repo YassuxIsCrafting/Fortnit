@@ -1,4 +1,4 @@
-"""Génère le décor de Fortnit (arbres, rochers, buissons, coffres, véhicules) et exporte models/decor.glb.
+"""Génère le décor d'Île Éclair (arbres, rochers, buissons, coffres, véhicules) et exporte models/decor.glb.
 
 Lancer dans Blender :  exec(open(r"C:/Repos/Fortnit/tools/blender/build_decor.py", encoding="utf-8").read(), {"__name__": "decor"})
 

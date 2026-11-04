@@ -1,4 +1,4 @@
-"""Génère la couronne des gagnants de Fortnit et exporte models/crown.glb.
+"""Génère la couronne des gagnants d'Île Éclair et exporte models/crown.glb.
 
 blender -b --factory-startup -P tools/blender/build_crown.py
 

@@ -1,4 +1,4 @@
-"""Génère les armes et le butin de Fortnit dans Blender, puis exporte models/items.glb.
+"""Génère les armes et le butin d'Île Éclair dans Blender, puis exporte models/items.glb.
 
 Lancer dans Blender :  exec(open(r"C:/Repos/Fortnit/tools/blender/build_items.py").read())
 

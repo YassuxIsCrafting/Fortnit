@@ -1,4 +1,4 @@
-// Fortnit pour Windows : une fenêtre plein écran qui charge le jeu en ligne.
+// Île Éclair pour Windows : une fenêtre plein écran qui charge le jeu en ligne.
 // Le jeu n'est pas embarqué, donc chaque mise à jour du site arrive toute seule au lancement.
 const { app, BrowserWindow, shell, Menu } = require("electron");
 const path = require("path");
@@ -20,7 +20,7 @@ function create() {
     width: 1600,
     height: 900,
     backgroundColor: "#14123a",
-    title: "Fortnit",
+    title: "Île Éclair",
     icon: path.join(__dirname, "build", "icon.png"),
     autoHideMenuBar: true,
     show: false,

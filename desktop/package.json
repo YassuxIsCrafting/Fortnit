@@ -1,8 +1,8 @@
 {
   "name": "fortnit-desktop",
-  "productName": "Fortnit",
+  "productName": "Île Éclair",
   "version": "1.0.0",
-  "description": "Fortnit pour Windows : ouvre le jeu en ligne, toujours à jour",
+  "description": "Île Éclair pour Windows : ouvre le jeu en ligne, toujours à jour",
   "author": "Yasser (YassuxIsCrafting)",
   "private": true,
   "main": "main.js",
@@ -17,14 +17,26 @@
   },
   "build": {
     "appId": "com.yassux.fortnit",
-    "productName": "Fortnit",
-    "files": ["main.js", "offline.html", "build/icon.png"],
-    "directories": { "output": "dist" },
+    "productName": "Île Éclair",
+    "electronDist": "node_modules/electron/dist",
+    "files": [
+      "main.js",
+      "offline.html",
+      "build/icon.png"
+    ],
+    "directories": {
+      "output": "dist"
+    },
     "win": {
       "target": "portable",
       "icon": "build/icon.ico",
       "signAndEditExecutable": true
     },
-    "portable": { "artifactName": "Fortnit.exe" }
+    "portable": {
+      "artifactName": "IleEclair.exe"
+    }
+  },
+  "allowScripts": {
+    "electron@38.2.0": true
   }
 }

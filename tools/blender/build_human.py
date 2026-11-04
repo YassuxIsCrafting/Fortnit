@@ -1,4 +1,4 @@
-"""Génère le personnage réaliste de Fortnit (maillage riggé) et ses accessoires de skins, exporte models/human.glb.
+"""Génère le personnage réaliste d'Île Éclair (maillage riggé) et ses accessoires de skins, exporte models/human.glb.
 
 blender -b --factory-startup -P <script qui exec ce fichier puis appelle build_human() et export_human()>
 

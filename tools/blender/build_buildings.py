@@ -1,4 +1,4 @@
-"""Génère les pièces des bâtiments de Fortnit et exporte models/buildings.glb.
+"""Génère les pièces des bâtiments d'Île Éclair et exporte models/buildings.glb.
 
 Lancer dans Blender :  exec(open(r"C:/Repos/Fortnit/tools/blender/build_buildings.py", encoding="utf-8").read(), {"__name__": "bld"})
 

@@ -1,14 +1,14 @@
-# Hesse Fortnite (Île Éclair 3D)
+# Île Éclair
 
 Battle royale 3D jouable dans le navigateur (three.js), en solo contre des bots ou en multijoueur,
 sur PC et sur mobile.
 
-> Projet de fan non officiel, gratuit et sans but commercial. Il n'est ni affilié, ni approuvé, ni
-> sponsorisé par Epic Games ou Fortnite.
+> Jeu indépendant, gratuit et sans but commercial, sans lien avec Epic Games ni avec aucun autre éditeur.
 
-- Jeu en ligne : https://fortnit-jeu.yasser-mobiarchitects.workers.dev/
-- Appli Android : `HesseFortnite.apk`, à compiler depuis le dossier `android/` (voir plus bas).
-- Appli Windows : `Fortnit.exe`, à compiler depuis le dossier `desktop/`, toujours à jour (voir plus bas).
+- Jeu en ligne : https://ile-eclair.yasser-mobiarchitects.workers.dev/ (l'ancienne adresse
+  https://fortnit-jeu.yasser-mobiarchitects.workers.dev/ reste en ligne pour les applis déjà installées)
+- Appli Android : `IleEclair.apk`, à compiler depuis le dossier `android/` (voir plus bas).
+- Appli Windows : `IleEclair.exe`, à compiler depuis le dossier `desktop/`, toujours à jour (voir plus bas).
 
 ## Le jeu
 
@@ -123,7 +123,7 @@ http://ADRESSE-DE-CE-PC:3000.
 ## Structure
 
 ```
-index.html, net.js, config.js   -> le jeu (site publié sur Cloudflare Workers, worker fortnit-jeu)
+index.html, net.js, config.js   -> le jeu (site publié sur Cloudflare Workers : ile-eclair et fortnit-jeu)
 models/                         -> modèles 3D du jeu (générés par tools/blender)
 cloudflare/                     -> serveur multijoueur, comptes et amis (Cloudflare Workers)
 android/                        -> appli Android (WebView)
@@ -132,11 +132,14 @@ desktop/                        -> appli Windows (Electron)
 
 ## Site du jeu (Cloudflare)
 
-Le site est le worker `fortnit-jeu`, qui ne sert que des fichiers statiques. Pour le mettre à jour, copier
-`index.html`, `config.js`, `net.js` et les modèles utilisés par le jeu (`models/*.glb` sauf les fichiers bruts
-listés dans `.gitignore`) dans un dossier, puis :
+Le site est servi par deux workers qui ne contiennent que des fichiers statiques : `ile-eclair` (adresse
+principale) et `fortnit-jeu` (ancienne adresse, encore ouverte par les applis Android et Windows déjà
+compilées). Le serveur et les comptes gardent leur nom technique `fortnit`. Pour mettre le site à jour,
+copier `index.html`, `config.js`, `net.js` et les modèles utilisés par le jeu (`models/*.glb` sauf les
+fichiers bruts listés dans `.gitignore`) dans un dossier, puis publier sur les deux :
 
 ```bash
+npx wrangler deploy --name ile-eclair --assets <dossier> --compatibility-date 2026-11-02
 npx wrangler deploy --name fortnit-jeu --assets <dossier> --compatibility-date 2026-11-02
 ```
 
@@ -157,20 +160,20 @@ serveur n'accepte que les connexions venant du site (`ALLOWED_ORIGINS`).
 
 L'appli ouvre le jeu en ligne (https://fortnit-jeu.yasser-mobiarchitects.workers.dev/) en plein écran ;
 il faut Internet. Pour la compiler : ouvrir le dossier `android/` dans Android Studio, puis
-Build > Build APK(s). Pour l'installer : copier `HesseFortnite.apk` sur le téléphone, l'ouvrir et
+Build > Build APK(s). Pour l'installer : copier `IleEclair.apk` sur le téléphone, l'ouvrir et
 autoriser l'installation depuis cette source.
 
 ## Appli Windows
 
-`Fortnit.exe` (dossier `desktop/`, Electron) ouvre en plein écran le jeu en ligne
+`IleEclair.exe` (dossier `desktop/`, Electron) ouvre en plein écran le jeu en ligne
 https://fortnit-jeu.yasser-mobiarchitects.workers.dev/. Le jeu n'est pas dans l'exe : chaque mise à jour du site
 arrive toute seule au prochain lancement, sans rien retélécharger. Il faut Internet.
 
-- Pas d'installation : double-clic sur `Fortnit.exe` pour jouer.
+- Pas d'installation : double-clic sur `IleEclair.exe` pour jouer.
 - L'exe n'est pas signé : au premier lancement, Windows affiche « Windows a protégé votre ordinateur ».
   Cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
 - Dans l'appli : F11 plein écran, F5 recharger.
-- Compiler soi-même : `cd desktop`, `npm install`, `npm run build` → `desktop/dist/Fortnit.exe`.
+- Compiler soi-même : `cd desktop`, `npm install`, `npm run build` → `desktop/dist/IleEclair.exe`.
   `npm run icon` régénère l'icône à partir de `desktop/build/icon.svg`.
 
 ## Crédits

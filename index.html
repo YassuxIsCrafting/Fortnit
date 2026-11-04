@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Fortnit</title>
+<title>Île Éclair</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 172'><path d='M80 6 150 32V95C150 130 115 152 80 165 45 152 10 130 10 95V32Z' fill='%237b3fe4' stroke='%2314123a' stroke-width='10'/><path d='M94 26 46 98H76L62 148 116 70H84Z' fill='%23ffd23f' stroke='%2314123a' stroke-width='6' stroke-linejoin='round'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
 <style>
@@ -233,7 +233,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <linearGradient id="lgGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6b8"/><stop offset=".48" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff8a1f"/></linearGradient>
 <linearGradient id="lgShield" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b98bff"/><stop offset="1" stop-color="#4a1fb0"/></linearGradient>
 <linearGradient id="lgShine" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="120" y2="40"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/><animateTransform attributeName="gradientTransform" type="translate" values="-200 0;800 0;800 0" keyTimes="0;.45;1" dur="4.5s" repeatCount="indefinite"/></linearGradient>
-<g id="lgw" font-family="Bungee,Impact,sans-serif" font-size="100"><text x="170" y="118" textLength="296" lengthAdjust="spacingAndGlyphs">FORTN</text><path d="M504 38 470 88H490L478 128 518 72H496Z"/><text x="522" y="118" textLength="70" lengthAdjust="spacingAndGlyphs">T</text></g>
+<g id="lgw" font-family="Bungee,Impact,sans-serif" font-size="84"><text x="170" y="118" textLength="118" lengthAdjust="spacingAndGlyphs">ÎLE</text><text x="300" y="118" textLength="182" lengthAdjust="spacingAndGlyphs">ÉCLA</text><path d="M516 56 488 96H504L494 128 528 84H510Z"/><text x="532" y="118" textLength="56" lengthAdjust="spacingAndGlyphs">R</text></g>
 <symbol id="logo" viewBox="0 0 600 172"><path d="M80 6 150 32V95C150 130 115 152 80 165 45 152 10 130 10 95V32Z" fill="url(#lgShield)" stroke="#14123a" stroke-width="10" stroke-linejoin="round"/><path d="M80 18 139 40V94C139 122 111 141 80 153 49 141 21 122 21 94V40Z" fill="none" stroke="#ffd23f" stroke-width="4"/>
 <path d="M94 26 46 98H76L62 148 116 70H84Z" fill="url(#lgGold)" stroke="#14123a" stroke-width="6" stroke-linejoin="round"><animate attributeName="opacity" values="1;1;.72;1;.86;1;1" keyTimes="0;.8;.83;.86;.89;.92;1" dur="5s" repeatCount="indefinite"/></path>
 <use href="#lgw" x="6" y="7" fill="#7b3fe4" stroke="#7b3fe4" stroke-width="12" stroke-linejoin="round"/><use href="#lgw" fill="#14123a" stroke="#14123a" stroke-width="12" stroke-linejoin="round"/><use href="#lgw" fill="url(#lgGold)"/><use href="#lgw" fill="url(#lgShine)"/>
@@ -245,7 +245,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
     <button type="button" class="tab on" id="tab-play">JOUER</button><button type="button" class="tab" id="tab-locker">DRESSING</button><button type="button" class="tab" id="tab-shop"><i id="dot"></i>BOUTIQUE</button><button type="button" class="tab" id="tab-pass">PASSE</button><button type="button" class="tab" id="tab-quests"><i id="qdot"></i>QUÊTES</button><button type="button" class="tab" id="tab-friends"><i id="fdot"></i>AMIS</button>
     <button type="button" class="tab" id="tab-acct" style="display:none">👤 Invité</button>
     <span id="lvb" title="Niveau de saison"><span>⭐</span><b id="lvn">1</b><span class="xpbar"><i id="lvx"></i></span></span><span id="bal"><span class="coin">K</span>KILL TOKENS <b id="tk">0</b><small id="kp">0/3</small><small id="cwn"></small></span></div>
-  <div id="lt"><svg class="logo" role="img" aria-label="Fortnit"><use href="#logo"/></svg><h1 id="ttl"></h1><p id="msg"></p></div>
+  <div id="lt"><svg class="logo" role="img" aria-label="Île Éclair"><use href="#logo"/></svg><h1 id="ttl"></h1><p id="msg"></p></div>
   <div id="lobby">
     <div class="panel" id="cust">
       <h2>Mon héros</h2>
@@ -530,12 +530,28 @@ if(!ownColor(look.c))look.c=OUT[0];if(!ownHat(look.h))look.h=0;if(!ownSkin(look.
 const lookOf=(pr,id)=>({u:clampI(pr.u,GLD.length),c:HEX.test(pr.c)?pr.c:'#'+hue(id).getHexString(),sk:SKINS[clampI(pr.s,SKINS.length)],h:clampI(pr.h,HATS.length),k:clampI(pr.k,40)});
 const hatG=g=>{if(!g.userData.hat){g.userData.hat=new THREE.Group();g.add(g.userData.hat)}return g.userData.hat};
 function addHat(g,i,col){
-  const m=(geo,mat,x,y,z)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);hatG(g).add(o)},c=L(col);
+  const m=(geo,mat,x,y,z)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.userData.hatPart=1;o.castShadow=true;hatG(g).add(o);return o},c=L(col);
+  g.userData.hatI=i;g.userData.hatC=col;
+  if(SH&&i){// modèles Blender (tools/blender/build_shop.py), dans le repère de la tête en blocs
+    if(i===1){m(SH.HAT1_t,c,0,0,0);m(SH.HAT1_f,mChest,0,0,0)}
+    else if(i===2){const o=m(gCrown||new THREE.CylinderGeometry(11,8,10,6),gCrown?mCrown:mGold,0,58,0);o.userData.crown=58;o.scale.setScalar(.9)}
+    else if(i===3)m(SH.HAT3_f,mChest,0,0,0);else if(i===4)m(SH.HAT4_f,mChest,0,0,0);
+    return}
   if(i===1){m(new THREE.CylinderGeometry(11.5,11.5,6,12),c,0,55,0);m(new THREE.BoxGeometry(12,2,16),c,9,52,0)}
   else if(i===2)m(new THREE.CylinderGeometry(11,8,10,6),mGold,0,58,0);
   else if(i===3)m(new THREE.SphereGeometry(13,12,8,0,6.2832,0,1.5708),mGrey,0,47,0);
   else if(i===4){m(new THREE.CylinderGeometry(1.2,1.2,14,6),mGrey,0,63,0);m(new THREE.SphereGeometry(3.5,8,6),L(0xff4d4d),0,71,0)}
 }
+// Objets 3D de la boutique : chapeaux, aile delta, structure des parapluies. Au chargement, les chapeaux déjà portés
+// sont reconstruits et les parapluies refaits à la prochaine ouverture.
+let SH=null;
+function shopLoad(){if(!THREE.GLTFLoader)return;new THREE.GLTFLoader().load('models/shop.glb',m=>{
+  const D={};m.scene.children.forEach(n=>D[n.name]=n);if(!D.HAT1_t)return;
+  SH={};for(const k of['HAT1_t','HAT1_f','HAT3_f','HAT4_f','U_ribs','U_handle'])if(D[k])SH[k]=itemGeo(D[k]);SH.U_canopy=D.U_canopy&&D.U_canopy.geometry;
+  if(D.G_glider)regeo(gGlider,itemGeo(D.G_glider));
+  for(const sc of[scene,ls])sc.traverse(o=>{const U=o.userData;if(U.hatI>0&&U.hat){for(const c of[...U.hat.children])if(c.userData.hatPart)U.hat.remove(c);addHat(o,U.hatI,U.hatC);if(U.hon&&U.real){U.hat.scale.setScalar(.42);U.hat.position.y=REAL_S*1.64-46*.42;for(const c of U.hat.children)if(c.userData.crown)c.position.y=c.userData.crown-6}}
+    if(U.gl&&U.gli>0){o.remove(U.gl);U.gl=null;U.gli=-1}})},undefined,()=>{})}
+shopLoad();
 function label(txt,y){
   const c=document.createElement('canvas');c.width=256;c.height=64;const x=c.getContext('2d');
   let f=34;x.font='700 '+f+'px Bungee,Impact,sans-serif';while(x.measureText(txt).width>240&&f>14){f-=2;x.font='700 '+f+'px Bungee,Impact,sans-serif'}
@@ -605,7 +621,7 @@ function mkChar(col,bar,name,sk,hat,w,k){
 // Skin 3D : le squelette recopie les poses des membres en blocs, donc marche, emotes et planeur marchent sans code à part.
 // Si le modèle ne charge pas, la version en blocs reste affichée.
 let heroP=null;const HERO_S=34,_hv=new THREE.Vector3(),_hz=new THREE.Vector3(),AX_Y=new THREE.Vector3(0,1,0);
-let heroSrc=null,heroOn=0;const HT={},HERO_MAX=12,HERO_R=650,FAR_R=800;
+let heroSrc=null,heroOn=0;const HT={},HERO_MAX=40,HERO_R=1000,FAR_R=2000;
 function heroLoad(){return heroP||(heroP=new Promise((ok,no)=>{if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return no();new THREE.GLTFLoader().load('models/hero-eclair.glb',m=>ok(heroSrc=m.scene),undefined,no)}).catch(()=>null))}
 function heroBuild(g,src,b,h,u,tint,real){
   const H=THREE.SkeletonUtils.clone(src),box=new THREE.Group(),B={},sks=[];H.traverse(o=>{if(o.isSkinnedMesh)sks.push(o);if(o.isBone)B[o.name]=o});if(!sks.length)return;const sk=sks[0];
@@ -615,7 +631,7 @@ function heroBuild(g,src,b,h,u,tint,real){
   const U=g.userData,armP=_hz.set(0,0,1).clone(),armN=_hz.set(0,0,-1).clone(),arm=(a,up,fo,rest)=>{const d=_hv.copy(DOWN).applyQuaternion(a.quaternion);up.quaternion.setFromUnitVectors(rest,d);const bend=1-Math.max(0,Math.min(1,d.y+1));fo.rotation.set(0,0,0);fo.rotateOnAxis(AX_Y,(rest.z>0?1:-1)*bend*-.5)};
   U.heroSync=()=>{const l0=U.legs[0].rotation.z,l1=U.legs[1].rotation.z;B.LegN.rotation.z=l0;B.LegP.rotation.z=l1;B.ShinN.rotation.z=-Math.abs(l0)*.9;B.ShinP.rotation.z=-Math.abs(l1)*.9;if(real){realArm(U.arms[0],B.ArmP,B.ForeP,armP,1);realArm(U.arms[1],B.ArmN,B.ForeN,armN,-1)}else{arm(U.arms[0],B.ArmP,B.ForeP,armP);arm(U.arms[1],B.ArmN,B.ForeN,armN)}};
   const umw=g.updateMatrixWorld;g.updateMatrixWorld=function(f){if(U.hon)U.heroSync();umw.call(g,f)};
-  U.real=!!real;U.heroSet=on=>{U.hon=on;box.visible=on;if(real)for(const c of U.skinParts||[])c.visible=!on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0;for(const c of U.hat.children)if(c.userData.crown)c.position.y=on?CROWN_RY:61}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;u.position.set(on?(real?10*RA.k:13):10,on?(real?RA.sy+(27-35)*RA.k:31):27,5)};U.heroSet(true);
+  U.real=!!real;U.heroSet=on=>{U.hon=on;box.visible=on;if(real)for(const c of U.skinParts||[])c.visible=!on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0;for(const c of U.hat.children)if(c.userData.crown)c.position.y=c.userData.crown-(on?6:0)}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;u.position.set(on?(real?10*RA.k:13):10,on?(real?RA.sy+(27-35)*RA.k:31):27,5)};U.heroSet(true);
 }
 function heroAttach(g,b,h,u){heroLoad().then(src=>{if(src)heroBuild(g,src,b,h,u)})}
 // Personnage réaliste (tools/blender/build_human.py), même squelette que le Héros Éclair : tenue par défaut des joueurs et bots proches.
@@ -640,6 +656,8 @@ function realAttach(g,b,h,u,kit){realLoad(kit&&kit.src).then(src=>{if(src&&!g.us
 realLoad();
 // Bots : vrai modèle de près (avec leur couleur), blocs de loin pour rester fluide.
 function setFar(g,on){const U=g.userData;if(!!U.far===on)return;U.far=on;for(const c of g.children)c.visible=on?c===U.fm||c===U.mk:c!==U.fm;if(!on){if(U.heroSet)U.heroSet(!!U.hon);g.matrixWorldNeedsUpdate=true}}
+// Un bot éliminé rend sa place de modèle réaliste (sinon, après HERO_MAX éliminations, plus aucun bot ne le devenait).
+const heroFree=b=>{if(b.m.userData.hon)heroOn=Math.max(0,heroOn-1)};
 function botLod(b,d){const U=b.m.userData,hq=HQ();setFar(b.m,d>(hq?FAR_R:450));const want=hq&&d<HERO_R;if(want&&!U.heroSet&&(realSrc||heroSrc)&&heroOn<HERO_MAX){const c=b.m.children;if(realSrc)heroBuild(b.m,realSrc,c[0],c[1],c[2],undefined,true);else heroBuild(b.m,heroSrc,c[0],c[1],c[2],BOTC[b.i%BOTC.length]);heroOn++;return}if(!U.heroSet)return;if(want!==!!U.hon){if(want&&heroOn>=HERO_MAX)return;heroOn+=want?1:-1;U.heroSet(want)}}
 const BOTC=[0xff7a3d,0x3da5ff,0xff5d8f,0x7dff8a,0xc27bff,0xffd23f,0x00e5ff,0xff4d4d,0xf5f5f5];
 let cars=[];
@@ -770,8 +788,8 @@ const UDRAW={
 function mkUmb(i){
   if(!UMB[i]){const cv2=document.createElement('canvas');cv2.width=1024;cv2.height=256;const c=cv2.getContext('2d');UDRAW[i](c,1024,256);c.strokeStyle='#14123a88';c.lineWidth=5;for(let k=0;k<8;k++){c.beginPath();c.moveTo(k*128,0);c.lineTo(k*128,256);c.stroke()}
     const t=new THREE.CanvasTexture(cv2);t.wrapS=THREE.RepeatWrapping;t.anisotropy=ANI;UMB[i]=new THREE.MeshLambertMaterial({map:t,side:THREE.DoubleSide,emissive:i===5?0x8a6200:0x333333,emissiveMap:t})}
-  const g=new THREE.Group(),ca=new THREE.Mesh(gCanopy,UMB[i]),po=new THREE.Mesh(gUPole,mDark),tp=new THREE.Mesh(gUTip,mUTip),a=new THREE.Vector3(1.6,52,16),b=new THREE.Vector3(0,126,0),d=b.clone().sub(a);
-  ca.position.y=96;ca.scale.y=.62;ca.userData.keep=true;ca.castShadow=true;po.position.copy(a).add(b).multiplyScalar(.5);po.scale.y=d.length();po.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());tp.position.y=129;g.add(ca,po,tp);return g}
+  const hd=SH&&SH.U_canopy,g=new THREE.Group(),ca=new THREE.Mesh(hd?SH.U_canopy:gCanopy,UMB[i]),po=new THREE.Mesh(gUPole,mDark),tp=new THREE.Mesh(gUTip,mUTip),a=new THREE.Vector3(1.6,52,16),b=new THREE.Vector3(0,126,0),d=b.clone().sub(a);
+  ca.position.y=96;ca.scale.y=hd?1:.62;if(hd){ca.add(new THREE.Mesh(SH.U_ribs,mChest));const hn=new THREE.Mesh(SH.U_handle,mChest);hn.position.copy(a);hn.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.clone().normalize());g.add(hn)}ca.userData.keep=true;ca.castShadow=true;po.position.copy(a).add(b).multiplyScalar(.5);po.scale.y=d.length();po.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());tp.position.y=129;g.add(ca,po,tp);return g}
 function glider(g,on){const U=g.userData,i=U.ug|0;let m=U.gl;if(!on&&!m)return;
   if(!m||U.gli!==i){if(m)g.remove(m);m=U.gl=i?mkUmb(i):new THREE.Mesh(gGlider,mChest);U.gli=i;g.add(m)}m.visible=on;
   const up=on&&i>0;if(up){m.children[0].rotation.y+=.012;U.arms[0].quaternion.setFromUnitVectors(DOWN,_gu)}else if(U.glup)U.arms[0].quaternion.copy(U.aq[0]);U.glup=up}
@@ -1071,9 +1089,9 @@ window.IE_onSocial=m=>{
 const crownHeld=()=>!!wallet.cr;let lastPh=-1,actx=null;
 function chime(){sfx("chime")}
 // Couronne des gagnants modélisée dans Blender (tools/blender/build_crown.py) ; cylindre doré tant qu'elle n'est pas chargée.
-let gCrown=null;const CROWN_RY=55;// sur la tête plus étroite du modèle réaliste
+let gCrown=null;
 const mCrown=new THREE.MeshLambertMaterial({vertexColors:true,emissive:0x2a1a00});
-function addCrown(g){const c=gCrown?new THREE.Mesh(gCrown,mCrown):new THREE.Mesh(new THREE.CylinderGeometry(11,8,10,6),mGold);const on=g.userData.hon&&g.userData.real;c.userData.crown=1;c.position.y=on?CROWN_RY:61;c.castShadow=true;const H=hatG(g);H.add(c);if(on){H.scale.setScalar(.42);H.position.y=REAL_S*1.64-46*.42}}
+function addCrown(g){const c=gCrown?new THREE.Mesh(gCrown,mCrown):new THREE.Mesh(new THREE.CylinderGeometry(11,8,10,6),mGold);const on=g.userData.hon&&g.userData.real;c.userData.crown=61;c.position.y=on?55:61;c.castShadow=true;const H=hatG(g);H.add(c);if(on){H.scale.setScalar(.42);H.position.y=REAL_S*1.64-46*.42}}
 function crownLoad(){if(!THREE.GLTFLoader)return;new THREE.GLTFLoader().load('models/crown.glb',m=>{const n=m.scene.getObjectByName('CROWN');if(!n)return;gCrown=itemGeo(n);
   for(const sc of[scene,ls])sc.traverse(o=>{if(o.userData.crown){o.geometry=gCrown;o.material=mCrown}})},undefined,()=>{})}
 crownLoad();
@@ -1137,11 +1155,11 @@ function applyBots(arr,snap){
   arr.forEach((d,i)=>{const b=botsAll[i];if(!b)return;if(!b.alive){if(snap||d[3]<=0)return;b.alive=true;b.killer="";if(!bots.includes(b))bots.push(b);dyn.add(b.m);for(const c of cards.filter(c=>c.kind==="bot"&&c.ref===b))removeCard(c)}
     if(d[3]<=0){if(!snap&&d[4]&&d[4]===myId())addKill();b.killer=d[4]===myId()?"":d[4]||"";if(d[4]===myId())b.killer=myId();killBot(b);return}
     const zq=Math.floor(d[2]/1001);b.sx=d[0];b.sy=d[1];b.a=(d[2]-zq*1001-500)/100;b.tz=zq*10;b.hp=d[3];if(snap){b.x=b.sx;b.y=b.sy;b.z=b.tz}});
-  for(const b of botsAll.slice(arr.length))if(b.alive){b.alive=false;bots.splice(bots.indexOf(b),1);dyn.remove(b.m)}
+  for(const b of botsAll.slice(arr.length))if(b.alive){b.alive=false;heroFree(b);bots.splice(bots.indexOf(b),1);dyn.remove(b.m)}
 }
 let ktT=0;
 function addKill(){sfx("elim");P.kills++;addXP(50,'Élimination','💥');qEv('kill');const g=P&&P.crowned?2:1;wallet.kp+=g;let tx="ÉLIMINATION ! +"+g+(g>1?" 👑":"");if(wallet.kp>=3){wallet.kp-=3;wallet.tk++;P.tok=(P.tok|0)+1;tx+=' · +1 KILL TOKEN 🪙'}saveW();updateBal();const k=document.getElementById('kt');k.textContent=tx;k.style.opacity=1;clearTimeout(ktT);ktT=setTimeout(()=>k.style.opacity=0,1500)}
-function killBot(b){if(!b.alive)return;b.alive=false;if(b.carry){const cd=b.carry;cd.by=null;cd.x=b.x;cd.y=b.y;cd.m.position.set(b.x,TH(b.x,b.y),b.y);cd.m.visible=true;b.carry=null}if(rlMode){if(reloadOn()&&((b.mate&&b.mate.alive)||(b.buddy&&(b.buddy===myId()?P.mode!=="dead"&&P.hp>0:(others.get(b.buddy)||{}).hp>0))))b.rsT=gnow()+RL_T*1000}else if(curMode&&vans.length&&((b.mate&&b.mate.alive)||(b.buddy&&(b.buddy!==myId()||P.mode!=="dead"))))dropCard("bot",b,botName(b.i),b.x,b.y);feed(b.killer?whoName(b.killer)+" a éliminé "+botName(b.i):botName(b.i)+" a été emporté par la tempête");if(b.killer==='me')addKill();bots.splice(bots.indexOf(b),1);ragdoll(b);for(const k of['ammo',Math.random()<.5?'mini':'med'])addLoot(b.x+rnd(-20,20),b.y+rnd(-20,20),k)}
+function killBot(b){if(!b.alive)return;b.alive=false;heroFree(b);if(b.carry){const cd=b.carry;cd.by=null;cd.x=b.x;cd.y=b.y;cd.m.position.set(b.x,TH(b.x,b.y),b.y);cd.m.visible=true;b.carry=null}if(rlMode){if(reloadOn()&&((b.mate&&b.mate.alive)||(b.buddy&&(b.buddy===myId()?P.mode!=="dead"&&P.hp>0:(others.get(b.buddy)||{}).hp>0))))b.rsT=gnow()+RL_T*1000}else if(curMode&&vans.length&&((b.mate&&b.mate.alive)||(b.buddy&&(b.buddy!==myId()||P.mode!=="dead"))))dropCard("bot",b,botName(b.i),b.x,b.y);feed(b.killer?whoName(b.killer)+" a éliminé "+botName(b.i):botName(b.i)+" a été emporté par la tempête");if(b.killer==='me')addKill();bots.splice(bots.indexOf(b),1);ragdoll(b);for(const k of['ammo',Math.random()<.5?'mini':'med'])addLoot(b.x+rnd(-20,20),b.y+rnd(-20,20),k)}
 const mCh=L(0x8b5a2b),mGoldB=L(0xffd23f),mBeam=new THREE.MeshBasicMaterial({color:0xffd23f,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false});
 function mergeBoxes(list){
   const pos=[],nor=[],col=[],c=new THREE.Color();
@@ -1756,7 +1774,7 @@ const ITEMS=[...SKN.map((s,i)=>({k:'s',i,n:s.n,e:s.e,p:s.p})),...OUT.map((c,i)=>
 let sel=null;
 // Rareté d'un cosmétique : purement visuelle (aucun avantage en jeu), d'après le prix.
 const itRar=it=>it.k==="e"?Math.min(4,it.r|0):it.p<=5?0:it.p<=15?1:it.p<=30?2:it.p<=45?3:4;
-// ===== Passe de combat, quêtes et XP de saison (inspirés du guide Fortnite : Quests, Daily Quests, Battle Pass) =====
+// ===== Passe de combat, quêtes et XP de saison (quêtes, quêtes du jour et passe, classiques du battle royale) =====
 const SEASON='S1',BP_LV=50,XP_LV=1000,BP_PRICE=95;
 const QTXT={kill:n=>'Élimine '+n+' adversaire'+(n>1?'s':''),chest:n=>'Ouvre '+n+' coffre'+(n>1?'s':''),ammo:n=>'Ouvre '+n+' caisse'+(n>1?'s':'')+' de munitions',
   match:n=>'Joue '+n+' partie'+(n>1?'s':''),top25:n=>'Finis dans le top 25'+(n>1?' ('+n+' fois)':''),top10:n=>'Finis dans le top 10'+(n>1?' ('+n+' fois)':''),
@@ -2127,8 +2145,8 @@ function renderCredits(){
   const b=document.getElementById('credb'),h=t=>{const e=document.createElement('h3');e.textContent=t;b.append(e)},
     p=(parts,cls)=>{const e=document.createElement('p');if(cls)e.className=cls;for(const x of parts){if(typeof x==='string')e.append(x);else{const a=document.createElement('a');a.href=x.href;a.textContent=x.t;a.target='_blank';a.rel='noopener noreferrer';e.append(a)}}b.append(e)};
   b.textContent='';
-  h('Le jeu');p(['Hesse Fortnite : conception et direction par Yasser (YassuxIsCrafting).']);p(['Code écrit avec l’aide de Claude (Anthropic).']);
-  p(['Projet de fan non officiel, gratuit et sans but commercial. Il n’est ni affilié, ni approuvé, ni sponsorisé par Epic Games ou Fortnite.'],'lic');
+  h('Le jeu');p(['Île Éclair : conception et direction par Yasser (YassuxIsCrafting).']);p(['Code écrit avec l’aide de Claude (Anthropic).']);
+  p(['Jeu indépendant, gratuit et sans but commercial, sans lien avec Epic Games ni avec aucun autre éditeur.'],'lic');
   p(['Les skins, véhicules, bâtiments et décors sont des créations originales du projet, ainsi que le sniper et la pioche.'],'lic');
   h('Modèles 3D');
   for(const[t,u,a,au]of[['T77 Handgun','https://sketchfab.com/3d-models/t77-handgun-7e6a5ffc9deb4994a4092ccdba85c965','4d_Bob','https://sketchfab.com/3d_Bob'],['SG553 Assault Rifle','https://sketchfab.com/3d-models/sg553-assault-rifle-92a2efa3086b4eec8ee93b910ce77aa1','wburton','https://sketchfab.com/wburton95'],['Shotgun','https://sketchfab.com/3d-models/shotgun-2f5b48d9904145a39c1c2fcc6e5579b7','DJMaesen','https://sketchfab.com/bumstrum'],['Medieval Chest (coffres)','https://sketchfab.com/3d-models/medieval-chest-037b03a3e0274279be4b93b7c7cedf01','AIV','https://sketchfab.com/aiv']])

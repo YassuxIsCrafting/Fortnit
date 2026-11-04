@@ -1,4 +1,4 @@
-"""Génère les parties du corps des personnages de Fortnit et exporte models/character.glb.
+"""Génère les parties du corps des personnages d'Île Éclair et exporte models/character.glb.
 
 Lancer dans Blender :  exec(open(r"C:/Repos/Fortnit/tools/blender/build_character.py", encoding="utf-8").read(), {"__name__": "chr"})
 
