@@ -658,7 +658,7 @@ realLoad();
 function setFar(g,on){const U=g.userData;if(!!U.far===on)return;U.far=on;for(const c of g.children)c.visible=on?c===U.fm||c===U.mk:c!==U.fm;if(!on){if(U.heroSet)U.heroSet(!!U.hon);g.matrixWorldNeedsUpdate=true}}
 // Un bot éliminé rend sa place de modèle réaliste (sinon, après HERO_MAX éliminations, plus aucun bot ne le devenait).
 const heroFree=b=>{if(b.m.userData.hon)heroOn=Math.max(0,heroOn-1)};
-function botLod(b,d){const U=b.m.userData,hq=HQ();setFar(b.m,d>(hq?FAR_R:450));const want=hq&&d<HERO_R;if(want&&!U.heroSet&&(realSrc||heroSrc)&&heroOn<HERO_MAX){const c=b.m.children;if(realSrc)heroBuild(b.m,realSrc,c[0],c[1],c[2],undefined,true);else heroBuild(b.m,heroSrc,c[0],c[1],c[2],BOTC[b.i%BOTC.length]);heroOn++;return}if(!U.heroSet)return;if(want!==!!U.hon){if(want&&heroOn>=HERO_MAX)return;heroOn+=want?1:-1;U.heroSet(want)}}
+function botLod(b,d){const U=b.m.userData,hq=HQ();setFar(b.m,d>(hq?FAR_R:450));const want=hq&&d<HERO_R;if(want&&!U.heroSet&&(realSrc||heroSrc)&&heroOn<HERO_MAX){const c=b.m.children;if(heroSrc&&(b.i%2||!realSrc))heroBuild(b.m,heroSrc,c[0],c[1],c[2],BOTC[b.i%BOTC.length]);else heroBuild(b.m,realSrc,c[0],c[1],c[2],undefined,true);/* un bot sur deux en Héros Éclair */heroOn++;return}if(!U.heroSet)return;if(want!==!!U.hon){if(want&&heroOn>=HERO_MAX)return;heroOn+=want?1:-1;U.heroSet(want)}}
 const BOTC=[0xff7a3d,0x3da5ff,0xff5d8f,0x7dff8a,0xc27bff,0xffd23f,0x00e5ff,0xff4d4d,0xf5f5f5];
 let cars=[];
 // Horloge de jeu : Date.now() moins le temps passé en pause (solo). On rajoute pOff quand une date part sur le réseau.
