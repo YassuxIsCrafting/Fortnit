@@ -630,17 +630,28 @@ function mkChar(col,bar,name,sk,hat,w,k){
 let heroP=null;const HERO_S=34,_hv=new THREE.Vector3(),_hz=new THREE.Vector3(),AX_Y=new THREE.Vector3(0,1,0);
 let heroSrc=null,heroOn=0;const HT={},HERO_MAX=40,HERO_R=1000,FAR_R=2000;
 function heroLoad(){return heroP||(heroP=new Promise((ok,no)=>{if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return no();new THREE.GLTFLoader().load('models/hero-eclair.glb',m=>ok(heroSrc=m.scene),undefined,no)}).catch(()=>null))}
-function heroBuild(g,src,b,h,u,tint,real){
-  const mx=!!(MX&&(src===MX.human||src===MX.hero));
-  const H=THREE.SkeletonUtils.clone(src),box=new THREE.Group(),B={},sks=[];H.traverse(o=>{if(o.isSkinnedMesh)sks.push(o);if(o.isBone)B[o.name]=o});if(!sks.length)return;const sk=sks[0];
+// Clone d'un modèle riggé, peint (perso réaliste : couleurs par matériau ; Héros Éclair : texture teintée) et mis à l'échelle.
+function heroClone(src,b,h,tint,real){
+  const H=THREE.SkeletonUtils.clone(src),box=new THREE.Group(),B={},sks=[];H.traverse(o=>{if(o.isSkinnedMesh)sks.push(o);if(o.isBone)B[o.name]=o});if(!sks.length)return null;const sk=sks[0];
   if(real)realPaint(sks,b.material.color,h.material.color,real);else{const key=tint===undefined?'x':tint;if(!HT[key]){const mp=sk.material.map;if(mp)mp.encoding=THREE.LinearEncoding;HT[key]=new THREE.MeshLambertMaterial({map:mp,skinning:true});if(tint!==undefined)HT[key].color.setHex(tint).lerp(new THREE.Color(0xffffff),.45)}sk.material=HT[key]}
   for(const o of sks){o.castShadow=true;o.frustumCulled=false}
-  box.scale.setScalar(real?REAL_S:HERO_S);box.add(H);g.add(box);
-  const U=g.userData;if(mx){box.rotation.y=Math.PI/2;U.mxSrc=src;U.mixer=new THREE.AnimationMixer(H);U.mxCur=U.mxAct=null;U.mxR=B.mixamorigRightHand;U.mxL=B.mixamorigLeftHand}
+  box.scale.setScalar(real?REAL_S:HERO_S);box.add(H);return{H,box,B}}
+// Déplacements (attente, course, sprint, recul, pas de côté) : anciennes animations, recopiées des membres en blocs sur l'ancien squelette.
+// Le reste (emotes, planeur, chute) : clips Mixamo. Un perso Mixamo garde donc aussi un clone de l'ancien modèle, affiché à la place.
+const LOCO=new Set(['idle','run','sprint','back','strafeL','strafeR']);
+function heroBuild(g,src,b,h,u,tint,real){
+  const mx=!!(MX&&(src===MX.human||src===MX.hero));
+  const c0=heroClone(src,b,h,tint,real);if(!c0)return;const{H,box,B}=c0;g.add(box);
+  const U=g.userData;let O=mx?null:c0;// O = clone de l'ancien squelette (os LegN, ArmP...)
+  const show=()=>{box.visible=!!U.hon&&!(mx&&U.loco);if(mx&&O)O.box.visible=!!U.hon&&!!U.loco};
+  if(mx){box.rotation.y=Math.PI/2;U.mxSrc=src;U.mixer=new THREE.AnimationMixer(H);U.mxCur=U.mxAct=null;U.mxR=B.mixamorigRightHand;U.mxL=B.mixamorigLeftHand;
+    (real?realLoad(real!==true?real.src:undefined):heroLoad()).then(s=>{if(!s||O)return;const o=heroClone(s,b,h,tint,real);if(!o)return;o.box.visible=false;g.add(o.box);O=o;show()})}
   const armP=_hz.set(0,0,1).clone(),armN=_hz.set(0,0,-1).clone(),arm=(a,up,fo,rest)=>{const d=_hv.copy(DOWN).applyQuaternion(a.quaternion);up.quaternion.setFromUnitVectors(rest,d);const bend=1-Math.max(0,Math.min(1,d.y+1));fo.rotation.set(0,0,0);fo.rotateOnAxis(AX_Y,(rest.z>0?1:-1)*bend*-.5)};
-  U.heroSync=()=>{const l0=U.legs[0].rotation.z,l1=U.legs[1].rotation.z;B.LegN.rotation.z=l0;B.LegP.rotation.z=l1;B.ShinN.rotation.z=-Math.abs(l0)*.9;B.ShinP.rotation.z=-Math.abs(l1)*.9;if(real){realArm(U.arms[0],B.ArmP,B.ForeP,armP,1);realArm(U.arms[1],B.ArmN,B.ForeN,armN,-1)}else{arm(U.arms[0],B.ArmP,B.ForeP,armP);arm(U.arms[1],B.ArmN,B.ForeN,armN)}};
-  const umw=g.updateMatrixWorld;g.updateMatrixWorld=function(f){if(U.hon){if(U.mixer){const now=performance.now()/1000,dt=Math.min(.1,now-(U.mxT||now));U.mxT=now;const em=mxState(g,dt);umw.call(g,f);if(!em)mxWeapon(g);return}U.heroSync()}umw.call(g,f)};
-  U.real=!!real;U.heroSet=on=>{U.hon=on;box.visible=on;if(real)for(const c of U.skinParts||[])c.visible=!on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0;for(const c of U.hat.children)if(c.userData.crown)c.position.y=c.userData.crown-(on?6:0)}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;if(!on)u.quaternion.identity();u.position.set(on?(real?10*RA.k:13):10,on?(real?RA.sy+(27-35)*RA.k:31):27,5)};U.heroSet(true);
+  U.heroSync=()=>{if(!O)return;const B=O.B,l0=U.legs[0].rotation.z,l1=U.legs[1].rotation.z;B.LegN.rotation.z=l0;B.LegP.rotation.z=l1;B.ShinN.rotation.z=-Math.abs(l0)*.9;B.ShinP.rotation.z=-Math.abs(l1)*.9;if(real){realArm(U.arms[0],B.ArmP,B.ForeP,armP,1);realArm(U.arms[1],B.ArmN,B.ForeN,armN,-1)}else{arm(U.arms[0],B.ArmP,B.ForeP,armP);arm(U.arms[1],B.ArmN,B.ForeN,armN)}};
+  const umw=g.updateMatrixWorld;g.updateMatrixWorld=function(f){if(U.hon){if(U.mixer){const now=performance.now()/1000,dt=Math.min(.1,now-(U.mxT||now));U.mxT=now;
+        const n=mxState(g,dt,!!O),lo=!!O&&LOCO.has(n);if(lo!==!!U.loco){U.loco=lo;show();if(lo){u.quaternion.identity();if(U.uPos)u.position.copy(U.uPos);U.mxCur=null}}
+        if(lo)U.heroSync();umw.call(g,f);if(!lo&&!(U.emo&&U.emoId))mxWeapon(g);return}U.heroSync()}umw.call(g,f)};
+  U.real=!!real;U.heroSet=on=>{U.hon=on;show();if(real)for(const c of U.skinParts||[])c.visible=!on;b.visible=h.visible=!on;if(real&&U.hat){U.hat.scale.setScalar(on?.42:1);U.hat.position.y=on?REAL_S*1.64-46*.42:0;for(const c of U.hat.children)if(c.userData.crown)c.position.y=c.userData.crown-(on?6:0)}for(const p of[...U.legs,...U.arms])for(const c of p.children)c.visible=!on;if(!on)u.quaternion.identity();u.position.set(on?(real?10*RA.k:13):10,on?(real?RA.sy+(27-35)*RA.k:31):27,5);U.uPos=u.position.clone()};U.heroSet(true);
 }
 function heroAttach(g,b,h,u){mxP.then(ok=>ok?heroBuild(g,MX.hero,b,h,u):heroLoad().then(src=>{if(src)heroBuild(g,src,b,h,u)}))}
 // Personnage réaliste (tools/blender/build_human.py), même squelette que le Héros Éclair : tenue par défaut des joueurs et bots proches.
@@ -674,14 +685,15 @@ const EMOCLIP={crown:'e_victory',trophy:'e_cheer',wave:'e_waveh',clap:'e_clap',t
 const MXONCE=new Set(['jump','land','hit','death','melee','reload','fire','e_bow','e_backflip','e_victory','e_cheer','e_salute','e_think']);
 function mxPlay(U,n){if(U.mxCur===n)return;const c=mxClip(U.mxSrc,n)||mxClip(U.mxSrc,'idle');if(!c)return;const a=U.mixer.clipAction(c);a.reset();a.setLoop(MXONCE.has(n)?THREE.LoopOnce:THREE.LoopRepeat);a.clampWhenFinished=true;a.play();
   if(U.mxAct&&U.mxAct!==a)U.mxAct.crossFadeTo(a,.22,false);U.mxAct=a;U.mxCur=n}
-function mxState(g,dt){const U=g.userData,px=g.position.x,pz=g.position.z,k=1/Math.max(dt,1e-3);if(U.mpx===undefined){U.mpx=px;U.mpz=pz;U.spd=0}
+// Renvoie l'état choisi ; avec old, les états de déplacement (LOCO) ne font pas tourner le mixer (l'ancien squelette les joue).
+function mxState(g,dt,old){const U=g.userData,px=g.position.x,pz=g.position.z,k=1/Math.max(dt,1e-3);if(U.mpx===undefined){U.mpx=px;U.mpz=pz;U.spd=0}
   const vx=(px-U.mpx)*k,vz=(pz-U.mpz)*k,sp=Math.hypot(vx,vz);U.mpx=px;U.mpz=pz;if(dt>0)U.spd+=(Math.min(sp,900)-U.spd)*Math.min(1,dt*8);
   let n='idle',rate=1;const em=U.emo&&U.emoId;
   if(em){const d=EMO[EMI[U.emoId]];n=(d&&d.clip)||EMOCLIP[U.emoId]||'e_hiphop'}
   else if(U.gl&&U.gl.visible)n='glide';else if(U.air)n='fall';
   else if(U.spd>25){const a=-g.rotation.y,f=(vx*Math.cos(a)+vz*Math.sin(a))/(sp||1),sd=(-vx*Math.sin(a)+vz*Math.cos(a))/(sp||1);
     n=f<-.45?'back':Math.abs(sd)>.75?(sd>0?'strafeR':'strafeL'):U.spd>330?'sprint':'run';rate=Math.max(.6,Math.min(1.6,U.spd/(n==='sprint'?380:230)))}
-  mxPlay(U,n);U.mixer.timeScale=rate;U.mixer.update(dt);return!!em}
+  if(old&&LOCO.has(n))return n;mxPlay(U,n);U.mixer.timeScale=rate;U.mixer.update(dt);return n}
 // Arme : dans la main droite, pointée vers la main gauche (qui la tient dans les animations de visée).
 const _mm=new THREE.Matrix4(),_mr=new THREE.Vector3(),_ml=new THREE.Vector3(),_ma=new THREE.Vector3(),_mb=new THREE.Vector3(),_mc=new THREE.Vector3(),UPW=new THREE.Vector3(0,1,0);
 function mxWeapon(g){const U=g.userData,u=g.children[2];if(!U.mxR||!U.mxL||!u.visible)return;U.mxR.getWorldPosition(_mr);U.mxL.getWorldPosition(_ml);g.worldToLocal(_mr);g.worldToLocal(_ml);
@@ -1508,7 +1520,7 @@ const SPR=[{id:'eau',n:"Esprit de l'Eau",e:'💧',c:0x3fb8ff,d:'soigne 2 PV/s ho
 let shrines=[];const SPR_R=60,gSprB=new THREE.SphereGeometry(8,14,10),gSprH=new THREE.SphereGeometry(6.5,14,10),gSprE=new THREE.SphereGeometry(1.9,8,6),gSprP=new THREE.SphereGeometry(1,6,5),gSprL=new THREE.CylinderGeometry(1.7,1.3,7,6),gSprG=new THREE.SphereGeometry(17,14,10),
   gShr=new THREE.CylinderGeometry(16,20,12,10),gShrT=new THREE.CylinderGeometry(20,16,4,10),gShrBeam=new THREE.CylinderGeometry(2.5,2.5,260,6,1,true),SPRM={};
 const sprMat=(k,mk)=>SPRM[k]||(SPRM[k]=mk());
-const sprIs=id=>!!(P&&P.spr&&SPR[P.spr.t].id===id);
+const sprIs=id=>!!(P&&P.esp&&SPR[P.esp.t].id===id);
 const _sprW=new WeakMap(),sprW=w=>{if(!sprIs('feu'))return w;let f=_sprW.get(w);if(!f){f=Object.assign({},w,{d:w.d*1.15});_sprW.set(w,f)}return f};
 // Petit compagnon à quatre pattes, tourné vers +X ; chaque élément a son signe : goutte, flamme, anneau de vent, rochers.
 function mkSpirit(t){const S=SPR[t],g=new THREE.Group(),body=new THREE.Group(),mb=sprMat('b'+t,()=>L(S.c)),me=sprMat('e',()=>B(0xffffff)),mp=sprMat('p',()=>B(0x111111));g.add(body);
@@ -1529,15 +1541,15 @@ function sprInit(){shrines=[];const rg=mul(31);for(let k=0;k<400&&shrines.length
     const g=new THREE.Group(),st=sprMat('st',()=>L(0x8a8f99)),gy=TH(x,y),base=new THREE.Mesh(gShr,st),top=new THREE.Mesh(gShrT,sprMat('b'+t,()=>L(SPR[t].c)));base.position.y=6;top.position.y=14;base.castShadow=base.receiveShadow=true;g.add(base,top);
     const beam=new THREE.Mesh(gShrBeam,sprMat('bm'+t,()=>new THREE.MeshBasicMaterial({color:SPR[t].c,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false})));beam.position.y=140;g.add(beam);
     const sp=mkSpirit(t);sp.position.y=17;g.add(sp);g.position.set(x,gy,y);g.rotation.y=rg()*6.28;dyn.add(g);shrines.push({x,y,t,m:g,sp,beam,taken:false})}}
-function sprBond(s){if(P.spr)dyn.remove(P.spr.m);s.taken=true;s.sp.visible=false;s.beam.visible=false;const S=SPR[s.t],m=mkSpirit(s.t);dyn.add(m);
-  P.spr={t:s.t,m,x:s.x,y:s.y,z:P.z,a:P.a};sfx("pickup");feed(S.e+" "+S.n+" lié : "+S.d);sprHud()}
-function sprLose(){if(!P||!P.spr)return;dyn.remove(P.spr.m);P.spr=null;sprHud()}
-function sprHud(){const el=$('sprb');if(!el)return;const s=P&&P.spr&&SPR[P.spr.t];el.style.display=s?'':'none';if(s){el.textContent=s.e+' '+s.n+' · '+s.d;el.style.borderColor='#'+s.c.toString(16).padStart(6,'0')}}
+function sprBond(s){if(P.esp)dyn.remove(P.esp.m);s.taken=true;s.sp.visible=false;s.beam.visible=false;const S=SPR[s.t],m=mkSpirit(s.t);dyn.add(m);
+  P.esp={t:s.t,m,x:s.x,y:s.y,z:P.z,a:P.a};sfx("pickup");feed(S.e+" "+S.n+" lié : "+S.d);sprHud()}
+function sprLose(){if(!P||!P.esp)return;dyn.remove(P.esp.m);P.esp=null;sprHud()}
+function sprHud(){const el=$('sprb');if(!el)return;const s=P&&P.esp&&SPR[P.esp.t];el.style.display=s?'':'none';if(s){el.textContent=s.e+' '+s.n+' · '+s.d;el.style.borderColor='#'+s.c.toString(16).padStart(6,'0')}}
 const sprNear=()=>P&&(P.mode==="ground"||P.mode==="island")&&!P.drive&&!P.knocked&&!P.carry?shrines.find(s=>!s.taken&&Math.abs(s.x-P.x)<SPR_R&&Math.abs(s.y-P.y)<SPR_R&&Math.hypot(s.x-P.x,s.y-P.y)<SPR_R):null;
 function sprTick(dt,now){if(!P)return;const tt=now/1000;
   for(const s of shrines){const v=Math.abs(s.x-P.x)<2600*viewK&&Math.abs(s.y-P.y)<2600*viewK;s.m.visible=v;if(!v||s.taken)continue;const U=s.sp.userData;s.sp.position.y=17+Math.sin(tt*2+s.x)*2.5;s.sp.rotation.y=tt*.6;sprFx(U,tt)}
   const near=sprNear();if(near&&keys.KeyE&&!P.sprE)sprBond(near);P.sprE=!!keys.KeyE;
-  const c=P.spr;if(!c)return;if(P.hp<=0||P.mode==="dead"){sprLose();return}
+  const c=P.esp;if(!c)return;if(P.hp<=0||P.mode==="dead"){sprLose();return}
   const show=P.mode==="ground"||P.mode==="island";c.m.visible=show&&!P.drive;if(!show){c.x=P.x;c.y=P.y;c.z=P.z;return}
   const fx=Math.cos(P.a),fy=Math.sin(P.a),tx=P.x-fy*34-fx*10,ty=P.y+fx*34-fy*10,ex=tx-c.x,ey=ty-c.y,d=Math.hypot(ex,ey),U=c.m.userData;
   if(d>450){c.x=tx;c.y=ty;c.z=P.z}else if(d>3){const mv=Math.min(d,Math.max(230,d*5)*dt);c.x+=ex/d*mv;c.y+=ey/d*mv;U.ph+=mv*.18;c.a=Math.atan2(ey,ex)}else{let da=P.a-c.a;da=Math.atan2(Math.sin(da),Math.cos(da));c.a+=da*Math.min(1,dt*6)}
