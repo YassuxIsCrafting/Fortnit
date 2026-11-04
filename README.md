@@ -156,10 +156,21 @@ serveur n'accepte que les connexions venant du site (`ALLOWED_ORIGINS`).
 
 ## Appli Android
 
-L'appli ouvre le jeu en ligne (https://ile-eclair.yasser-mobiarchitects.workers.dev/) en plein écran ;
-il faut Internet. Pour la compiler : ouvrir le dossier `android/` dans Android Studio, puis
-Build > Build APK(s). Pour l'installer : copier `IleEclair.apk` sur le téléphone, l'ouvrir et
-autoriser l'installation depuis cette source.
+L'appli (`com.yassux.ileeclair`) ouvre le jeu en ligne (https://ile-eclair.yasser-mobiarchitects.workers.dev/)
+en plein écran ; il faut Internet. Comme l'exe, elle ne contient pas le jeu : les mises à jour du site arrivent
+toutes seules.
+
+- Installer : copier `IleEclair.apk` sur le téléphone, l'ouvrir et autoriser l'installation depuis cette source.
+- Ancienne appli (`com.yassux.fortnit`, nom Fortnit) : elle ouvrait `fortnit-jeu`, qui n'existe plus. Elle ne
+  marche plus et n'est pas remplacée par la nouvelle : la désinstaller à la main.
+- Compiler avec Android Studio : ouvrir le dossier `android/`, puis Build > Build APK(s). Le Java fourni avec
+  les versions récentes d'Android Studio (Java 25) est trop récent pour Gradle 8.7 (erreur « Unsupported class
+  file major version 69 ») : choisir un JDK 17 ou 21 dans Settings > Build, Execution, Deployment > Build Tools >
+  Gradle > Gradle JDK.
+- Compiler en ligne de commande (le projet n'a pas de `gradlew`) : avec Gradle 8.7 et `JAVA_HOME` sur un JDK
+  17 ou 21, `gradle -p android assembleDebug`. Gradle télécharge tout seul la plateforme Android 34 si elle
+  manque. L'APK sort dans `android/app/build/outputs/apk/debug/app-debug.apk` (le renommer `IleEclair.apk`).
+- L'appli n'a pas encore d'icône : Android affiche l'icône par défaut.
 
 ## Appli Windows
 
@@ -170,9 +181,16 @@ arrive toute seule au prochain lancement, sans rien retélécharger. Il faut Int
 - Pas d'installation : double-clic sur `IleEclair.exe` pour jouer.
 - L'exe n'est pas signé : au premier lancement, Windows affiche « Windows a protégé votre ordinateur ».
   Cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
-- Dans l'appli : F11 plein écran, F5 recharger.
-- Compiler soi-même : `cd desktop`, `npm install`, `npm run build` → `desktop/dist/IleEclair.exe`.
-  `npm run icon` régénère l'icône à partir de `desktop/build/icon.svg`.
+- Dans l'appli : F11 plein écran, F5 recharger. Une seule fenêtre à la fois : relancer l'exe remet la fenêtre
+  ouverte devant.
+- Sans Internet, l'appli affiche « Pas de connexion » avec un bouton Réessayer.
+- Ancien `Fortnit.exe` : il ouvrait `fortnit-jeu`, qui n'existe plus. Il ne marche plus, le remplacer par
+  `IleEclair.exe`.
+- Compiler soi-même : `cd desktop`, `npm install`, `npm run build` → `desktop/dist/IleEclair.exe` (environ 80 Mo,
+  la compression prend quelques minutes). `npm run icon` régénère l'icône à partir de `desktop/build/icon.svg`.
+- Si la compilation échoue sur « Cannot create symbolic link » (outil `winCodeSign`, Windows sans droits
+  administrateur) : décompresser l'archive `%LOCALAPPDATA%\electron-builder\Cache\winCodeSign\<nombre>.7z` dans un
+  dossier `winCodeSign-2.6.0` au même endroit (les erreurs sur les fichiers Mac peuvent être ignorées), puis relancer.
 
 ## Crédits
 
