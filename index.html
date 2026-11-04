@@ -978,8 +978,13 @@ function cineFrame(){
   const near=(o,r)=>Math.abs(o.x-c.fx)<r&&Math.abs(o.y-c.fz)<r;for(const o of cars)o.m.visible=near(o,1800);for(const o of chests)o.m.visible=near(o,CHEST_R);
   $('cfade').style.opacity=Math.max(0,1-T/(i?.22:.9),i<c.S.length-1?1-(s.d-T)/.14:0);
 }
+// Une partie vient de partir (le bus vole encore) : on la rejoint au lieu d'attendre la suivante. Sans ça, le joueur dont
+// l'horloge ou le réseau avait un léger retard voyait son pote partir et restait bloqué sur l'île toute la partie.
+const JOIN_LATE=12000;let joinIG=null;
 function islandTick(){
-  const L=islandPeers(),busy=ingame().length>0,me=myId();let lead=me,lp=null;
+  const L=islandPeers(),G=ingame(),busy=G.length>0,me=myId();let lead=me,lp=null,hb=null;
+  for(const p of G)if(Array.isArray(p.presence.b)&&isFinite(p.presence.t)&&(!hb||p.presence.t>hb.presence.t))hb=p;
+  if(hb){const st=hb.presence.t-pOff;if(gnow()-st<JOIN_LATE){joinIG=hb;try{startMatch(st,L.length+1+G.length)}finally{joinIG=null}return}}
   for(const p of L)if(String(p.peer)<String(lead)){lead=p.peer;lp=p}
   islMd=lp?lp.presence.md|0:mode;
   if(lead===me){if(busy)myIslT=0;else if(!myIslT)myIslT=gnow();islT=myIslT}else islT=lp&&isFinite(lp.presence.t)?lp.presence.t-pOff:0;
@@ -991,7 +996,7 @@ function startMatch(st,n){
   Object.assign(P,{drive:null,hp:100,sh:0,own:[0,0,0,0,1],mag:[0,0,0,0,0],sel:4,rel:null,use:null,inv:{mini:0,big:0,med:0},wood:0,ammo:0,kills:0,tok:0,bonus:0,born:gnow(),disc:new Set(),dead:0});
   P.crowned=crownHeld();if(P.crowned)addCrown(P.m);lastPh=-1;
   heroOn=0;heroLoad();rlMode=humans()[0].md===2;R=rlMode?R_RL:R0;WAITS=rlMode?W_RL:W0;SHRS=rlMode?S_RL:S0;for(const v of vans)v.m.visible=!rlMode;
-  t0=st;mSeed=(st+pOff)%2147483647;const hb=ingame().find(p=>Array.isArray(p.presence.b)),nb=hb?hb.presence.b.length:Math.max(0,(rlMode?RL_NP:NP)-n);
+  t0=st;mSeed=(st+pOff)%2147483647;const hb=joinIG||ingame().find(p=>Array.isArray(p.presence.b)),nb=hb?hb.presence.b.length:Math.max(0,(rlMode?RL_NP:NP)-n);
   bots=[];botsAll=[];for(let i=0;i<nb;i++){const b={i,z:0,tz:0,mode:"ground",agg:i%5<2,alive:true,x:C,y:C,hp:100,sh:0,hk:1+(i%3?0:1),wood:40+(i*37)%90,loots:0,r:16,cd:1,a:0,tx:C,ty:C,tt:0,m:mkChar(BOTC[i%BOTC.length],1,0,SKINS[i%5],0,1)};b.sx=b.x;b.sy=b.y;bots.push(b);botsAll.push(b);dyn.add(b.m)}
   buildTeams(n);P.knocked=false;P.emote=null;P.revT=0;
   for(const v of vans)v.cd=0;for(const c of [...cards])removeCard(c);
@@ -1005,7 +1010,7 @@ function setMode(m){mode=party.pt&&!m?1:m;try{localStorage.setItem('ie_mode',Str
   document.querySelectorAll('#mpick button').forEach(b=>{const s=+b.dataset.s,on=s===(mode?1:0);b.className=on?'on':'';b.setAttribute('aria-checked',on);b.disabled=!s&&(mode===2||!!party.pt);b.title=b.disabled?(mode===2?'Reload se joue en duo':'Tu es en groupe : duo obligatoire'):''});if(room)room.presence({md:mode}).catch(()=>{})}
 function setParty(pt,mate){party={pt,mate};if(room)room.presence({pt}).catch(()=>{});setMode(pt&&!mode?1:mode);const el=document.getElementById('party');el.textContent='';
   if(pt){el.append('👥 Groupe : toi + '+mate+' ');const b=document.createElement('button');b.type='button';b.className='link';b.textContent='Quitter le groupe';b.onclick=()=>setParty(0,'');el.append(b)}}
-const humans=()=>[{peer:myId(),pt:party.pt,md:mode},...islandPeers().map(p=>({peer:p.peer,pt:p.presence.pt|0,md:p.presence.md|0}))].sort((a,b)=>String(a.peer)<String(b.peer)?-1:1);
+const humans=()=>[{peer:myId(),pt:party.pt,md:mode},...(joinIG?[...islandPeers(),...ingame()]:islandPeers()).map(p=>({peer:p.peer,pt:p.presence.pt|0,md:p.presence.md|0}))].sort((a,b)=>String(a.peer)<String(b.peer)?-1:1);
 function buildTeams(n){
   const me=myId(),hum=humans();
   curMode=hum[0].md>=1?1:0;teamMap=new Map();const size=new Map();
