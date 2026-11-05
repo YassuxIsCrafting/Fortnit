@@ -2,7 +2,7 @@
 import { DurableObject } from 'cloudflare:workers';
 
 const MAX_PLAYERS = 12, MAX_ACCOUNTS = 5000;
-const TOPICS = new Set(['shot', 'bs', 'kill', 'wall', 'chest', 'rev', 'chat']);
+const TOPICS = new Set(['shot', 'bs', 'kill', 'wall', 'chest', 'rev', 'chat', 'fx']);   // fx : effets des gadgets
 const MAX_FRIENDS = 60;
 const UR = /^[A-Za-z0-9_-]{3,14}$/, HEX = /^#[0-9a-f]{6}$/i, KEY = /^[0-9a-f]{64}$/;
 const enc = new TextEncoder();
@@ -30,7 +30,7 @@ function cleanPatch(p) {
     if (v === null) { if (k === 't' || k === 'b') out[k] = null; continue; }
     if (k === 'n') { if (typeof v === 'string') out.n = v.replace(/[\u0000-\u001f<>]/g, '').slice(0, 14); }
     else if (k === 'c') { if (typeof v === 'string' && HEX.test(v)) out.c = v; }
-    else if (['s', 'h', 'k', 'u', 'w', 'g', 'cr', 'kn', 'em', 'md'].includes(k)) { if (Number.isInteger(v) && v >= 0 && v <= (k === 'k' ? 40 : 9)) out[k] = v; }
+    else if (['s', 'h', 'k', 'u', 'w', 'g', 'cr', 'kn', 'em', 'md', 'vr', 'iv'].includes(k)) { if (Number.isInteger(v) && v >= 0 && v <= (k === 'k' ? 40 : k === 'vr' ? 20 : 9)) out[k] = v; }   // vr : règle spéciale, iv : camouflage
     else if (['x', 'y', 'z', 'a', 'hp', 't', 'v', 'pt', 'tm', 'en'].includes(k)) { if (num(v)) out[k] = v; }
     else if (k === 'b') {
       if (Array.isArray(v) && v.length <= 128 && v.every(r => Array.isArray(r) && r.length <= 5 && r.every(z => num(z) || (typeof z === 'string' && z.length <= 40)))) out.b = v;
