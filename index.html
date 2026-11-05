@@ -511,6 +511,7 @@ SKN.push({n:'Héros Éclair',e:'🦸'});const HK=SKN.length-1;
 // Skins sur le modèle réaliste : palette par matériau (la peau reste celle choisie), Cap = casquette visible.
 SKN.push({n:'Soldat',e:'🪖',p:30});const SK_SOLD=SKN.length-1,KIT={},HEAD=['Hair','EyeW','EyeD'];
 SKN.push({n:'Kaiju des Marais',e:'🦎',p:60});const SK_KAIJU=SKN.length-1;   // monstre original (tools/blender/build_human.py, accessoire kaiju)
+SKN.push({n:'Corsaire des Récifs',e:'⚓',p:40});const SK_CORS=SKN.length-1;   // pirate original (bandana, écharpe, sabre ; accessoire corsaire)
 // acc = accessoires de human.glb à afficher (A_<acc>_...), hide = parties du corps masquées, autres clés = couleur par matériau.
 Object.assign(KIT,{
   1:{acc:'robot',hide:HEAD,Skin:0x8a95a5,Shirt:0xaab4c2,Pants:0x6b7280,Belt:0x2a2a33,Shoes:0x2a2a33},
@@ -534,6 +535,7 @@ Object.assign(KIT,{
   27:{acc:'agent',Shirt:0x4b2a8f,Pants:0x1b1430,Belt:0xc27bff,Shoes:0x1b1430,Hair:0x1b1430},
   28:{acc:'king',Shirt:0xf5f7ff,Pants:0xd62828,Belt:0xffd23f,Shoes:0x5a3a24},
   [SK_SOLD]:{acc:'soldier',Shirt:0x5b6b3a,Pants:0x4b5320,Belt:0x2b2418,Shoes:0x1f1f1f},
+  [SK_CORS]:{acc:'corsaire',Shirt:0xf2e8d0,Pants:0x2f4a6b,Belt:0xb8322a,Shoes:0x3a2a1a,Hair:0x1b1b22},
   [SK_KAIJU]:{acc:'kaiju',hide:HEAD,Skin:0x4a6b2f,Shirt:0x4a6b2f,Pants:0x3d5a2a,Belt:0xc9b27a,Shoes:0x2f4520}});   // modèle 3D riggé (models/hero-eclair.glb), offert à tous
 // Qualité graphique : "good" = effets complets, "potato" = réglages légers pour PC modeste / mobile.
 const CFG_DEF={gfx:"good",shadows:true,res:1,view:"normal",auto:true,fps:false,toon:true,post:true,day:true,wx:true,shake:true,sens:1,fov:70,invY:false,vol:1,mus:.6,sfx:1},VIEW={short:1800,normal:2900,long:4200};
@@ -608,6 +610,8 @@ function addSkin(g,k,b,h){
     for(const z of[-1,1]){const c=new THREE.Mesh(CO(2.6,12),ho);c.position.set(0,54,z*13);c.rotation.x=z*-1.1;g.add(c)}m(BX(4,10,12),or,10,39,0);m(BX(3,4,8),or,10,33,0)}
   else if(k===15){const cr=new THREE.MeshLambertMaterial({color:0xb388ff,emissive:0x3a1a7a,transparent:true,opacity:.85,flatShading:true});b.material=cr;h.material=cr;for(const[x,y,z,r]of[[0,60,0,0],[-4,57,6,.5],[-4,57,-6,-.5],[0,40,13,1.2],[0,40,-13,-1.2]]){const c=new THREE.Mesh(new THREE.OctahedronGeometry(4.5,0),cr);c.scale.y=2;c.position.set(x,y,z);c.rotation.x=r;g.add(c)}for(const z of[-4,4])m(SP(1.8),B(0xffffff),10.4,48,z)}
   else if(k===16){const rk=L(0x1f1b1b),lv=B(0xff7a1a);b.material=rk;h.material=rk;for(const[w,hh,x,y,z,r]of[[1,12,12.4,27,3,.4],[1,10,12.2,24,-4,-.3],[1,8,-12.3,28,0,.2],[1,7,10.8,47,-6,.5],[1,6,-10.9,46,5,-.4]])m(BX(w,hh,1.6),lv,x,y,z,r);m(CY(12.95,12.95,1.2),lv,0,34,0);for(const z of[-4,4])m(SP(2),lv,10.4,48,z)}
+  else if(k===SK_CORS){const bl=L(0x1f6fb2),rd=L(0xb8322a);b.material=L(0xf2e8d0);m(CY(11.7,11.7,5),bl,0,51,0);m(SP(2.6),bl,-11.5,50,0);m(BX(6,1.4,2.5),bl,-14,47.5,1.5,-.6);
+    m(CY(12.95,12.95,3.5),rd,0,20,0);m(BX(1.4,26,4),rd,12.4,29,0,0);m(BX(2,16,1.6),L(0xd9e1e8),4,10,14,.2);m(BX(5,1.4,4),mGold,4,18.5,14);m(SP(1.3),mGold,0,44,11.5)}
   else if(k===25){const ye=L(0xffd23f),bl=L(0x2e6fd6);b.material=ye;m(CY(12.95,12.95,3),bl,0,19,0);m(BX(2,3,4),L(0xeeeeee),12.6,19,0);for(const[y,r]of[[33,.5],[28,-.5],[23,.5]])m(BX(1.4,7,2.6),bl,12.5,y,0,r);for(const z of[-14,14])m(BX(9,4,8),bl,0,37,z)}
   else if(k===26){const ar=L(0x3d6fd6),sv=L(0xc9d3e0),gl=B(0x00e5ff);b.material=ar;h.visible=false;m(CY(11.5,12,16),sv,0,47,0);m(SP(11.5),sv,0,55,0);m(BX(2,3,15),gl,11.3,48,0);for(const z of[-15,15])m(SP(7),sv,0,36,z);m(CY(12.95,12.95,3),L(0xffd23f),0,24,0);
     for(const[y,x,r]of[[66,-2,.4],[72,-5,-.4],[78,-8,.4]])m(BX(3,8,3),L(0xffd23f),x,y,0,r);m(BX(3,26,22),gl,-13,26,0)}
