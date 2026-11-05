@@ -139,7 +139,7 @@ body.touch #feed{font-size:11px;max-width:36vw}body.touch #kt{font-size:18px}bod
 #cfg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#14123ae6;z-index:16;padding:16px}#cfgp{width:min(520px,94vw);max-height:88vh}
 #cfgb{overflow:auto;display:flex;flex-direction:column;gap:6px;font-family:system-ui,sans-serif;font-size:14px;padding-right:4px}#cfgb h3{margin:8px 0 0;font-family:Bungee,Impact,sans-serif;font-weight:400;font-size:13px;color:var(--gold)}
 #cfgb .opt{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#ffffff0d;border-radius:6px;padding:6px 10px}#cfgb .opt span{flex:1}#cfgb select,#cfgb input[type=range]{font:inherit;max-width:52%}#cfgb select{padding:4px 6px;border-radius:6px}#cfgb .val{min-width:44px;text-align:right;color:var(--gold)}
-#cfgb input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold)}#cfgb .keys{font-size:12px;line-height:1.6;opacity:.9}
+#cfgb input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold)}#cfgb .kbb{min-width:118px;padding:4px 8px;border-radius:6px;font:inherit;font-weight:700;cursor:pointer}#cfgb .kbb.wait{background:var(--gold);color:#222}#cfgb .kbr{align-self:flex-start;padding:4px 10px;border-radius:6px;font:inherit;cursor:pointer}#cfgb .keys{font-size:12px;line-height:1.6;opacity:.9}
 #fps{bottom:calc(8px + env(safe-area-inset-bottom,0px));left:10px;font-family:system-ui,sans-serif;font-size:12px;color:#7dff8a;display:none}
 #chat{position:fixed;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px));width:min(380px,40vw);z-index:40;font-family:system-ui,sans-serif;font-size:14px;pointer-events:none}
 #chl{max-height:9.6em;overflow:hidden;display:flex;flex-direction:column;gap:3px}
@@ -1944,6 +1944,48 @@ function closeChat(send){if(!chatOn)return;const i=$('chi'),t=chatTxt(i.value);c
   if(send&&t){const now=Date.now();if(now-chatLast<900)chatAdd('','Doucement : un message par seconde.',0,1);else{chatLast=now;chatAdd(myName,t,1);if(room)room.emit('chat',{n:myName,t}).catch(()=>{})}}
   if(run&&!IS_TOUCH&&!paused&&document.pointerLockElement!==cv)try{cv.requestPointerLock()}catch(x){}}
 $('chf').addEventListener('submit',e=>{e.preventDefault();closeChat(true)});$('chi').addEventListener('blur',()=>closeChat(false));
+// Touches personnalisables (Paramètres). Le jeu garde ses touches d'origine en interne : une vraie touche choisie par le
+// joueur est traduite en touche d'origine (événement recréé), et la touche d'origine libérée ne fait plus rien.
+// Les événements recréés par le tactile et la manette (non « isTrusted ») ne sont jamais traduits.
+const KB=[['av','Avancer','KeyW'],['re','Reculer','KeyS'],['ga','Aller à gauche','KeyA'],['dr','Aller à droite','KeyD'],['sa','Sauter','Space'],['sp','Sprinter','ShiftLeft'],
+  ['ac','Action (voiture, relever, relancer)','KeyE'],['co','Ouvrir un coffre / une caisse','KeyF'],['mu','Construire un mur','KeyQ','a'],['es','Construire un escalier','KeyR'],['so','Construire un sol','KeyC'],['to','Construire un toit','KeyV'],['ma','Changer de matériau','KeyX'],
+  ['w1','Pioche','Digit1'],['w2','Arme case 2','Digit2'],['w3','Arme case 3','Digit3'],['w4','Arme case 4','Digit4'],['w5','Arme case 5','Digit5'],['h6','Minipot','Digit6'],['h7','Grosse potion','Digit7'],['h8','Medkit','Digit8'],['o9','Orbe de saut','Digit9'],
+  ['ca','Carte','KeyM','m'],['em','Roue des emotes','KeyB'],['iv','Inventaire','KeyI'],['ch','Chat','KeyG'],['pa','Paramètres','KeyP']];
+const kbOf=a=>CFG.kb&&CFG.kb[a]||KB.find(x=>x[0]===a)[2],KBD=new Set(KB.map(x=>x[2]));
+let kbRev=new Map(),kbKoff=new Set(),kbFor=0,kbSyn=false,kbCap=null,kLay=null;
+try{navigator.keyboard.getLayoutMap().then(m=>kLay=m).catch(()=>{})}catch(e){}
+const KN={Space:'Espace',ShiftLeft:'Maj gauche',ShiftRight:'Maj droite',ControlLeft:'Ctrl gauche',ControlRight:'Ctrl droite',AltLeft:'Alt',AltRight:'Alt Gr',Tab:'Tab',CapsLock:'Verr. Maj',Enter:'Entrée',Backspace:'Retour arrière',ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',Mouse1:'Clic molette',Mouse3:'Souris 4',Mouse4:'Souris 5'};
+const kName=c=>KN[c]||String(kLay&&kLay.get(c)||c.replace(/^(Key|Digit)/,'').replace(/^Numpad/,'Pavé ')).toUpperCase(),kL=a=>kName(kbOf(a));
+// Table de traduction : touche choisie -> [touche d'origine, lettre d'origine] ; null = touche d'origine libérée.
+function kbBuild(){kbFor=CFG.kb;kbRev=new Map();kbKoff=new Set();for(const[a,,d,k]of KB){const c=kbOf(a);if(c!==d){kbRev.set(c,[d,k]);if(k)kbKoff.add(k)}}
+  for(const[a,,d]of KB)if(kbOf(a)!==d&&!kbRev.has(d))kbRev.set(d,null)}
+// Nouvelle touche pour une action : si elle était déjà prise, l'autre action récupère l'ancienne touche (échange).
+function kbSet(a,c){const old=kbOf(a),o=KB.find(x=>x[0]!==a&&kbOf(x[0])===c),kb=Object.assign({},CFG.kb);kb[a]=c;if(o)kb[o[0]]=old;
+  for(const[x,,d]of KB)if(kb[x]===d)delete kb[x];CFG.kb=kb;saveCfg();kbBuild()}
+function kbFire(type,c,k,rep){kbSyn=true;try{dispatchEvent(new KeyboardEvent(type,{code:c,key:k||'',repeat:!!rep}))}finally{kbSyn=false}}
+function kbTr(e){if(kbSyn||!e.isTrusted)return;
+  if(kbCap&&e.type==='keydown'){e.preventDefault();e.stopImmediatePropagation();if(e.code!=='Escape'&&e.code)kbSet(kbCap,e.code);kbCap=null;kbPaint();return}
+  if(chatOn||/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;if(kbFor!==CFG.kb)kbBuild();
+  const t=kbRev.get(e.code);if(t===undefined&&!(e.key&&kbKoff.has(e.key.toLowerCase())&&!KBD.has(e.code)))return;
+  e.preventDefault();e.stopImmediatePropagation();if(t)kbFire(e.type,t[0],t[1],e.repeat)}
+addEventListener('keydown',kbTr,true);addEventListener('keyup',kbTr,true);
+// Souris : le clic molette et les deux boutons latéraux peuvent aussi recevoir une action.
+function kbMouse(e){if(!e.isTrusted||![1,3,4].includes(e.button)){if(kbCap&&e.type==='mousedown'){kbCap=null;kbPaint()}return}const c='Mouse'+e.button;
+  if(kbCap){e.preventDefault();e.stopImmediatePropagation();if(e.type==='mousedown'){kbSet(kbCap,c);kbCap=null;kbPaint()}return}
+  if(!run||document.pointerLockElement!==cv)return;if(kbFor!==CFG.kb)kbBuild();const t=kbRev.get(c);if(!t)return;
+  e.preventDefault();e.stopImmediatePropagation();kbFire(e.type==='mousedown'?'keydown':'keyup',t[0],t[1],false)}
+addEventListener('mousedown',kbMouse,true);addEventListener('mouseup',kbMouse,true);addEventListener('auxclick',e=>{if([1,3,4].includes(e.button)&&(kbCap||run))e.preventDefault()},true);
+// Manette : actions en partie et bouton par défaut (disposition standard). Options (9) reste le bouton des paramètres.
+const PADA=[['fi','Tirer',7],['vi','Viser',6],['sa','Sauter',0],['mu','Mur',1],['es','Escalier',12],['ac','Action (coffre, voiture, relever)',2],['pi','Pioche',3],['sp','Sprint (bascule)',10],
+  ['su','Arme suivante',5],['pr','Arme précédente',4],['em','Roue des emotes',13],['bo','Potion de bouclier',14],['me','Medkit',15],['ca','Carte',8],['ma','Changer de matériau',11]];
+const pbOf=a=>{const v=CFG.pb&&CFG.pb[a];return Number.isInteger(v)?v:PADA.find(x=>x[0]===a)[2]};let pbCap=null;
+const PBN=[['Croix','A'],['Rond','B'],['Carré','X'],['Triangle','Y'],['L1','LB'],['R1','RB'],['L2','LT'],['R2','RT'],['Créer','Affichage'],['Options','Menu'],['L3','Stick G'],['R3','Stick D'],['Haut','Haut'],['Bas','Bas'],['Gauche','Gauche'],['Droite','Droite']];
+const pbName=i=>{const n=PBN[i],k=padKind(padGp&&padGp.id);return!n?'Bouton '+i:k==='PlayStation'?n[0]:k==='Xbox'?n[1]:n[0]===n[1]?n[0]:n[0]+' / '+n[1]};
+function pbSet(a,i){const old=pbOf(a),o=PADA.find(x=>x[0]!==a&&pbOf(x[0])===i),pb=Object.assign({},CFG.pb);pb[a]=i;if(o)pb[o[0]]=old;
+  for(const[x,,d]of PADA)if(pb[x]===d)delete pb[x];CFG.pb=pb;saveCfg()}
+// Met à jour les boutons du panneau sans le reconstruire (on garde la position de défilement).
+function kbPaint(){document.querySelectorAll('#cfgb [data-kb]').forEach(b=>{const a=b.dataset.kb;b.textContent=kbCap===a?'Appuie…':kL(a);b.classList.toggle('wait',kbCap===a)});
+  document.querySelectorAll('#cfgb [data-pb]').forEach(b=>{const a=b.dataset.pb;b.textContent=pbCap===a?'Appuie…':pbName(pbOf(a));b.classList.toggle('wait',pbCap===a)})}
 addEventListener("keydown",e=>{if(chatOn){if(e.code==="Enter"||e.code==="NumpadEnter"||e.key==="Enter"){e.preventDefault();closeChat(true)}else if(e.code==="Escape")closeChat(false);return}if(finale){if(!e.repeat&&finale.t>1.3)finDone();return}if(cine){if(!e.repeat)endCine();return}if(paused){if(cfgOpen()&&(e.code==="Escape"||e.code==="KeyP"))closeCfg();else if(e.code==="KeyP"&&!e.repeat)openCfg();return}
   if(e.code==="KeyG"&&!e.repeat&&!ewOpen&&!cfgOpen()&&!/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||"")&&$("acct").style.display!=="flex"){e.preventDefault();openChat();return}keys[e.code]=true;
   if(!run){const typing=/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||"");if(e.code==="Escape"&&cfgOpen())closeCfg();else if(e.code==="Escape"&&ewOpen)closeWheel(false);else if(e.code==="KeyB"&&!e.repeat&&!typing&&document.getElementById("acct").style.display!=="flex"){e.preventDefault();if(ewOpen)closeWheel(false);else openWheel()}return}if(e.code==="KeyE"&&!e.repeat&&lootE()){}else if(e.code==="KeyE"&&!e.repeat&&!liveOthers().some(o=>isMate(o)&&o.kn&&dist(o,P)<55)&&!(P.carry&&vans.some(v=>Math.hypot(v.x-P.x,v.y-P.y)<75)))toggleCar();if(e.code==="KeyB"&&!e.repeat){if(ewOpen)closeWheel(false);else openWheel()}if(e.code==="Escape"&&ewOpen)closeWheel(false);if(e.code==="KeyP"&&!e.repeat){if(cfgOpen())closeCfg();else openCfg()}if(e.code==="Escape"&&cfgOpen())closeCfg();if(e.code==="Space"){e.preventDefault();if(P.mode==="bus")P.exitReq=true}
@@ -1982,7 +2024,7 @@ function hud(){
   {const u=P.use||P.rel||(P.revT?{t:P.revT,d:4}:null)||(P.rbT?{t:P.rbT,d:REBOOT_T}:null);document.getElementById("use").style.width=(u?u.t/u.d*100:0)+"%";document.getElementById("usew").style.visibility=u?"visible":"hidden"}
   $('shn').textContent=Math.ceil(P.sh);$('hpn').textContent=Math.max(0,Math.ceil(P.hp));$('wd').textContent=P.wood;$('st').textContent=P.stone|0;$('mt').textContent=P.metal|0;for(let i=0;i<3;i++)$('bm'+i).classList.toggle('on',(P.bm|0)===i);$("am").textContent=P.cs>=0&&P.sl[P.cs]?P.sl[P.cs].mag+" / "+P.ammo:P.ammo;{const nc=(P.mode==="ground"||P.mode==="island")&&!P.drive&&chests.find(c=>!c.open&&Math.hypot(c.x-P.x,c.y-P.y)<70),ncar=P.mode==="ground"&&!P.drive&&cars.find(c=>!c.other&&Math.hypot(c.x-P.x,c.y-P.y)<70),pm=$("prm");
     const nv=P.carry&&vans.find(v=>Math.hypot(v.x-P.x,v.y-P.y)<75),nsh=sprNear(),nw=P.mode==="ground"&&!P.drive&&!P.carry&&nearW(),nwn=nw&&WN[WI[nw.k]]+" "+RAR[nw.r|0].n.toLowerCase();
-    pm.textContent=P.mode==="dead"&&rlMode?"🔁 Réapparition dans "+Math.max(0,Math.ceil((P.rsT-gnow())/1000))+" s":P.mode==="dead"?"☠️ En attente de relance · "+Math.max(0,Math.ceil((CARD_TTL-(gnow()-P.deadT))/1000))+" s":P.carry?(nv?(vanReady(nv)?"Maintiens E pour relancer "+P.carry.name:"🚐 Fourgon en recharge, essaie un autre"):"🃏 Carte de "+P.carry.name+" : va à un fourgon de relance 🚐 (carte : M)"):P.mode==="bus"?"Appuie sur ESPACE pour sauter du bus":P.drive?"E pour sortir · "+Math.round(Math.abs(P.drive.v)/5)+" km/h":nsh?"Appuie sur E pour lier "+SPR[nsh.t].e+" "+SPR[nsh.t].n+" ("+SPR[nsh.t].d+")":ncar?"Appuie sur E pour conduire":nw?(P.sl.includes(null)?"Appuie sur E pour ramasser : "+nwn:P.cs>=0?"E : échanger ton "+WN[P.sel]+" contre "+nwn:"Prends une arme en main pour l'échanger contre "+nwn):nc&&nc.kind==="ammo"?"Appuie sur F pour ouvrir la caisse":"Appuie sur F pour ouvrir le coffre";pm.style.opacity=(nc||nsh||ncar||nw||P.drive||P.mode==="bus"||P.mode==="dead"||P.carry)?1:0}
+    pm.textContent=P.mode==="dead"&&rlMode?"🔁 Réapparition dans "+Math.max(0,Math.ceil((P.rsT-gnow())/1000))+" s":P.mode==="dead"?"☠️ En attente de relance · "+Math.max(0,Math.ceil((CARD_TTL-(gnow()-P.deadT))/1000))+" s":P.carry?(nv?(vanReady(nv)?"Maintiens "+kL('ac')+" pour relancer "+P.carry.name:"🚐 Fourgon en recharge, essaie un autre"):"🃏 Carte de "+P.carry.name+" : va à un fourgon de relance 🚐 (carte : M)"):P.mode==="bus"?"Appuie sur "+kL('sa')+" pour sauter du bus":P.drive?kL('ac')+" pour sortir · "+Math.round(Math.abs(P.drive.v)/5)+" km/h":nsh?"Appuie sur "+kL('ac')+" pour lier "+SPR[nsh.t].e+" "+SPR[nsh.t].n+" ("+SPR[nsh.t].d+")":ncar?"Appuie sur "+kL('ac')+" pour conduire":nw?(P.sl.includes(null)?"Appuie sur "+kL('ac')+" pour ramasser : "+nwn:P.cs>=0?kL('ac')+" : échanger ton "+WN[P.sel]+" contre "+nwn:"Prends une arme en main pour l'échanger contre "+nwn):nc&&nc.kind==="ammo"?"Appuie sur "+kL('co')+" pour ouvrir la caisse":"Appuie sur "+kL('co')+" pour ouvrir le coffre";pm.style.opacity=(nc||nsh||ncar||nw||P.drive||P.mode==="bus"||P.mode==="dead"||P.carry)?1:0}
 }
 const ls=new THREE.Scene();ls.background=new THREE.Color(0x2b1e6b);
 ls.add(new THREE.HemisphereLight(0xffffff,0x6a4bd8,1.05));const lsun=new THREE.DirectionalLight(0xffffff,.8);lsun.position.set(100,300,200);ls.add(lsun);
@@ -2393,15 +2435,25 @@ function renderCfg(){
   rng('Champ de vision','fov',55,95,1,v=>v+'°');
   chk('Inverser l’axe vertical','invY');
   {const s=document.createElement('select');for(const[v,t]of[['pc','🖥️ PC'],['mo','📱 Mobile']]){const o=document.createElement('option');o.value=v;o.textContent=t;s.append(o)}s.value=IS_TOUCH?'mo':'pc';s.onchange=()=>setDevice(s.value,true);row('Appareil',s)}
+  // Touches : clic sur le bouton, puis nouvelle touche (Échap ou clic gauche pour annuler).
+  const bind=(label,dk,a,cap)=>{const t=document.createElement('button');t.type='button';t.className='kbb';t.dataset[dk]=a;t.onclick=e=>{e.preventDefault();cap(a)};row(label,t)};
+  const note=t=>{const p=document.createElement('p');p.className='keys';p.textContent=t;b.append(p)};
+  const rst=(t,f)=>{const r=document.createElement('button');r.type='button';r.className='kbr';r.textContent=t;r.onclick=f;b.append(r)};
+  h('Touches clavier / souris');note('Clique sur une action puis appuie sur la nouvelle touche (Échap annule). Le clic molette et les boutons latéraux de la souris marchent aussi. Tirer et viser restent sur les clics gauche et droit.');
+  for(const[a,n]of KB)bind(n,'kb',a,a=>{pbCap=null;kbCap=kbCap===a?null:a;kbPaint()});
+  rst('↺ Touches par défaut',()=>{CFG.kb={};saveCfg();kbBuild();kbCap=null;kbPaint()});
+  h('Boutons de la manette');note('Clique sur une action puis appuie sur le bouton de la manette (Options annule). Les joysticks et Options ne changent pas.');
+  for(const[a,n]of PADA)bind(n,'pb',a,a=>{kbCap=null;pbCap=pbCap===a?null:a;kbPaint()});
+  rst('↺ Boutons par défaut',()=>{CFG.pb={};saveCfg();pbCap=null;kbPaint()});kbPaint();
   h('Son');
   rng("Volume général","vol",0,1,.05,v=>Math.round(v*100)+" %");
   rng("Musique","mus",0,1,.05,v=>Math.round(v*100)+" %");
   rng("Effets sonores","sfx",0,1,.05,v=>Math.round(v*100)+" %");
   h('Commandes');
-  const k1=document.createElement('p');k1.className='keys';k1.innerHTML='<b>PC</b> : '+CTL_PC+' · <b>P</b> paramètres';const k2=document.createElement('p');k2.className='keys';k2.textContent='Mobile : '+CTL_MO+' · ⚙️ paramètres';const k3=document.createElement("p");k3.className="keys";k3.textContent="Manette PS5 : joystick gauche bouger · joystick droit viser · R2 tirer · L2 viser · Croix sauter · Rond mur · Carré action (coffre, voiture, relever) · Triangle pioche · R1 / L1 changer d'arme · haut escalier · bas roue d'emotes · gauche / droite soins · Créer carte · Options paramètres";const pi=document.createElement("p");pi.className="keys";pi.id="padinfo";pi.textContent="…";b.append(pi);const k4=document.createElement("p");k4.className="keys";k4.textContent="Manette Xbox : joystick gauche bouger · joystick droit viser · RT tirer · LT viser · A sauter · B mur · X action (coffre, voiture, relever) · Y pioche · RB / LB changer d'arme · haut escalier · bas roue d'emotes · gauche / droite soins · Affichage carte · Menu paramètres";b.append(k1,k2,k3,k4);
+  const k1=document.createElement('p');k1.className='keys';k1.innerHTML='<b>PC</b> (touches par défaut) : '+CTL_PC+' · <b>P</b> paramètres';const k2=document.createElement('p');k2.className='keys';k2.textContent='Mobile : '+CTL_MO+' · ⚙️ paramètres';const k3=document.createElement("p");k3.className="keys";k3.textContent="Manette PS5 : joystick gauche bouger · joystick droit viser · R2 tirer · L2 viser · Croix sauter · Rond mur · Carré action (coffre, voiture, relever) · Triangle pioche · R1 / L1 changer d'arme · haut escalier · bas roue d'emotes · gauche / droite soins · Créer carte · Options paramètres";const pi=document.createElement("p");pi.className="keys";pi.id="padinfo";pi.textContent="…";b.append(pi);const k4=document.createElement("p");k4.className="keys";k4.textContent="Manette Xbox : joystick gauche bouger · joystick droit viser · RT tirer · LT viser · A sauter · B mur · X action (coffre, voiture, relever) · Y pioche · RB / LB changer d'arme · haut escalier · bas roue d'emotes · gauche / droite soins · Affichage carte · Menu paramètres";b.append(k1,k2,k3,k4);
 }
 function openCfg(){if(run)setPause(true);renderCfg();$('cfg').style.display='flex';down=false;aim=false;if(document.pointerLockElement)document.exitPointerLock()}
-function closeCfg(){$('cfg').style.display='none'}
+function closeCfg(){$('cfg').style.display='none';kbCap=pbCap=null}
 const cfgOpen=()=>$('cfg').style.display==='flex';
 // Pause : seulement en solo (personne d'autre dans la partie ni sur l'île). Le temps de jeu (gnow) est figé.
 const soloGame=()=>!others.size&&!islandPeers().length&&!ingame().length;
@@ -2474,23 +2526,25 @@ function padPoll(dt){
   if(ewOpen){const sx=Math.abs(rx)+Math.abs(ry)>Math.abs(lx)+Math.abs(ly)?rx:lx,sy=sx===rx?ry:ly;
     if(Math.hypot(sx,sy)>.5){ewMoved=true;wheelPick(((Math.round((Math.atan2(sy,sx)+Math.PI/2)/(Math.PI/4))%8)+8)%8)}
     if(pr(0))closeWheel(true);else if(pr(1)||pr(13))closeWheel(false);padMove.x=padMove.y=0;return}
+  if(pbCap&&cfgOpen()){const i=cur.findIndex((v,j)=>v&&!prev[j]);if(i>=0){if(i!==9&&i<16)pbSet(pbCap,i);pbCap=null;kbPaint()}return}
   if(cfgOpen()){if(pr(9)||pr(1))closeCfg();return}
   if(paused){if(pr(0))setPause(false);else if(pr(9))openCfg();return}
   if(!run){if(ly<-.7&&!padSw){padSw=1;swipeMode(true)}else if(ly>.7&&!padSw){padSw=1;swipeMode(false)}else if(Math.abs(ly)<.3)padSw=0;
     if(pr(9))openCfg();else if(pr(13))openWheel();else if(pr(0)){const ov=document.getElementById('ov'),busy=['acct','dev','cred','inv'].some(id=>{const e=document.getElementById(id);return e&&getComputedStyle(e).display!=='none'});if(ov.style.display!=='none'&&!busy)document.getElementById('go').click()}return}
   padMove.x=lx;padMove.y=ly;
   if(rx||ry){const k=(aim&&P?(P.sel===3?.3:.55):1)*CFG.sens;yaw-=rx*dt*3.2*k;pitch=Math.max(-1.1,Math.min(.5,pitch-ry*dt*2.2*k*(CFG.invY?-1:1)))}
-  if(pr(7))down=true;else if(rl(7))down=false;
-  if(pr(6))aim=true;else if(rl(6))aim=false;
-  if(pr(0))kd('Space',' ');else if(rl(0))ku('Space',' ');
-  if(pr(1))kd('KeyQ','q');else if(rl(1))ku('KeyQ','q');
-  if(pr(12))kd('KeyR','r');else if(rl(12))ku('KeyR','r');
-  if(pr(2)){padAct=P&&P.mode!=='bus'&&!P.drive&&chests.some(c=>!c.open&&Math.hypot(c.x-P.x,c.y-P.y)<70)?'KeyF':P&&P.mode==='bus'?'Space':'KeyE';kd(padAct,padAct==='Space'?' ':'')}else if(rl(2))ku(padAct);
-  if(pr(3))selSlot(-1);if(pr(10))keys.ShiftLeft=!keys.ShiftLeft;
-  if(pr(5))dispatchEvent(new WheelEvent('wheel',{deltaY:1}));if(pr(4))dispatchEvent(new WheelEvent('wheel',{deltaY:-1}));
-  if(pr(13))openWheel();
-  if(pr(14))useItem(P.inv.mini&&P.sh<50?'mini':'big');if(pr(15))useItem('med');
-  if(pr(8))kd('KeyM','m');if(pr(11))bMat();if(pr(9))openCfg();
+  const q=pbOf;// boutons choisis par le joueur (Paramètres)
+  if(pr(q('fi')))down=true;else if(rl(q('fi')))down=false;
+  if(pr(q('vi')))aim=true;else if(rl(q('vi')))aim=false;
+  if(pr(q('sa')))kd('Space',' ');else if(rl(q('sa')))ku('Space',' ');
+  if(pr(q('mu')))kd('KeyQ','q');else if(rl(q('mu')))ku('KeyQ','q');
+  if(pr(q('es')))kd('KeyR','r');else if(rl(q('es')))ku('KeyR','r');
+  if(pr(q('ac'))){padAct=P&&P.mode!=='bus'&&!P.drive&&chests.some(c=>!c.open&&Math.hypot(c.x-P.x,c.y-P.y)<70)?'KeyF':P&&P.mode==='bus'?'Space':'KeyE';kd(padAct,padAct==='Space'?' ':'')}else if(rl(q('ac')))ku(padAct);
+  if(pr(q('pi')))selSlot(-1);if(pr(q('sp')))keys.ShiftLeft=!keys.ShiftLeft;
+  if(pr(q('su')))dispatchEvent(new WheelEvent('wheel',{deltaY:1}));if(pr(q('pr')))dispatchEvent(new WheelEvent('wheel',{deltaY:-1}));
+  if(pr(q('em')))openWheel();
+  if(pr(q('bo')))useItem(P.inv.mini&&P.sh<50?'mini':'big');if(pr(q('me')))useItem('med');
+  if(pr(q('ca')))kd('KeyM','m');if(pr(q('ma')))bMat();if(pr(9))openCfg();
 }
 let padAct='KeyE';
 let lobT=0;function lobbyLoop(t){requestAnimationFrame(lobbyLoop);const ldt=Math.min(.05,(t-lobT)/1000||0);lobT=t;if(run)return;padPoll(ldt);lobbyUpdate(t);STAGE(t);if(POST){const U=POST.U;U.uOut.value=CFG.toon?.8:0;U.uSt.value=0;U.uSp.value=0;U.uRay.value=0;U.uFl.value=0;U.uBl.value=.6}drawScene(ls,lc)}
