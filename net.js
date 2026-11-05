@@ -80,7 +80,9 @@
     resume: function (u, token) { return call({ t: 'resume', u: u, token: token }); },
     save: function (p) { return call({ t: 'save', p: p }); },
     friends: function () { return call({ t: 'flist' }); },
-    social: function (t, u, ok) { return call({ t: t, u: u, ok: ok }); }
+    social: function (t, u, ok) { return call({ t: t, u: u, ok: ok }); },
+    // Ping : temps d'un aller-retour avec le serveur, en millisecondes.
+    ping: function () { var t0 = performance.now(); return call({ t: 'ping' }).then(function () { return performance.now() - t0; }); }
   };
 
   window.claude = {

@@ -553,7 +553,7 @@ Object.assign(KIT,{
   [SK_CORS]:{acc:'corsaire',Shirt:0xf2e8d0,Pants:0x2f4a6b,Belt:0xb8322a,Shoes:0x3a2a1a,Hair:0x1b1b22},
   [SK_KAIJU]:{acc:'kaiju',hide:HEAD,Skin:0x4a6b2f,Shirt:0x4a6b2f,Pants:0x3d5a2a,Belt:0xc9b27a,Shoes:0x2f4520}});   // modèle 3D riggé (models/hero-eclair.glb), offert à tous
 // Qualité graphique : "good" = effets complets, "potato" = réglages légers pour PC modeste / mobile.
-const CFG_DEF={gfx:"good",shadows:true,res:1,view:"normal",auto:true,fps:false,toon:true,post:true,day:true,wx:true,shake:true,sens:1,fov:70,invY:false,vol:1,mus:.6,sfx:1},VIEW={short:1800,normal:2900,long:4200};
+const CFG_DEF={gfx:"good",shadows:true,res:1,view:"normal",auto:true,fps:false,toon:true,post:true,day:true,wx:true,shake:true,sens:1,fov:70,invY:false,bprev:false,vol:1,mus:.6,sfx:1},VIEW={short:1800,normal:2900,long:4200};
 let CFG=Object.assign({},CFG_DEF),viewK=1;try{Object.assign(CFG,JSON.parse(localStorage.getItem("ie_cfg")||"{}"));if(localStorage.getItem("ie_gfx")==="potato")CFG.gfx="potato"}catch(e){}
 let gfxQ=CFG.gfx;const HQ=()=>gfxQ!=='potato';
 // Rendu cartoon : ombres et lumière par aplats. Le programme des matériaux est figé au chargement, d'où l'option appliquée au prochain lancement.
@@ -1640,16 +1640,17 @@ const taken=(gx,gy,b,k)=>(wgrid.get(wKey(gx,gy))||[]).some(w=>w.b===b)||(k==='f'
 const lvl=o=>Math.max(0,Math.min(TOPB,Math.floor((P.z+o)/WS)*WS));
 // kind : 'w' mur, 's' escalier, 'f' sol, 'r' toit en pente ; matériau choisi avec X (P.bm).
 let bmT=0;function bMat(){if(!P)return;P.bm=((P.bm|0)+1)%3;const M_=BMAT[P.bm];feed(M_.e+" Construction en "+M_.n.toLowerCase()+" : "+M_.hp+" PV, "+M_.t+" s");sfx("pickup")}
-function build(kind){
+function build(kind,dry){
   if(P.drive||P.knocked)return;
   if(P.mode!=="ground"&&P.mode!=="island")return;
-  const mt=P.bm|0,M_=BMAT[mt];if((P[M_.r]|0)<10){if(Date.now()-bmT>1500){bmT=Date.now();feed(M_.e+" Pas assez de "+M_.n.toLowerCase()+" (appuie sur X pour changer)")}return}
+  const mt=P.bm|0,M_=BMAT[mt],poor=(P[M_.r]|0)<10;if(poor&&!dry){if(Date.now()-bmT>1500){bmT=Date.now();feed(M_.e+" Pas assez de "+M_.n.toLowerCase()+" (appuie sur X pour changer)")}return}
   const stair=kind==='s',slab=kind==='f'||kind==='r';
   const d=((Math.round(P.a/(Math.PI/2))%4)+4)%4,on=(stair||kind==='f')&&stairs.find(s=>s.d===d&&inCell(s,P.x,P.y)&&Math.abs(stH(s,P.x,P.y)-P.z)<5);
   let gx=Math.floor((P.x+Math.cos(P.a)*50)/WS)*WS,gy=Math.floor((P.y+Math.sin(P.a)*50)/WS)*WS,b=lvl(10);
   if(kind==='f')b=Math.max(0,Math.min(TOPB,Math.round(P.z/WS)*WS));else if(kind==='r')b=Math.min(TOPB,lvl(10)+WS);
   if(on){gx=on.x+[WS,0,-WS,0][d];gy=on.y+[0,WS,0,-WS][d];b=Math.min(TOPB,on.b+WS)}
   const mine=P.x>gx-P.r&&P.x<gx+WS+P.r&&P.y>gy-P.r&&P.y<gy+WS+P.r;
+  if(dry)return{gx,gy,b,d,kind,bad:poor||taken(gx,gy,b,kind)||(kind==='w'&&mine&&P.z<b+WS&&P.z+50>b)};// aperçu : où la pièce irait
   if(taken(gx,gy,b,kind))return;
   if(slab){
     addSlab(gx,gy,b,kind,mt);
@@ -1663,8 +1664,21 @@ function build(kind){
     addWall(gx,gy,b,mt);
     if(room)room.emit('wall',{x:gx,y:gy,b,m:mt}).catch(()=>{});
   }
-  P[M_.r]-=10;sfx("build");qEv('build');
+  P[M_.r]-=10;sfx("build");qEv('build');return true;
 }
+// Construction (liste « ChatGPT ») : garder la touche enfoncée construit en continu en suivant la visée (turbo).
+// Avec l'option « Aperçu avant de construire », la pièce apparaît en transparence (bleue, rouge si impossible)
+// et se pose quand on relâche la touche.
+let bHold=null,bGhost={};const mGhOk=new THREE.MeshBasicMaterial({color:0x4aa8ff,transparent:true,opacity:.35,depthWrite:false}),mGhNo=new THREE.MeshBasicMaterial({color:0xff4d4d,transparent:true,opacity:.35,depthWrite:false});
+function bPress(kind,code){if(bHold&&bHold.code===code)return;bHold={kind,code,t:0};if(!CFG.bprev)build(kind)}
+function bRelease(code){if(!bHold||bHold.code!==code)return;const k=bHold.kind;bHold=null;ghostHide();if(CFG.bprev&&run)build(k)}
+function bTick(dt){if(!bHold)return;if(!run||!keys[bHold.code]){bHold=null;ghostHide();return}
+  if(CFG.bprev){ghostShow(build(bHold.kind,true));return}if((bHold.t+=dt)>=.09){bHold.t=0;build(bHold.kind)}}
+function ghostShow(t){if(!t)return ghostHide();let g=bGhost[t.kind];
+  if(!g){if(t.kind==='s'){g=new THREE.Group();const pl=new THREE.Mesh(gPlank,mGhOk);pl.rotation.z=Math.PI/4;pl.position.y=WS/2-2;g.add(pl)}else g=new THREE.Mesh(t.kind==='w'?gWall:t.kind==='f'?gFloor:gRoof,mGhOk);bGhost[t.kind]=g}
+  if(g.parent!==dyn)dyn.add(g);for(const k in bGhost)bGhost[k].visible=k===t.kind;const hg=TH(t.gx+WS/2,t.gy+WS/2),m=t.bad?mGhNo:mGhOk;g.traverse(o=>{if(o.isMesh)o.material=m});
+  if(t.kind==='s'){g.position.set(t.gx+WS/2,hg+t.b,t.gy+WS/2);g.rotation.y=-t.d*Math.PI/2}else g.position.set(t.gx+WS/2,hg+t.b+(t.kind==='w'?30:t.kind==='f'?2:WS/4),t.gy+WS/2)}
+function ghostHide(){for(const k in bGhost)bGhost[k].visible=false}
 function hit(e,dmg){if(e===P){if(P.mode==="island")return;P.hurtAt=gnow();let d=dmg;if(P.sh>0){const a=Math.min(P.sh,d);P.sh-=a;d-=a}P.hp-=d;return}if(e.sh>0){const a=Math.min(e.sh,dmg);e.sh-=a;dmg-=a}e.hp-=dmg;if(e.hp<=0)killBot(e)}
 function net(){
   if(!room)return;
@@ -1787,7 +1801,7 @@ function update(dt,now){
   if(down&&P.cd<=0&&!P.use&&!P.rel&&canAct){
     if(W.melee){swing();P.cd=W.rate}
     else if(S&&S.mag>0){shoot(P,P.a,sprW(WR[P.sel][rr]),aimSlope(),P.sel);S.mag--;P.st.shots+=W.pel||1;P.cd=W.rate}}
-  orbStep(dt);grenStep(dt);anStep(dt);
+  orbStep(dt);grenStep(dt);anStep(dt);bTick(dt);
   if(P.rcl>0){const r=Math.min(P.rcl,Math.max(.03,P.rcl*6)*dt);pitch=Math.max(-1.1,pitch-r);P.rcl-=r}// la visée revient après le recul
   if(P.use){P.use.t+=dt;if(P.use.t>=P.use.d){const u=P.use.k;P.use=null;P.inv[u]--;qEv('heal');if(u==='mini')P.sh=Math.min(50,P.sh+25);else if(u==='big')P.sh=Math.min(100,P.sh+50);else P.hp=100}}
   for(const c of cards.filter(c=>!c.by&&c.kind!=="me"&&gnow()-c.t0>CARD_TTL))removeCard(c);
@@ -2073,7 +2087,7 @@ function kbPaint(){document.querySelectorAll('#cfgb [data-kb]').forEach(b=>{cons
 addEventListener("keydown",e=>{if(chatOn){if(e.code==="Enter"||e.code==="NumpadEnter"||e.key==="Enter"){e.preventDefault();closeChat(true)}else if(e.code==="Escape")closeChat(false);return}if(finale){if(!e.repeat&&finale.t>1.3)finDone();return}if(cine){if(!e.repeat)endCine();return}if(paused){if(cfgOpen()&&(e.code==="Escape"||e.code==="KeyP"))closeCfg();else if(e.code==="KeyP"&&!e.repeat)openCfg();return}
   if(e.code==="KeyG"&&!e.repeat&&!ewOpen&&!cfgOpen()&&!/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||"")&&$("acct").style.display!=="flex"){e.preventDefault();openChat();return}keys[e.code]=true;
   if(!run){const typing=/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||"");if(e.code==="Escape"&&cfgOpen())closeCfg();else if(e.code==="Escape"&&ewOpen)closeWheel(false);else if(e.code==="KeyB"&&!e.repeat&&!typing&&document.getElementById("acct").style.display!=="flex"){e.preventDefault();if(ewOpen)closeWheel(false);else openWheel()}return}if(e.code==="KeyE"&&!e.repeat&&lootE()){}else if(e.code==="KeyE"&&!e.repeat&&!liveOthers().some(o=>isMate(o)&&o.kn&&dist(o,P)<55)&&!(P.carry&&vans.some(v=>Math.hypot(v.x-P.x,v.y-P.y)<75)))toggleCar();if(e.code==="KeyB"&&!e.repeat){if(ewOpen)closeWheel(false);else openWheel()}if(e.code==="Escape"&&ewOpen)closeWheel(false);if(e.code==="KeyP"&&!e.repeat){if(cfgOpen())closeCfg();else openCfg()}if(e.code==="Escape"&&cfgOpen())closeCfg();if(e.code==="Space"){e.preventDefault();if(P.mode==="bus")P.exitReq=true}
-  if(e.code==='KeyQ'||(e.key&&e.key.toLowerCase()==='a'&&e.code!=='KeyA'))build('w');else if(e.code==='KeyR')build('s');else if(e.code==='KeyC')build('f');else if(e.code==='KeyV')build('r');else if(e.code==='KeyX')bMat();
+  {const bk=e.code==='KeyQ'||(e.key&&e.key.toLowerCase()==='a'&&e.code!=='KeyA')?'w':e.code==='KeyR'?'s':e.code==='KeyC'?'f':e.code==='KeyV'?'r':null;if(bk)bPress(bk,e.code);else if(e.code==='KeyX')bMat()}
   if(e.code==='KeyF'&&P.z<40){const c=chests.find(c=>!c.open&&!(c.z>0)&&Math.hypot(c.x-P.x,c.y-P.y)<70);if(c)openChest(c,true)}
   const d=e.code.replace('Digit','').replace('Numpad','');
   if(d==="1")selSlot(-1);else if(/^[2-5]$/.test(d))selSlot(+d-2);else if(d==="6")useItem("mini");else if(d==="7")useItem("big");else if(d==="8")useItem("med");else if(d==="9")throwOrb();if(e.code==='KeyH'&&!e.repeat)throwGren();
@@ -2082,7 +2096,7 @@ addEventListener("keydown",e=>{if(chatOn){if(e.code==="Enter"||e.code==="NumpadE
 addEventListener('keydown',e=>{if(!run||e.repeat||/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;if(e.code==='KeyI')invShow(!invOpen);else if(e.code==='Escape'&&invOpen)invShow(false)});
 $('invm').addEventListener('click',e=>{const d=e.target.closest('button');if(!d)return;const k=d.dataset.d;if(k==='x')invShow(false);else if(k[0]==='w')dropW(+k.slice(1));else dropItem(k);invDraw()});
 addEventListener('wheel',e=>{if(!run)return;const o=[-1,0,1,2,3].filter(i=>i<0||P.sl[i]),j=o.indexOf(P.cs);selSlot(o[(j+(e.deltaY>0?1:-1)+o.length)%o.length])});
-addEventListener("keyup",e=>{keys[e.code]=false;if(e.code==="KeyB"&&ewOpen&&ewMoved&&ewSel>=0)closeWheel(true)});
+addEventListener("keyup",e=>{keys[e.code]=false;bRelease(e.code);if(e.code==="KeyB"&&ewOpen&&ewMoved&&ewSel>=0)closeWheel(true)});
 addEventListener("mousemove",e=>{if(cine)return;if(ewOpen){wheelMove(e);return}if(document.pointerLockElement===cv){const k=aim&&P?(P.sel===3?.3:.65):1;yaw-=e.movementX*.003*k*CFG.sens;pitch=Math.max(-1.1,Math.min(.5,pitch-e.movementY*.003*k*CFG.sens*(CFG.invY?-1:1)))}});
 cv.addEventListener('mousedown',e=>{
   if(cine){endCine();return}
@@ -2541,11 +2555,12 @@ function renderCfg(){
   sel('Résolution','res',[[.5,'Basse (50 %)'],[.75,'Moyenne (75 %)'],[1,'Normale (100 %)'],[1.5,'Haute (150 %)']]);
   sel('Distance d’affichage','view',[['short','Courte'],['normal','Normale'],['long','Longue']]);
   chk('Qualité automatique si le jeu ralentit','auto');
-  chk('Afficher les images par seconde (FPS)','fps');
+  chk('Afficher les images par seconde (FPS) et le ping','fps');
   h('Contrôles');
   rng('Sensibilité de la visée','sens',.3,2.5,.05,v=>'×'+(+v).toFixed(2));
   rng('Champ de vision','fov',55,95,1,v=>v+'°');
   chk('Inverser l’axe vertical','invY');
+  chk('Aperçu avant de construire (la pièce se pose en relâchant la touche)','bprev');
   {const s=document.createElement('select');for(const[v,t]of[['pc','🖥️ PC'],['mo','📱 Mobile']]){const o=document.createElement('option');o.value=v;o.textContent=t;s.append(o)}s.value=IS_TOUCH?'mo':'pc';s.onchange=()=>setDevice(s.value,true);row('Appareil',s)}
   // Touches : clic sur le bouton, puis nouvelle touche (Échap ou clic gauche pour annuler).
   const bind=(label,dk,a,cap)=>{const t=document.createElement('button');t.type='button';t.className='kbb';t.dataset[dk]=a;t.onclick=e=>{e.preventDefault();cap(a)};row(label,t)};
@@ -2578,7 +2593,9 @@ $('pausego').onclick=()=>setPause(false);$('pausecfg').onclick=openCfg;
 document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&!ewOpen&&!chatOn)setPause(true)});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)setPause(true)});
 $('cfgbtn').onclick=openCfg;$('cfgx').onclick=closeCfg;$('cfgreset').onclick=()=>{CFG=Object.assign({},CFG_DEF);saveCfg();applyCfg();renderCfg()};
-let fpsN=0,fpsT=0;function fpsTick(dt){if(!CFG.fps)return;fpsN++;fpsT+=dt;if(fpsT>=.5){$('fps').textContent=Math.round(fpsN/fpsT)+' FPS';fpsN=0;fpsT=0}}
+// Ping (liste « ChatGPT ») : aller-retour avec le serveur toutes les 3 s, affiché avec les FPS quand l'option est cochée.
+let fpsN=0,fpsT=0,pingMs=-1;function fpsTick(dt){if(!CFG.fps)return;fpsN++;fpsT+=dt;if(fpsT>=.5){$('fps').textContent=Math.round(fpsN/fpsT)+' FPS'+(pingMs>=0?' · '+pingMs+' ms':'');fpsN=0;fpsT=0}}
+setInterval(()=>{if(!CFG.fps||!room||!auth||!auth.ping||document.hidden)return;auth.ping().then(ms=>{pingMs=Math.round(ms)}).catch(()=>{pingMs=-1})},3000);
 function renderCredits(){
   const b=document.getElementById('credb'),h=t=>{const e=document.createElement('h3');e.textContent=t;b.append(e)},
     p=(parts,cls)=>{const e=document.createElement('p');if(cls)e.className=cls;for(const x of parts){if(typeof x==='string')e.append(x);else{const a=document.createElement('a');a.href=x.href;a.textContent=x.t;a.target='_blank';a.rel='noopener noreferrer';e.append(a)}}b.append(e)};

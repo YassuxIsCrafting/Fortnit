@@ -121,6 +121,8 @@ export class Room extends DurableObject {
         const pr = this.pres.get(id) || {}; merge(pr, p); this.pres.set(id, pr);
         this.bcast(id, { t: 'pr', id, patch: p });
         this.persist(ws, id, ['n', 'c', 's', 'h', 'k', 'g'].some(k => k in p));
+      } else if (m.t === 'ping') {
+        reply({ ok: true }); // mesure du ping côté joueur
       } else if (m.t === 'ev') {
         if (!TOPICS.has(m.topic) || JSON.stringify(m.data ?? null).length > 2048) return;
         this.bcast(id, { t: 'ev', id, topic: m.topic, data: m.data });
