@@ -553,7 +553,7 @@ Object.assign(KIT,{
   [SK_CORS]:{acc:'corsaire',Shirt:0xf2e8d0,Pants:0x2f4a6b,Belt:0xb8322a,Shoes:0x3a2a1a,Hair:0x1b1b22},
   [SK_KAIJU]:{acc:'kaiju',hide:HEAD,Skin:0x4a6b2f,Shirt:0x4a6b2f,Pants:0x3d5a2a,Belt:0xc9b27a,Shoes:0x2f4520}});   // modèle 3D riggé (models/hero-eclair.glb), offert à tous
 // Qualité graphique : "good" = effets complets, "potato" = réglages légers pour PC modeste / mobile.
-const CFG_DEF={gfx:"good",shadows:true,res:1,view:"normal",auto:true,fps:false,toon:true,post:true,day:true,wx:true,shake:true,sens:1,fov:70,invY:false,bprev:false,vol:1,mus:.6,sfx:1},VIEW={short:1800,normal:2900,long:4200};
+const CFG_DEF={gfx:"good",shadows:true,res:1,view:"normal",auto:true,fps:false,toon:true,post:true,day:true,wx:true,shake:true,sens:1,fov:70,invY:false,bprev:false,eco:false,vol:1,mus:.6,sfx:1},VIEW={short:1800,normal:2900,long:4200};
 let CFG=Object.assign({},CFG_DEF),viewK=1;try{Object.assign(CFG,JSON.parse(localStorage.getItem("ie_cfg")||"{}"));if(localStorage.getItem("ie_gfx")==="potato")CFG.gfx="potato"}catch(e){}
 let gfxQ=CFG.gfx;const HQ=()=>gfxQ!=='potato';
 // Rendu cartoon : ombres et lumière par aplats. Le programme des matériaux est figé au chargement, d'où l'option appliquée au prochain lancement.
@@ -2023,9 +2023,10 @@ let qT=0,qN=0,qL=0;
 function loop(t){
   if(!run)return;
   if(paused){last=t;padPoll(0);requestAnimationFrame(loop);return}
+  if(CFG.eco&&t-last<31){requestAnimationFrame(loop);return} // mode économie : 30 images/s au plus
   const raw=(t-last)/1000,dt=Math.min(.05,raw)*(finale?finale.ts:1);last=t;if(!finale)padPoll(dt);update(dt,t);draw(t,dt);fpsTick(raw);if(run)requestAnimationFrame(loop);
   if(raw>0&&raw<.5){qT+=raw;qN++}
-  if(qT>3){if(CFG.auto&&qN/qT<42&&qL<4){qL++;if(qL===2){renderer.setPixelRatio(Math.min(devicePixelRatio,1)*Math.min(1,CFG.res));rs()}else if(qL===3)sun.castShadow=false}qT=qN=0}
+  if(qT>3){if(CFG.auto&&qN/qT<(CFG.eco?24:42)&&qL<4){qL++;if(qL===2){renderer.setPixelRatio(Math.min(devicePixelRatio,1)*Math.min(1,CFG.res));rs()}else if(qL===3)sun.castShadow=false}qT=qN=0}
 }
 const cv=renderer.domElement;
 document.getElementById('pseudo').value='Joueur'+(100+Math.floor(Math.random()*900));
@@ -2535,6 +2536,8 @@ function applyCfg(){
 function gfxApply(){const hi=gfxQ!=='potato',ms=hi?4096:1024;WIND.value=hi?1:0;
   if(sun.shadow.mapSize.x!==ms){sun.shadow.mapSize.set(ms,ms);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}
   document.body.classList.toggle('hq',hi)}
+// Plein écran (demande du navigateur ; refusé sans clic du joueur)
+function fsSet(on){try{return Promise.resolve(on?document.fullscreenElement||document.documentElement.requestFullscreen({navigationUI:'hide'}):document.fullscreenElement&&document.exitFullscreen()).catch(()=>{})}catch(e){return Promise.resolve()}}
 function renderCfg(){
   const b=$('cfgb');b.textContent='';
   const h=t=>{const e=document.createElement('h3');e.textContent=t;b.append(e)};
@@ -2556,6 +2559,8 @@ function renderCfg(){
   sel('Distance d’affichage','view',[['short','Courte'],['normal','Normale'],['long','Longue']]);
   chk('Qualité automatique si le jeu ralentit','auto');
   chk('Afficher les images par seconde (FPS) et le ping','fps');
+  chk('Mode économie d’énergie (30 images/s, pour la batterie)','eco');
+  {const c=document.createElement('input');c.type='checkbox';c.checked=!!document.fullscreenElement;c.disabled=!document.documentElement.requestFullscreen;c.onchange=()=>fsSet(c.checked).finally(()=>c.checked=!!document.fullscreenElement);row('Plein écran (touche F11 aussi)',c)}
   h('Contrôles');
   rng('Sensibilité de la visée','sens',.3,2.5,.05,v=>'×'+(+v).toFixed(2));
   rng('Champ de vision','fov',55,95,1,v=>v+'°');
@@ -2704,7 +2709,7 @@ function padPoll(dt){
   if(pr(q('gr')))throwGren();if(pr(q('ca')))kd('KeyM','m');if(pr(q('ma')))bMat();if(pr(9))openCfg();
 }
 let padAct='KeyE';
-let lobT=0;function lobbyLoop(t){requestAnimationFrame(lobbyLoop);const ldt=Math.min(.05,(t-lobT)/1000||0);lobT=t;if(run)return;padPoll(ldt);lobbyUpdate(t);STAGE(t);if(POST){const U=POST.U;U.uOut.value=CFG.toon?.8:0;U.uSt.value=0;U.uSp.value=0;U.uRay.value=0;U.uFl.value=0;U.uBl.value=.6}drawScene(ls,lc)}
+let lobT=0;function lobbyLoop(t){requestAnimationFrame(lobbyLoop);if(CFG.eco&&t-lobT<31)return;const ldt=Math.min(.05,(t-lobT)/1000||0);lobT=t;if(run)return;padPoll(ldt);lobbyUpdate(t);STAGE(t);if(POST){const U=POST.U;U.uOut.value=CFG.toon?.8:0;U.uSt.value=0;U.uSp.value=0;U.uRay.value=0;U.uFl.value=0;U.uBl.value=.6}drawScene(ls,lc)}
 function netUI(){
   const el=document.getElementById('net');
   if(!room){el.textContent='Mode solo : le multijoueur n\'est pas disponible dans cette vue.';return}
