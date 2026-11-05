@@ -158,6 +158,8 @@ body:not(.playing) #chat{bottom:auto;top:calc(96px + env(safe-area-inset-top,0px
 body:not(.playing) #invm{display:none!important}
 .stg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;font-size:11px;opacity:.95}.stg div{background:#ffffff14;border-radius:6px;padding:6px 4px;text-align:center}.stg b{display:block;font-size:17px}
 #t-cfg{left:calc(30px + min(132px,32vh) + min(54px,13vh) + env(safe-area-inset-left,0px));bottom:calc(62px + env(safe-area-inset-bottom,0px))}
+#cdn{position:fixed;left:50%;top:28%;transform:translate(-50%,-50%);font-family:Bungee,Impact,sans-serif;font-size:min(120px,22vh);color:var(--gold);text-shadow:0 6px 0 #0006,0 0 30px #ffd23f88;pointer-events:none;z-index:5;display:none}#cdn.pop{animation:cdpop .9s ease-out}@keyframes cdpop{0%{transform:translate(-50%,-50%) scale(1.8);opacity:0}25%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-50%) scale(.85);opacity:.6}}
+#hist{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#14123ae6;z-index:14;padding:16px}#histp{width:min(560px,94vw);max-height:86vh}#histb{overflow:auto;font-family:system-ui,sans-serif;font-size:13px;display:flex;flex-direction:column;gap:5px;margin-bottom:10px}#histb .hr{display:flex;gap:10px;align-items:center;background:#ffffff10;border-radius:6px;padding:6px 10px}#histb .hr b{min-width:42px;font-family:Bungee,Impact,sans-serif;font-weight:400;color:var(--gold)}#histb .hr span{flex:1}#histb .hr small{opacity:.7}#histb .sum{opacity:.85;margin:0 0 4px}
 #cred{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#14123ae6;z-index:14;padding:16px}#credp{width:min(560px,94vw);max-height:86vh}
 #credb{overflow:auto;font-family:system-ui,sans-serif;font-size:13px;line-height:1.5;display:flex;flex-direction:column;gap:4px}#credb h3{margin:10px 0 2px;font-family:Bungee,Impact,sans-serif;font-weight:400;font-size:13px;color:var(--gold)}#credb a{color:#8de0ff}#credb p{margin:0}#credb .lic{opacity:.75;font-size:12px}
 #modes{grid-area:modes;pointer-events:auto;display:flex;gap:8px;overflow-x:auto;padding:8px 2px 2px;touch-action:pan-x;user-select:none;-webkit-user-select:none;scrollbar-width:none}#modes::-webkit-scrollbar{display:none}
@@ -238,7 +240,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <div class="hud" id="bot"><div class="vit"><div class="bar"><div id="sh"></div></div><b id="shn">0</b></div><div class="vit"><div class="bar"><div id="hp"></div></div><b id="hpn">100</b></div></div>
 <div class="hud" id="br"><div class="card" id="bm0">🪵 <b id="wd">50</b></div><div class="card" id="bm1">🪨 <b id="st">0</b></div><div class="card" id="bm2">🔩 <b id="mt">0</b></div><div class="card">🔹 <b id="am">90</b><small>MUNITIONS</small></div></div>
 <div class="bar hud" id="usew"><div id="use"></div></div>
-<div id="hb"></div>
+<div id="hb"></div><div id="cdn" aria-live="polite"></div>
 <div id="invm" role="dialog" aria-label="Inventaire"></div>
 <div id="touch"><div id="joy"><div id="knob"></div></div>
   <button type="button" class="tb" id="t-fire" aria-label="Tirer">🔥</button><button type="button" class="tb" id="t-aim" aria-label="Viser">🎯</button><button type="button" class="tb" id="t-jump" aria-label="Sauter">⤒</button>
@@ -282,7 +284,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
   </div>
   <div id="bt">
     <div id="mcard"><h2 id="mname">Battle Royale</h2><div id="msw"><button type="button" id="msub" aria-haspopup="true" aria-expanded="false" aria-controls="mpick">Solo · 100 joueurs</button><div id="mpick" role="menu" aria-label="Taille d'équipe"><button type="button" role="menuitemradio" data-s="0">Solo</button><button type="button" role="menuitemradio" data-s="1">Duo</button></div></div><button id="go">Jouer</button><p id="party"></p></div>
-    <div id="acts"><button type="button" id="devsw"></button><button type="button" id="credbtn">📜 Crédits</button><button type="button" id="cfgbtn">⚙️ Paramètres</button><button type="button" id="ewbtn">💃 Emote (B)</button></div>
+    <div id="acts"><button type="button" id="devsw"></button><button type="button" id="credbtn">📜 Crédits</button><button type="button" id="histbtn">🕘 Historique</button><button type="button" id="cfgbtn">⚙️ Paramètres</button><button type="button" id="ewbtn">💃 Emote (B)</button></div>
     <div id="modes" role="radiogroup" aria-label="Mode de jeu (glisse vers le haut pour Reload)">
       <button type="button" class="md on" data-m="0" role="radio" style="--bg:linear-gradient(135deg,#2b6cff,#14123a 85%)"><i>🪂</i><b>Battle Royale</b><small>Solo ou duo · 100 joueurs</small></button>
       <button type="button" class="md" data-m="2" role="radio" style="--bg:linear-gradient(135deg,#ff5d8f,#7b3dff 55%,#14123a)"><i>🔁</i><b>Reload</b><small>Duo · 40 joueurs · réapparition</small></button>
@@ -293,6 +295,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <div id="dev" role="dialog" aria-modal="true" aria-labelledby="devt"><div class="panel" id="devp"><h2 id="devt">Tu joues sur…</h2><div class="row"><button type="button" id="dev-pc">🖥️ PC</button><button type="button" id="dev-mo">📱 Mobile</button></div><p class="hint">PC : clavier et souris. Mobile : commandes tactiles à l'écran. Tu pourras changer depuis le lobby.</p></div></div>
 <div id="pause" role="dialog" aria-modal="true" aria-labelledby="pauset"><div class="panel" id="pausep"><h2 id="pauset">⏸ Pause</h2><p>Partie solo : le temps est figé.</p><div class="row"><button type="button" id="pausecfg">Paramètres</button><button type="button" id="pausego">Reprendre</button></div></div></div>
 <div id="cfg" role="dialog" aria-modal="true" aria-labelledby="cfgt"><div class="panel" id="cfgp"><h2 id="cfgt">Paramètres</h2><div id="cfgb"></div><div class="row"><button type="button" id="cfgreset">Réinitialiser</button><button type="button" id="cfgx">Fermer</button></div></div></div>
+<div id="hist" role="dialog" aria-modal="true" aria-labelledby="histt"><div class="panel" id="histp"><h2 id="histt">Historique des parties</h2><div id="histb"></div><button type="button" id="histx">Fermer</button></div></div>
 <div id="cred" role="dialog" aria-modal="true" aria-labelledby="credt"><div class="panel" id="credp"><h2 id="credt">Crédits</h2><div id="credb"></div><button type="button" id="credx">Fermer</button></div></div>
 <div id="acct"><div class="panel" id="acp">
   <h2 id="at">Connexion</h2>
@@ -446,9 +449,9 @@ for(const m of BMAT){m.mw=m.mw||new THREE.MeshLambertMaterial({color:m.c,map:m.t
 const gFloor=new THREE.BoxGeometry(WS,4,WS),gRoof=new THREE.ConeGeometry(WS/Math.SQRT2,WS/2,4,1);gRoof.rotateY(Math.PI/4);
 const mWall=new THREE.MeshLambertMaterial({color:0xc98b4a,map:texPlank}),mBul=new THREE.MeshBasicMaterial({color:0xfff6b0,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}),mGun=L(0x222222),mSkin=L(0xffd9b3);
 BMAT[0].mw=mWall;// le mur en bois garde le matériau d’origine
-const mLoot={tp:B(0xc58cff),mini:B(0x4aa8ff),big:B(0x00e5ff),med:B(0xff4d4d),ammo:B(0xffd23f),wood:B(0xb0773a),stone:B(0xa9acb1),metal:B(0x93a7bc),ar:B(0x5fd35f),sg:B(0x4aa8ff),sn:B(0xc27bff)};
-const gPot=new THREE.SphereGeometry(8,10,8),gKit=new THREE.BoxGeometry(20,13,13),gWpn=new THREE.BoxGeometry(30,6,8),LG={tp:gPot,mini:gPot,big:gPot,med:gKit,ammo:gLoot,wood:gLoot,stone:gLoot,metal:gLoot,ar:gWpn,sg:gWpn,sn:gWpn};
-const KINDS=['mini','mini','big','med','tp','ammo','ammo','ammo','wood','stone','metal','pi','pi','ar','ar','sg','sn'];
+const mLoot={gr:B(0x5c8a3c),tp:B(0xc58cff),mini:B(0x4aa8ff),big:B(0x00e5ff),med:B(0xff4d4d),ammo:B(0xffd23f),wood:B(0xb0773a),stone:B(0xa9acb1),metal:B(0x93a7bc),ar:B(0x5fd35f),sg:B(0x4aa8ff),sn:B(0xc27bff)};
+const gPot=new THREE.SphereGeometry(8,10,8),gKit=new THREE.BoxGeometry(20,13,13),gWpn=new THREE.BoxGeometry(30,6,8),LG={gr:new THREE.SphereGeometry(6,10,8),tp:gPot,mini:gPot,big:gPot,med:gKit,ammo:gLoot,wood:gLoot,stone:gLoot,metal:gLoot,ar:gWpn,sg:gWpn,sn:gWpn};
+const KINDS=['mini','mini','big','med','tp','gr','ammo','ammo','ammo','wood','stone','metal','pi','pi','ar','ar','sg','sn'];
 const WEAPONS=[{d:13,rate:.3,sp:.02,pel:1,spd:900,life:.9,mag:16,rl:1.3},{d:9,rate:.1,sp:.07,pel:1,spd:900,life:.9,mag:30,rl:2.2},{d:7,rate:.85,sp:.14,pel:6,spd:800,life:.35,mag:5,rl:4.2},{d:65,rate:1.3,sp:0,pel:1,spd:1500,life:1.1,mag:1,rl:2.6},{d:20,rate:.45,sp:0,pel:1,spd:800,life:.07,mag:0,melee:1}],BOTW={d:8,sp:.25,pel:1,spd:900,life:.9};
 // Armes des bots (pistolet, fusil d'assaut, pompe, sniper), moins précises que celles du joueur. rg : distance de combat voulue, see : portée de repérage.
 const BOTWS=[{d:10,sp:.13,pel:1,spd:900,life:.9,cd:[.5,.8],rg:190,see:380},{d:6,sp:.15,pel:1,spd:900,life:.9,cd:[.22,.36],rg:250,see:420},{d:6,sp:.16,pel:5,spd:800,life:.35,cd:[1,1.4],rg:80,see:340},{d:38,sp:.03,pel:1,spd:1500,life:1.1,cd:[2.4,3.4],rg:430,see:560}];
@@ -759,7 +762,7 @@ function init(st,n){
   cars=[];{const rc=mul(4242);for(let k=0;k<600&&cars.length<50&&blds.length;k++){const b=blds[Math.floor(rc()*blds.length)],s=Math.floor(rc()*4),o=b.s/2+75,x=b.x+b.s/2+[o,0,-o,0][s],y=b.y+b.s/2+[0,o,0,-o][s],h=rc()*6.2832,v=Math.floor(rc()*CARC.length);
     if(x<60||y<60||x>M-60||y>M-60||inBld(x,y,20)||trees.some(t=>Math.hypot(t.x-x,t.y-y)<75)||chests.some(c=>Math.hypot(c.x-x,c.y-y)<70)||cars.some(c=>Math.hypot(c.x-x,c.y-y)<90))continue;cars.push(mkCar(cars.length,x,y,h,v))}}
   placeVans();sprInit();sprHud();
-  P={x:C,y:C,z:0,vz:0,fz:0,gr:true,hp:100,born:gnow(),kills:0,sh:0,own:[0,0,0,0,1],mag:[0,0,0,0,0],sel:4,sl:[null,null,null,null],cs:-1,rel:null,use:null,inv:{mini:0,big:0,med:0,tp:0},st:{dmg:0,shots:0,hits:0,heads:0,dist:0,chests:0},wood:0,stone:0,metal:0,bm:0,ammo:0,r:16,cd:0,a:0,hc:0,disc:new Set(),mode:'ground',m:mkChar(look.c,0,0,SKINS[look.s],look.h,4,look.k)};P.m.userData.ug=look.u;dyn.add(P.m);
+  P={x:C,y:C,z:0,vz:0,fz:0,gr:true,hp:100,born:gnow(),kills:0,sh:0,own:[0,0,0,0,1],mag:[0,0,0,0,0],sel:4,sl:[null,null,null,null],cs:-1,rel:null,use:null,inv:{mini:0,big:0,med:0,tp:0,gr:0},st:{dmg:0,shots:0,hits:0,heads:0,dist:0,chests:0},wood:0,stone:0,metal:0,bm:0,ammo:0,r:16,cd:0,a:0,hc:0,disc:new Set(),mode:'ground',m:mkChar(look.c,0,0,SKINS[look.s],look.h,4,look.k)};P.m.userData.ug=look.u;dyn.add(P.m);
   bots=[];botsAll=[];bus=null;
   bul=[];fx=[];pops=[];rags=[];finale=null;finEnd=false;heroOn=0;stairs=[];slabs=[];growing=[];t0=gnow();aim=false;fov=CFG.fov;cam.fov=CFG.fov;cam.updateProjectionMatrix();
   ZC=[{x:C,y:C}];stormC=ZC[0];ph=0;stormR=R[0];stormPre=true;yaw=rnd(0,6.28);pitch=0;
@@ -1018,7 +1021,7 @@ function islandTick(){
 function startMatch(st,n){
   for(let i=loot.length-1;i>=0;i--)if(loot[i].isl){dyn.remove(loot[i].m);loot.splice(i,1)}
   for(const e of others.values())dyn.remove(e.m);others.clear();bul.forEach(b=>dyn.remove(b.m));bul=[];
-  Object.assign(P,{drive:null,hp:100,sh:0,own:[0,0,0,0,1],mag:[0,0,0,0,0],sel:4,sl:[null,null,null,null],cs:-1,rel:null,use:null,inv:{mini:0,big:0,med:0,tp:0},st:{dmg:0,shots:0,hits:0,heads:0,dist:0,chests:0},wood:0,stone:0,metal:0,ammo:0,kills:0,tok:0,bonus:0,born:gnow(),disc:new Set(),dead:0});
+  Object.assign(P,{drive:null,hp:100,sh:0,own:[0,0,0,0,1],mag:[0,0,0,0,0],sel:4,sl:[null,null,null,null],cs:-1,rel:null,use:null,inv:{mini:0,big:0,med:0,tp:0,gr:0},st:{dmg:0,shots:0,hits:0,heads:0,dist:0,chests:0},wood:0,stone:0,metal:0,ammo:0,kills:0,tok:0,bonus:0,born:gnow(),disc:new Set(),dead:0});
   P.crowned=crownHeld();if(P.crowned)addCrown(P.m);lastPh=-1;
   heroOn=0;heroLoad();rlMode=humans()[0].md===2;R=rlMode?R_RL:R0;WAITS=rlMode?W_RL:W0;SHRS=rlMode?S_RL:S0;for(const v of vans)v.m.visible=!rlMode;
   t0=st;mSeed=(st+pOff)%2147483647;const hb=joinIG||ingame().find(p=>Array.isArray(p.presence.b)),nb=hb?hb.presence.b.length:Math.max(0,(rlMode?RL_NP:NP)-n);
@@ -1213,7 +1216,7 @@ function dropCard(kind,ref,name,x,y){const g=new THREE.Group(),c=new THREE.Mesh(
 function removeCard(cd){const i=cards.indexOf(cd);if(i>=0)cards.splice(i,1);dyn.remove(cd.m);if(P&&P.carry===cd)P.carry=null}
 function rebootSelf(vi){
   const v=vans[vi|0]||vans[0];if(!v)return;for(const cd of cards.filter(c=>c.kind==='me'))removeCard(cd);
-  Object.assign(P,{mode:'air',x:v.x+rnd(-30,30),y:v.y+rnd(-30,30),z:420,vz:-100,glided:false,hp:100,sh:0,alive:true,knocked:false,dead:0,own:[0,0,0,0,1],mag:[0,0,0,0,0],sel:4,sl:[null,null,null,null],cs:-1,ammo:0,wood:0,inv:{mini:0,big:0,med:0,tp:0},use:null,rel:null,carry:null});
+  Object.assign(P,{mode:'air',x:v.x+rnd(-30,30),y:v.y+rnd(-30,30),z:420,vz:-100,glided:false,hp:100,sh:0,alive:true,knocked:false,dead:0,own:[0,0,0,0,1],mag:[0,0,0,0,0],sel:4,sl:[null,null,null,null],cs:-1,ammo:0,wood:0,inv:{mini:0,big:0,med:0,tp:0,gr:0},use:null,rel:null,carry:null});
   P.m.visible=true;feed('🔄 Tu as été relancé ! Récupère vite des armes.');sfx('chest');
 }
 function rebootBot(b,v){
@@ -1241,7 +1244,7 @@ function goReload(){
 }
 // Réapparition Reload : on retombe du ciel près de son équipier avec la pioche, un pistolet commun, des munitions et du bois.
 function reloadSelf(f){
-  const s=reloadSpot(f);Object.assign(P,{mode:'air',x:s.x,y:s.y,z:BUS_Z*.8,vz:-200,glided:false,hp:100,sh:0,alive:true,knocked:false,dead:0,rsT:0,own:[1,0,0,0,1],mag:[WEAPONS[0].mag,0,0,0,0],sel:0,sl:[{w:0,r:0,mag:WEAPONS[0].mag},null,null,null],cs:0,ammo:60,wood:100,inv:{mini:0,big:0,med:0,tp:0},use:null,rel:null,carry:null});
+  const s=reloadSpot(f);Object.assign(P,{mode:'air',x:s.x,y:s.y,z:BUS_Z*.8,vz:-200,glided:false,hp:100,sh:0,alive:true,knocked:false,dead:0,rsT:0,own:[1,0,0,0,1],mag:[WEAPONS[0].mag,0,0,0,0],sel:0,sl:[{w:0,r:0,mag:WEAPONS[0].mag},null,null,null],cs:0,ammo:60,wood:100,inv:{mini:0,big:0,med:0,tp:0,gr:0},use:null,rel:null,carry:null});
   P.m.visible=true;feed('🔁 Tu es de retour ! Atterris près de ton équipier.');sfx('whoosh');
 }
 function reloadBot(b,f){
@@ -1361,8 +1364,8 @@ function mkAmmoBox(i,x,y,ry){
 }
 function openChest(c,send){
   if(c.open||c.z>0)return;sfx("chest",0,Math.hypot(c.x-P.x,c.y-P.y));if(c.beam)c.beam.visible=false;c.open=true;c.t=0;if(c.bi!==undefined)hideInst(beamI,c.bi);
-  const r=mul(1000+c.i),w=["pi","ar","ar","sg","sn"][Math.floor(r()*5)],h=["mini","big","med","tp"][Math.floor(r()*4)],wr=rollRar(r,c.kind==='leg'?[0,0,0,0,75,25]:CHESTW);
-  if(c.kind==="drop"){const w2=["ar","sg","sn"][Math.floor(r()*3)];[[w,rollRar(r,DROPW)],[w2,rollRar(r,DROPW)],["big",0],["ammo",0],["tp",0]].forEach(([k,q],j)=>{const a=j*1.25+.3;addLoot(c.x+Math.cos(a)*46,c.y+Math.sin(a)*46,k,q)})}
+  const r=mul(1000+c.i),w=["pi","ar","ar","sg","sn"][Math.floor(r()*5)],h=["mini","big","med","tp","gr"][Math.floor(r()*5)],wr=rollRar(r,c.kind==='leg'?[0,0,0,0,75,25]:CHESTW);
+  if(c.kind==="drop"){const w2=["ar","sg","sn"][Math.floor(r()*3)];[[w,rollRar(r,DROPW)],[w2,rollRar(r,DROPW)],["big",0],["ammo",0],["tp",0],["gr",0]].forEach(([k,q],j)=>{const a=j*1.25+.3;addLoot(c.x+Math.cos(a)*46,c.y+Math.sin(a)*46,k,q)})}
   else if(c.kind==="ammo")["ammo","ammo"].forEach((k,j)=>addLoot(c.x+Math.cos(j*3+.5)*30,c.y+Math.sin(j*3+.5)*30,k));
   else [w,"ammo",h,["wood","stone","metal"][Math.floor(r()*3)]].forEach((k,j)=>{const a=j*1.6+.5;addLoot(c.x+Math.cos(a)*40,c.y+Math.sin(a)*40,k,wr)});
   if(near(c.x,c.y)){chestFx(c);for(let j=1;j<=(c.kind==="ammo"?2:c.kind==="drop"?5:4);j++)if(loot[loot.length-j])loot[loot.length-j].pop={t:0,x:c.x,y:c.y}}
@@ -1467,6 +1470,7 @@ function pickup(o){
   if(k==='mini'){if(I.mini>=6)return 0;I.mini=Math.min(6,I.mini+(o.n||2))}
   else if(k==='big'){if(I.big>=3)return 0;I.big++}
   else if(k==='med'){if(I.med>=3)return 0;I.med++}
+  else if(k==='gr'){if((I.gr|0)>=4)return 0;I.gr=Math.min(4,(I.gr|0)+(o.n||2));feed('💣 Grenades : touche H pour en lancer une (elle explose au bout de 2 s)')}
   else if(k==='tp'){if((I.tp|0)>=2)return 0;I.tp=(I.tp|0)+1;feed('🔮 Orbe de saut : touche 9 pour la lancer, tu te téléportes où elle tombe')}
   else if(k==="ammo")P.ammo=Math.min(999,P.ammo+30);
   else if(k==='wood')P.wood+=30;else if(k==='stone')P.stone=Math.min(999,(P.stone|0)+30);else if(k==='metal')P.metal=Math.min(999,(P.metal|0)+30);
@@ -1505,14 +1509,34 @@ function lootE(){if(!run||P.mode!=="ground"||P.drive||P.knocked||P.carry)return 
 function invShow(on){invOpen=on;$('invm').style.display=on?'flex':'none';if(on){try{document.exitPointerLock()}catch(e){}invDraw()}}
 function invDraw(){if(!invOpen)return;let h='<h3>🎒 Inventaire</h3><small>Lâcher pose l’objet devant toi · I ou Échap pour fermer</small>';
   P.sl.forEach((q,i)=>{h+='<div class="ivr"><i>'+(i+2)+'</i>'+(q?'<b style="color:'+RAR[q.r].c+'">'+IC[q.w]+WN[q.w]+'</b><span>'+RAR[q.r].n+' · '+q.mag+'/'+WEAPONS[q.w].mag+'</span><button type="button" data-d="w'+i+'">Lâcher</button>':'<b class="off">— vide —</b>')+'</div>'});
-  for(const[k,n,e]of[['mini','Minipot','🧪'],['big','Grosse pot','⚗️'],['med','Medkit','🩹'],['tp','Orbe de saut','🔮']])if(P.inv[k])h+='<div class="ivr"><i>'+e+'</i><b>'+n+'</b><span>× '+P.inv[k]+'</span><button type="button" data-d="'+k+'">Lâcher 1</button></div>';
+  for(const[k,n,e]of[['mini','Minipot','🧪'],['big','Grosse pot','⚗️'],['med','Medkit','🩹'],['tp','Orbe de saut','🔮'],['gr','Grenade','💣']])if(P.inv[k])h+='<div class="ivr"><i>'+e+'</i><b>'+n+'</b><span>× '+P.inv[k]+'</span><button type="button" data-d="'+k+'">Lâcher 1</button></div>';
   $('invm').innerHTML=h+'<button type="button" data-d="x">Fermer</button>'}
 // Bot coéquipier : il vient prendre un soin lâché par le joueur s'il en a besoin, puis le boit (2 s).
 const HEALK={mini:b=>(b.sh||0)<50,big:b=>(b.sh||0)<100,med:b=>b.hp<100},HEALN={mini:'minipot',big:'grosse potion',med:'medkit'};
 function botHealLoot(b){if(!drops.length)return null;drops=drops.filter(o=>loot.includes(o));let best=null,bd=700;for(const o of drops){if(o.skip||!HEALK[o.k](b))continue;const d=dist(o,b);if(d<bd){bd=d;best=o}}return best}
 function botTakeHeal(b,o){dyn.remove(o.m);loot.splice(loot.indexOf(o),1);b.hkind=o.k;b.heal=2;sfx('pickup',0,dist(b,P));feed('🤝 '+botName(b.i)+' ramasse ton '+HEALN[o.k]+' et se soigne')}
+// Grenades (liste d'idées « ChatGPT ») : touche H, lancée en cloche dans la direction visée, elle rebondit puis explose
+// au bout de 2,2 s (rayon 150, jusqu'à 80 dégâts, rien pour soi ni pour son équipe). L'explosion passe par le message
+// « shot » (champ g) : chaque joueur applique ses propres dégâts, et l'hôte ceux des bots, comme pour les balles.
+const gGren=new THREE.SphereGeometry(5,10,8),mGren=L(0x4f7a3a),GREN_R=150,GREN_D=80;let grens=[];
+function throwGren(){if(!run||!P.inv.gr||P.knocked||P.drive||P.mode!=="ground"||P.carry||finale)return;P.inv.gr--;P.use=null;P.emote=null;
+  const dx=-Math.sin(yaw),dy=-Math.cos(yaw),c=Math.cos(pitch*.8),h=WY(P.x,P.y,P.z)+45,m=new THREE.Mesh(gGren,mGren);
+  const g={m,x:P.x+dx*14,y:P.y+dy*14,h,vx:dx*560*c,vy:dy*560*c,vh:220+pitch*520,t:0};m.position.set(g.x,h,g.y);dyn.add(m);grens.push(g);sfx('swing');P.m.userData.sw=1}
+function grenStep(dt){for(let i=grens.length-1;i>=0;i--){const o=grens[i];if(!run){dyn.remove(o.m);grens.splice(i,1);continue}o.t+=dt;
+  const nx=Math.max(60,Math.min(M-60,o.x+o.vx*dt)),ny=Math.max(60,Math.min(M-60,o.y+o.vy*dt)),g0=TH(nx,ny);
+  if((solGrid.get(tKey(nx,ny))||[]).some(q=>o.h-g0<q.h&&Math.hypot(nx-q.x,ny-q.y)<q.r+5)){o.vx*=-.45;o.vy*=-.45}else{o.x=nx;o.y=ny}// rebond sur un obstacle
+  o.vh-=900*dt;o.h+=o.vh*dt;const g=TH(o.x,o.y)+5;if(o.h<g){o.h=g;o.vh=Math.abs(o.vh)>60?-o.vh*.35:0;o.vx*=.55;o.vy*=.55}
+  o.m.position.set(o.x,o.h,o.y);o.m.rotation.x+=dt*9;if(Math.floor(o.t*6)%2)pt(PA,o.x,o.h+4,o.y,0,20,0,.15,4,0xff3030,{});
+  if(o.t<2.2)continue;dyn.remove(o.m);grens.splice(i,1);grenBoom(o.x,o.y,o.h,P);if(room)room.emit("shot",{x:Math.round(o.x),y:Math.round(o.y),z:Math.round(o.h),a:[],w:0,g:1}).catch(()=>{})}}
+function grenBoom(x,y,h,o){if(!run)return;const dP=Math.hypot(x-P.x,y-P.y);sfx('boom',0,dP);shk=Math.min(1,shk+Math.max(0,.8-dP/900));
+  if(near(x,y)){for(let i=0;i<46;i++){const a=rnd(0,6.28),e=rnd(.2,1.2),sp=rnd(90,320);pt(PF,x,h+rnd(0,10),y,Math.cos(a)*sp*Math.cos(e),Math.sin(e)*sp,Math.sin(a)*sp*Math.cos(e),rnd(.35,.8),rnd(8,18),[0xffd23f,0xff7a1f,0xff3d1f][i%3],{d:2})}
+    for(let i=0;i<16;i++)pt(PF,x+rnd(-30,30),h+rnd(5,40),y+rnd(-30,30),rnd(-30,30),rnd(20,60),rnd(-30,30),rnd(1,1.8),rnd(18,30),0x55504a,{d:2,gr:1.6,a:.5})}
+  const fall=e=>{const d=Math.hypot(e.x-x,e.y-y,(WY(e.x,e.y,e.z||0)+25)-h);return d<GREN_R?Math.round(GREN_D*Math.pow(1-d/GREN_R,.7)):0};
+  if(o!==P&&P.alive!==false&&P.mode!=="dead"&&!(o&&o.team!==undefined&&o.team===P.team)){const d=fall(P);if(d){hit(P,d);ouch();dmgDir(x,y);if(P.hp<=0&&!P.dead&&o&&o.peer){P.dead=1;if(room)room.emit('kill',{k:o.peer}).catch(()=>{})}}}
+  if(isHost)for(const b of bots){if(!b.alive||(o&&o.team!==undefined&&o.team===b.team))continue;const d=fall(b);if(!d)continue;const shH=(b.sh||0)>0;
+    b.killer=o===P?"me":(o&&o.peer)||"";b.atk=o;b.hurtT=.9;hit(b,d);if(b.m)b.m.userData.hurt=1;if(o===P){qEv('dmg',d);if(P.st){P.st.hits++;P.st.dmg+=d}dmgNum(b.x,b.y,b.z||0,d,false,shH);hitMark(shH,false,b.hp<=0);sfx('hit')}}}
 function useItem(k){
-  if(k==='tp')return throwOrb();
+  if(k==='tp')return throwOrb();if(k==='gr')return throwGren();
   if(!run||P.use||!P.inv[k]||P.knocked||P.mode==="dead")return;
   if((k==='mini'&&P.sh>=50)||(k==='big'&&P.sh>=100)||(k==='med'&&P.hp>=100))return;
   P.use={k,t:0,d:{mini:2,big:3.5,med:4}[k]};
@@ -1732,7 +1756,7 @@ function update(dt,now){
   if(down&&P.cd<=0&&!P.use&&!P.rel&&canAct){
     if(W.melee){swing();P.cd=W.rate}
     else if(S&&S.mag>0){shoot(P,P.a,sprW(WR[P.sel][rr]),aimSlope(),P.sel);S.mag--;P.st.shots+=W.pel||1;P.cd=W.rate}}
-  orbStep(dt);
+  orbStep(dt);grenStep(dt);
   if(P.use){P.use.t+=dt;if(P.use.t>=P.use.d){const u=P.use.k;P.use=null;P.inv[u]--;qEv('heal');if(u==='mini')P.sh=Math.min(50,P.sh+25);else if(u==='big')P.sh=Math.min(100,P.sh+50);else P.hp=100}}
   for(const c of cards.filter(c=>!c.by&&c.kind!=="me"&&gnow()-c.t0>CARD_TTL))removeCard(c);
   if(P.mode==="ground"&&!P.knocked){
@@ -1824,7 +1848,7 @@ function end(win){
   run=false;aim=false;sfx(win?"win":"lose");setMusic("lobby");document.body.classList.remove("playing");joy.x=joy.y=0;showTab('play');
   if(win&&gnow()-P.born>20000){wallet.tk+=10;P.tok=(P.tok|0)+10;P.bonus=1;saveW();updateBal()}lastNet=0;sendNet(performance.now());document.exitPointerLock&&document.exitPointerLock();
   document.getElementById("ttl").textContent=win?(P.crowned?"Victoire couronnée !":"Victoire royale !"):"Éliminé";
-  const bpm=matchEndBP(win,win?1:bots.length+liveOthers().length+1);
+  const bpm=matchEndBP(win,win?1:bots.length+liveOthers().length+1);histAdd(win,win?1:bots.length+liveOthers().length+1);
   normCrown();let cm="";if(win){wallet.wins++;if(P.crowned){wallet.cw++;cm="<br>👑 Victoire couronnée n°<b>"+wallet.cw+"</b> cette saison"+(wallet.cw===1?" · <b>Badge Couronné débloqué !</b>":"")}cm+="<br>👑 Tu gardes une couronne pour ta prochaine partie."}else if(P.crowned)cm="<br>Tu as perdu ta couronne.";wallet.cr=win?1:0;try{localStorage.removeItem("ie_crown")}catch(e){}saveW();updateBal();pushLook();
   document.getElementById('msg').innerHTML=(win?'Tu es le dernier survivant de l\'île.':'Tu finis à la place <b>#'+(bots.length+liveOthers().length+1)+'</b>.')+'<br>Éliminations : <b>'+P.kills+'</b>'+(P.tok?' · Tokens gagnés : <b>'+P.tok+'</b>'+(P.bonus?' (dont 10 pour le Top 1)':''):'')+cm+bpm+statsHTML();
   document.getElementById("go").textContent="Rejouer";bigMap=false;document.getElementById("bm").style.display="none";
@@ -1977,7 +2001,7 @@ $('chf').addEventListener('submit',e=>{e.preventDefault();closeChat(true)});$('c
 // Les événements recréés par le tactile et la manette (non « isTrusted ») ne sont jamais traduits.
 const KB=[['av','Avancer','KeyW'],['re','Reculer','KeyS'],['ga','Aller à gauche','KeyA'],['dr','Aller à droite','KeyD'],['sa','Sauter','Space'],['sp','Sprinter','ShiftLeft'],
   ['ac','Action (voiture, relever, relancer)','KeyE'],['co','Ouvrir un coffre / une caisse','KeyF'],['mu','Construire un mur','KeyQ','a'],['es','Construire un escalier','KeyR'],['so','Construire un sol','KeyC'],['to','Construire un toit','KeyV'],['ma','Changer de matériau','KeyX'],
-  ['w1','Pioche','Digit1'],['w2','Arme case 2','Digit2'],['w3','Arme case 3','Digit3'],['w4','Arme case 4','Digit4'],['w5','Arme case 5','Digit5'],['h6','Minipot','Digit6'],['h7','Grosse potion','Digit7'],['h8','Medkit','Digit8'],['o9','Orbe de saut','Digit9'],
+  ['w1','Pioche','Digit1'],['w2','Arme case 2','Digit2'],['w3','Arme case 3','Digit3'],['w4','Arme case 4','Digit4'],['w5','Arme case 5','Digit5'],['h6','Minipot','Digit6'],['h7','Grosse potion','Digit7'],['h8','Medkit','Digit8'],['o9','Orbe de saut','Digit9'],['gr','Grenade','KeyH'],
   ['ca','Carte','KeyM','m'],['em','Roue des emotes','KeyB'],['iv','Inventaire','KeyI'],['ch','Chat','KeyG'],['pa','Paramètres','KeyP']];
 const kbOf=a=>CFG.kb&&CFG.kb[a]||KB.find(x=>x[0]===a)[2],KBD=new Set(KB.map(x=>x[2]));
 let kbRev=new Map(),kbKoff=new Set(),kbFor=0,kbSyn=false,kbCap=null,kLay=null;
@@ -2005,10 +2029,10 @@ function kbMouse(e){if(!e.isTrusted||![1,3,4].includes(e.button)){if(kbCap&&e.ty
 addEventListener('mousedown',kbMouse,true);addEventListener('mouseup',kbMouse,true);addEventListener('auxclick',e=>{if([1,3,4].includes(e.button)&&(kbCap||run))e.preventDefault()},true);
 // Manette : actions en partie et bouton par défaut (disposition standard). Options (9) reste le bouton des paramètres.
 const PADA=[['fi','Tirer',7],['vi','Viser',6],['sa','Sauter',0],['mu','Mur',1],['es','Escalier',12],['ac','Action (coffre, voiture, relever)',2],['pi','Pioche',3],['sp','Sprint (bascule)',10],
-  ['su','Arme suivante',5],['pr','Arme précédente',4],['em','Roue des emotes',13],['bo','Potion de bouclier',14],['me','Medkit',15],['ca','Carte',8],['ma','Changer de matériau',11]];
+  ['su','Arme suivante',5],['pr','Arme précédente',4],['em','Roue des emotes',13],['bo','Potion de bouclier',14],['me','Medkit',15],['ca','Carte',8],['ma','Changer de matériau',11],['gr','Grenade (aucun bouton au départ)',-1]];
 const pbOf=a=>{const v=CFG.pb&&CFG.pb[a];return Number.isInteger(v)?v:PADA.find(x=>x[0]===a)[2]};let pbCap=null;
 const PBN=[['Croix','A'],['Rond','B'],['Carré','X'],['Triangle','Y'],['L1','LB'],['R1','RB'],['L2','LT'],['R2','RT'],['Créer','Affichage'],['Options','Menu'],['L3','Stick G'],['R3','Stick D'],['Haut','Haut'],['Bas','Bas'],['Gauche','Gauche'],['Droite','Droite']];
-const pbName=i=>{const n=PBN[i],k=padKind(padGp&&padGp.id);return!n?'Bouton '+i:k==='PlayStation'?n[0]:k==='Xbox'?n[1]:n[0]===n[1]?n[0]:n[0]+' / '+n[1]};
+const pbName=i=>{if(i<0)return'—';const n=PBN[i],k=padKind(padGp&&padGp.id);return!n?'Bouton '+i:k==='PlayStation'?n[0]:k==='Xbox'?n[1]:n[0]===n[1]?n[0]:n[0]+' / '+n[1]};
 function pbSet(a,i){const old=pbOf(a),o=PADA.find(x=>x[0]!==a&&pbOf(x[0])===i),pb=Object.assign({},CFG.pb);pb[a]=i;if(o)pb[o[0]]=old;
   for(const[x,,d]of PADA)if(pb[x]===d)delete pb[x];CFG.pb=pb;saveCfg()}
 // Met à jour les boutons du panneau sans le reconstruire (on garde la position de défilement).
@@ -2020,7 +2044,7 @@ addEventListener("keydown",e=>{if(chatOn){if(e.code==="Enter"||e.code==="NumpadE
   if(e.code==='KeyQ'||(e.key&&e.key.toLowerCase()==='a'&&e.code!=='KeyA'))build('w');else if(e.code==='KeyR')build('s');else if(e.code==='KeyC')build('f');else if(e.code==='KeyV')build('r');else if(e.code==='KeyX')bMat();
   if(e.code==='KeyF'&&P.z<40){const c=chests.find(c=>!c.open&&!(c.z>0)&&Math.hypot(c.x-P.x,c.y-P.y)<70);if(c)openChest(c,true)}
   const d=e.code.replace('Digit','').replace('Numpad','');
-  if(d==="1")selSlot(-1);else if(/^[2-5]$/.test(d))selSlot(+d-2);else if(d==="6")useItem("mini");else if(d==="7")useItem("big");else if(d==="8")useItem("med");else if(d==="9")throwOrb();
+  if(d==="1")selSlot(-1);else if(/^[2-5]$/.test(d))selSlot(+d-2);else if(d==="6")useItem("mini");else if(d==="7")useItem("big");else if(d==="8")useItem("med");else if(d==="9")throwOrb();if(e.code==='KeyH'&&!e.repeat)throwGren();
   if(e.key&&e.key.toLowerCase()==="m"){bigMap=!bigMap;document.getElementById("bm").style.display=bigMap?"block":"none"}});
 // I : menu de l'inventaire (Échap le ferme)
 addEventListener('keydown',e=>{if(!run||e.repeat||/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;if(e.code==='KeyI')invShow(!invOpen);else if(e.code==='Escape'&&invOpen)invShow(false)});
@@ -2038,9 +2062,12 @@ cv.addEventListener('mousedown',e=>{
 addEventListener('mouseup',e=>{if(e.button===2)aim=false;else down=false});addEventListener('blur',()=>{aim=false;down=false});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 const IC=['<rect x="14" y="7" width="34" height="6"/><rect x="16" y="13" width="8" height="10"/>','<rect x="4" y="9" width="12" height="5"/><rect x="16" y="8" width="26" height="6"/><rect x="42" y="9.5" width="18" height="3"/><rect x="24" y="14" width="5" height="9"/><rect x="14" y="14" width="4" height="6"/>','<rect x="2" y="10" width="14" height="6"/><rect x="16" y="9" width="14" height="6"/><rect x="30" y="10" width="30" height="3"/><rect x="34" y="14" width="14" height="3"/>','<rect x="2" y="10" width="14" height="6"/><rect x="16" y="10" width="20" height="5"/><rect x="36" y="11" width="26" height="2.5"/><rect x="22" y="5" width="18" height="4"/><rect x="26" y="9" width="3" height="2"/>'].map(p=>'<svg viewBox="0 0 64 26" width="44" height="18" fill="currentColor">'+p+'</svg>');
-const SLOTS=[{n:"Pioche",e:"⛏️",c:"#6fa8dc",w:4},{n:'Vide',e:'',c:'#556',sl:0},{n:'Vide',e:'',c:'#556',sl:1},{n:'Vide',e:'',c:'#556',sl:2},{n:'Vide',e:'',c:'#556',sl:3},{n:'Minipot',e:'🧪',c:'#4aa8ff',i:'mini'},{n:'Grosse pot',e:'⚗️',c:'#00e5ff',i:'big'},{n:'Medkit',e:'🩹',c:'#ff5d5d',i:'med'},{n:'Orbe de saut',e:'🔮',c:'#c58cff',i:'tp'}];
-const hbEls=SLOTS.map((s,i)=>{const d=document.createElement('div');d.innerHTML='<i>'+(i+1)+'</i><b>'+s.e+'</b><span>'+s.n+'</span><em></em>';d.style.setProperty('--c',s.c);document.getElementById('hb').appendChild(d);return d});
-function hud(){
+const SLOTS=[{n:"Pioche",e:"⛏️",c:"#6fa8dc",w:4},{n:'Vide',e:'',c:'#556',sl:0},{n:'Vide',e:'',c:'#556',sl:1},{n:'Vide',e:'',c:'#556',sl:2},{n:'Vide',e:'',c:'#556',sl:3},{n:'Minipot',e:'🧪',c:'#4aa8ff',i:'mini'},{n:'Grosse pot',e:'⚗️',c:'#00e5ff',i:'big'},{n:'Medkit',e:'🩹',c:'#ff5d5d',i:'med'},{n:'Orbe de saut',e:'🔮',c:'#c58cff',i:'tp'},{n:'Grenade',e:'💣',c:'#7fbf4a',i:'gr'}];
+const hbEls=SLOTS.map((s,i)=>{const d=document.createElement('div');d.innerHTML='<i>'+(s.i==='gr'?'H':i+1)+'</i><b>'+s.e+'</b><span>'+s.n+'</span><em></em>';d.style.setProperty('--c',s.c);document.getElementById('hb').appendChild(d);return d});
+// Compte à rebours : les 10 dernières secondes avant le départ du bus, en grand au milieu de l'écran, avec un bip.
+let cdLast=-1;function cdTick(){const el=$('cdn'),r=P&&P.mode==="island"&&islT&&!finale?(islT+ISLAND_WAIT-gnow())/1000:99,n=Math.ceil(r);
+  if(r>10||r<=0){if(cdLast!==-1){el.style.display='none';cdLast=-1}return}if(n===cdLast)return;cdLast=n;el.textContent=n;el.style.display='block';el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');sfx('tick')}
+function hud(){cdTick();
   {const el=document.getElementById("mate"),m=curMode&&P.mode!=="island"&&[...bots.filter(b=>b.team===P.team),...liveOthers().filter(isMate)][0];el.style.display=m?"flex":"none";
     if(m){if(!el.firstChild){el.append(document.createElement("span"),document.createElement("div"));el.lastChild.className="bar";el.lastChild.append(document.createElement("div"))}
       el.firstChild.textContent="🤝 "+(m.i!==undefined?botName(m.i):m.n||"Coéquipier")+(m.kn?" · À TERRE":"");el.lastChild.firstChild.style.width=Math.max(0,Math.min(100,m.hp))+"%"}}
@@ -2407,6 +2434,8 @@ function sfx(name,arg,d){
   else if(name==='build'){tone(B,220,t,.1,'square',v(.1),330);hiss(B,t,.07,v(.15),1200)}
   else if(name==='chest'){[784,988,1175,1568].forEach((f,i)=>tone(B,f,t+i*.07,.25,'triangle',v(.14)))}
   else if(name==='pickup'){tone(B,660,t,.08,'triangle',v(.15));tone(B,990,t+.06,.1,'triangle',v(.13))}
+  else if(name==='boom'){tone(B,70,t,.7,'sawtooth',v(.4),220);tone(B,45,t,.9,'sine',v(.5));hiss(B,t,.8,v(.5),700)}
+  else if(name==='tick'){tone(B,880,t,.08,'square',v(.12),1800)}
   else if(name==='tp'){tone(B,320,t,.35,'sine',v(.22),1400);tone(B,640,t+.05,.3,'triangle',v(.12),2400);hiss(B,t,.25,v(.14),3000)}
   else if(name==='magout'){tone(B,900,t,.03,'square',v(.07),400);hiss(B,t,.06,v(.12),2500)}
   else if(name==='magin'){tone(B,480,t,.04,'square',v(.12),180);hiss(B,t,.04,v(.16),3200)}
@@ -2521,6 +2550,16 @@ const SERVICES=[
   {n:'Wrangler',url:'https://developers.cloudflare.com/workers/wrangler/',d:'déploiement du site et du serveur sur Cloudflare.'},
   {n:'Android WebView, Gradle et Eclipse Temurin',url:'https://developer.android.com',d:'construction de l’appli Android.'}
 ];
+// Historique des parties : les 20 dernières parties jouées sur cet appareil (place, éliminations, dégâts, survie, mode).
+const histGet=()=>{try{const h=JSON.parse(localStorage.getItem('ie_hist')||'[]');return Array.isArray(h)?h:[]}catch(e){return[]}};
+function histAdd(win,pl){if(!P||P.mode==='island')return;const h=histGet();h.unshift({t:Date.now(),w:win?1:0,p:pl|0,k:P.kills|0,d:Math.round(P.st&&P.st.dmg||0),s:Math.round((gnow()-P.born)/1000),m:rlMode?'Reload':curMode?'Duo':'Solo'});try{localStorage.setItem('ie_hist',JSON.stringify(h.slice(0,20)))}catch(e){}}
+function histShow(){const b=$('histb'),h=histGet();b.textContent='';
+  if(!h.length){const p=document.createElement('p');p.textContent='Aucune partie pour l’instant : joue une partie et elle apparaîtra ici.';b.append(p)}
+  else{const w=h.filter(x=>x.w).length,k=h.reduce((a,x)=>a+(x.k|0),0),p=document.createElement('p');p.className='sum';p.textContent=h.length+' parties · '+w+' victoire'+(w>1?'s':'')+' · '+k+' éliminations · meilleure place #'+Math.min(...h.map(x=>x.p||99));b.append(p)}
+  for(const x of h){const r=document.createElement('div'),pl=document.createElement('b'),t=document.createElement('span'),d=document.createElement('small');r.className='hr';
+    pl.textContent=x.w?'👑 #1':'#'+(x.p|0);t.textContent=(x.m||'Solo')+' · '+(x.k|0)+' élim. · '+(x.d|0)+' dégâts · '+fmt(x.s|0)+' de survie';d.textContent=new Date(x.t).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});r.append(pl,t,d);b.append(r)}
+  $('hist').style.display='flex';$('histx').focus()}
+$('histbtn').onclick=histShow;$('histx').onclick=()=>{$('hist').style.display='none'};
 $('credbtn').onclick=()=>{renderCredits();$('cred').style.display='flex'};$('credx').onclick=()=>{$('cred').style.display='none'};
 // Manette (PS5 DualSense et autres, disposition standard du navigateur).
 // Boutons : 0 Croix · 1 Rond · 2 Carré · 3 Triangle · 4 L1 · 5 R1 · 6 L2 · 7 R2 · 8 Créer · 9 Options · 12-15 croix directionnelle.
@@ -2558,7 +2597,7 @@ function padPoll(dt){
   if(cfgOpen()){if(pr(9)||pr(1))closeCfg();return}
   if(paused){if(pr(0))setPause(false);else if(pr(9))openCfg();return}
   if(!run){if(ly<-.7&&!padSw){padSw=1;swipeMode(true)}else if(ly>.7&&!padSw){padSw=1;swipeMode(false)}else if(Math.abs(ly)<.3)padSw=0;
-    if(pr(9))openCfg();else if(pr(13))openWheel();else if(pr(0)){const ov=document.getElementById('ov'),busy=['acct','dev','cred','inv'].some(id=>{const e=document.getElementById(id);return e&&getComputedStyle(e).display!=='none'});if(ov.style.display!=='none'&&!busy)document.getElementById('go').click()}return}
+    if(pr(9))openCfg();else if(pr(13))openWheel();else if(pr(0)){const ov=document.getElementById('ov'),busy=['acct','dev','cred','hist','inv'].some(id=>{const e=document.getElementById(id);return e&&getComputedStyle(e).display!=='none'});if(ov.style.display!=='none'&&!busy)document.getElementById('go').click()}return}
   padMove.x=lx;padMove.y=ly;
   if(rx||ry){const k=(aim&&P?(P.sel===3?.3:.55):1)*CFG.sens;yaw-=rx*dt*3.2*k;pitch=Math.max(-1.1,Math.min(.5,pitch-ry*dt*2.2*k*(CFG.invY?-1:1)))}
   const q=pbOf;// boutons choisis par le joueur (Paramètres)
@@ -2572,7 +2611,7 @@ function padPoll(dt){
   if(pr(q('su')))dispatchEvent(new WheelEvent('wheel',{deltaY:1}));if(pr(q('pr')))dispatchEvent(new WheelEvent('wheel',{deltaY:-1}));
   if(pr(q('em')))openWheel();
   if(pr(q('bo')))useItem(P.inv.mini&&P.sh<50?'mini':'big');if(pr(q('me')))useItem('med');
-  if(pr(q('ca')))kd('KeyM','m');if(pr(q('ma')))bMat();if(pr(9))openCfg();
+  if(pr(q('gr')))throwGren();if(pr(q('ca')))kd('KeyM','m');if(pr(q('ma')))bMat();if(pr(9))openCfg();
 }
 let padAct='KeyE';
 let lobT=0;function lobbyLoop(t){requestAnimationFrame(lobbyLoop);const ldt=Math.min(.05,(t-lobT)/1000||0);lobT=t;if(run)return;padPoll(ldt);lobbyUpdate(t);STAGE(t);if(POST){const U=POST.U;U.uOut.value=CFG.toon?.8:0;U.uSt.value=0;U.uSp.value=0;U.uRay.value=0;U.uFl.value=0;U.uBl.value=.6}drawScene(ls,lc)}
@@ -2584,7 +2623,7 @@ function netUI(){
 }
 function wire(){
   room.onPeers(netUI);
-  room.on('shot',m=>{const d=m.data||{};if(m.sameTab||!run||!isFinite(d.x+d.y)||!Array.isArray(d.a))return;const bw=WEAPONS[d.w|0]||WEAPONS[0],w=isFinite(d.m)&&d.m!==1?Object.assign({},bw,{d:bw.d*Math.max(1,Math.min(1.3,d.m))}):bw;if(!bw.melee)flash(d.x,d.y,isFinite(d.z)?d.z:32);if(!bw.melee)sfx("shot",d.w|0,Math.hypot(d.x-P.x,d.y-P.y));for(const a of d.a.slice(0,8))if(isFinite(a))spawn(d.x,d.y,a,others.get(m.peer)||null,w,d.z,d.s)});
+  room.on('shot',m=>{const d=m.data||{};if(m.sameTab||!run||!isFinite(d.x+d.y)||!Array.isArray(d.a))return;if(d.g){if(isFinite(d.z))grenBoom(d.x,d.y,d.z,others.get(m.peer)||null);return}const bw=WEAPONS[d.w|0]||WEAPONS[0],w=isFinite(d.m)&&d.m!==1?Object.assign({},bw,{d:bw.d*Math.max(1,Math.min(1.3,d.m))}):bw;if(!bw.melee)flash(d.x,d.y,isFinite(d.z)?d.z:32);if(!bw.melee)sfx("shot",d.w|0,Math.hypot(d.x-P.x,d.y-P.y));for(const a of d.a.slice(0,8))if(isFinite(a))spawn(d.x,d.y,a,others.get(m.peer)||null,w,d.z,d.s)});
   room.on('bs',m=>{if(m.sameTab||!run||!Array.isArray(m.data))return;for(const d of m.data.slice(0,20))if(Array.isArray(d)&&isFinite(d[1]+d[2]+d[3])){const w=d[5]===undefined?BOTW:botWep(d[5]|0,d[6]|0),z=isFinite(d[8])?d[8]:32,o=botsAll[d[0]]||null;flash(d[1],d[2],z);sfx("shot",d[5]===undefined?1:d[5]|0,Math.hypot(d[1]-P.x,d[2]-P.y));spawn(d[1],d[2],d[3],o,w,z,d[4]);if(Array.isArray(d[7]))for(const a of d[7].slice(0,6))if(isFinite(a))spawn(d[1],d[2],a,o,w,z,d[4])}});
   room.on("rev",m=>{const d=m.data||{};if(m.sameTab||!run)return;if(d.to===myId()&&d.van!==undefined){if(P.mode==="dead")rebootSelf(d.van|0);return}if(d.to===myId()&&P.knocked){P.knocked=false;P.hp=30;feed("🙌 Tu as été relevé !")}});
   room.on('chat',m=>{const d=m.data||{},t=chatTxt(d.t);if(m.sameTab||!t)return;const e=others.get(m.peer);chatAdd((e&&isMate(e)?'🤝 ':'')+(cleanName(d.n)||e&&e.n||'Joueur'),t,0)});
