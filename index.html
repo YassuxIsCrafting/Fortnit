@@ -1512,7 +1512,7 @@ function pickup(o){
   else if(k==='ky'){if((I.ky|0)>=3)return 0;I.ky=(I.ky|0)+1;feed('🗝️ Clé '+I.ky+'/3 du coffre ultime'+(I.ky>=3?' : va l’ouvrir (F) à '+(w5.u?w5.u.n:'son lieu'):''));sfx('chime')}
   else if(k==='kc'){if(I.kc)return 0;I.kc=1;feed('💳 Carte d’accès : elle ouvre le coffre-fort (F devant lui)')}
   else if(k==='fu'){if((I.fu|0)>=2)return 0;I.fu=(I.fu|0)+1;feed('⛽ Bidon d’essence : il fait le plein tout seul quand ta voiture est presque vide')}
-  else if(GD[k]){const g=GD[k],mx=g[2]*2;if((I[k]|0)>=mx)return 0;I[k]=Math.min(mx,(I[k]|0)+g[2]);if(!I[P.gk])P.gk=k;feed(g[0]+' '+g[1]+' : '+g[3]+' (touche '+kL('ga')+', '+kL('gs')+' pour changer)')}
+  else if(GD[k]){const g=GD[k],mx=g[2]*2;if((I[k]|0)>=mx)return 0;I[k]=Math.min(mx,(I[k]|0)+g[2]);if(!I[P.gk])P.gk=k;feed(g[0]+' '+g[1]+' : '+g[3]+' (touche '+kL('gj')+', '+kL('gs')+' pour changer)')}
   else if(k==="ammo")P.ammo=Math.min(999,P.ammo+30);
   else if(k==='wood')P.wood+=30;else if(k==='stone')P.stone=Math.min(999,(P.stone|0)+30);else if(k==='metal')P.metal=Math.min(999,(P.metal|0)+30);
   else return takeW(o,WI[k],o.r|0,false);
@@ -2446,7 +2446,7 @@ $('chf').addEventListener('submit',e=>{e.preventDefault();closeChat(true)});$('c
 // Les événements recréés par le tactile et la manette (non « isTrusted ») ne sont jamais traduits.
 const KB=[['av','Avancer','KeyW'],['re','Reculer','KeyS'],['ga','Aller à gauche','KeyA'],['dr','Aller à droite','KeyD'],['sa','Sauter','Space'],['sp','Sprinter','ShiftLeft'],['gl','Glisser (en courant)','KeyT'],
   ['ac','Action (voiture, relever, relancer)','KeyE'],['co','Ouvrir un coffre / une caisse','KeyF'],['mu','Construire un mur','KeyQ','a'],['es','Construire un escalier','KeyR'],['so','Construire un sol','KeyC'],['to','Construire un toit','KeyV'],['ma','Changer de matériau','KeyX'],['ed','Éditer une construction','KeyY'],
-  ['w1','Pioche','Digit1'],['w2','Arme case 2','Digit2'],['w3','Arme case 3','Digit3'],['w4','Arme case 4','Digit4'],['w5','Arme case 5','Digit5'],['h6','Minipot','Digit6'],['h7','Grosse potion','Digit7'],['h8','Medkit','Digit8'],['o9','Orbe de saut','Digit9'],['gr','Grenade','KeyH'],['ga','Utiliser le gadget','KeyJ'],['gs','Changer de gadget','KeyK'],
+  ['w1','Pioche','Digit1'],['w2','Arme case 2','Digit2'],['w3','Arme case 3','Digit3'],['w4','Arme case 4','Digit4'],['w5','Arme case 5','Digit5'],['h6','Minipot','Digit6'],['h7','Grosse potion','Digit7'],['h8','Medkit','Digit8'],['o9','Orbe de saut','Digit9'],['gr','Grenade','KeyH'],['gj','Utiliser le gadget','KeyJ'],['gs','Changer de gadget','KeyK'],
   ['ca','Carte','KeyM','m'],['em','Roue des emotes','KeyB'],['iv','Inventaire','KeyI'],['ch','Chat','KeyG'],['pa','Paramètres','KeyP']];
 const kbOf=a=>CFG.kb&&CFG.kb[a]||KB.find(x=>x[0]===a)[2],KBD=new Set(KB.map(x=>x[2]));
 let kbRev=new Map(),kbKoff=new Set(),kbFor=0,kbSyn=false,kbCap=null,kLay=null;
