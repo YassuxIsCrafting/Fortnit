@@ -658,7 +658,7 @@ function heroClone(src,b,h,tint,real){
 // Un seul squelette (celui de human.glb / hero-eclair.glb). Déplacements (attente, course, sprint, recul, pas de côté) :
 // anciennes animations, recopiées des membres en blocs. Le reste (emotes, planeur, chute) : clips Mixamo retranscrits sur ce
 // même squelette (tools/blender/build_anims.py), joués par un AnimationMixer.
-const LOCO=new Set(['idle','run','sprint','back','strafeL','strafeR']);
+const LOCO=new Set(['idle','run','sprint','back','strafeL','strafeR','proc']);
 function heroBuild(g,src,b,h,u,tint,real){
   const c0=heroClone(src,b,h,tint,real);if(!c0)return;const{H,box,B}=c0;g.add(box);
   const U=g.userData,rest=Object.values(B).map(o=>[o,o.position.clone(),o.quaternion.clone()]);U.mxSrc=src;U.loco=true;
@@ -708,7 +708,7 @@ function mxPlay(U,n){if(U.mxCur===n)return;const c=mxClip(U.mxSrc,n)||mxClip(U.m
 function mxState(g,dt){const U=g.userData,px=g.position.x,pz=g.position.z,k=1/Math.max(dt,1e-3);if(U.mpx===undefined){U.mpx=px;U.mpz=pz;U.spd=0}
   const vx=(px-U.mpx)*k,vz=(pz-U.mpz)*k,sp=Math.hypot(vx,vz);U.mpx=px;U.mpz=pz;if(dt>0)U.spd+=(Math.min(sp,900)-U.spd)*Math.min(1,dt*8);
   let n='idle',rate=1;const em=U.emo&&U.emoId;
-  if(em){const d=EMO[EMI[U.emoId]];n=(d&&d.clip)||EMOCLIP[U.emoId]||'e_hiphop'}
+  if(em){const d=EMO[EMI[U.emoId]];n=d&&d.proc?'proc':(d&&d.clip)||EMOCLIP[U.emoId]||'e_hiphop'}
   else if(U.gl&&U.gl.visible)n='glide';else if(U.air)n='fall';
   else if(U.spd>25){const a=-g.rotation.y,f=(vx*Math.cos(a)+vz*Math.sin(a))/(sp||1),sd=(-vx*Math.sin(a)+vz*Math.cos(a))/(sp||1);
     n=f<-.45?'back':Math.abs(sd)>.75?(sd>0?'strafeR':'strafeL'):U.spd>330?'sprint':'run';rate=Math.max(.6,Math.min(1.6,U.spd/(n==='sprint'?380:230)))}
@@ -1085,9 +1085,20 @@ const EMO=[
     ['squats','Squats','🏋️',6,1,'e_squat'],['pompes','Pompes','💪',6,1,'e_pushup'],['kick','Coup de pied','🦵',8,1,'e_kick'],['provoc','Provocation','🥊',6,1,'e_taunt']].map(([id,n,e,p,r,clip])=>({id:'mx_'+id,n,e,p,r,loop:1,clip,d:'Animation Mixamo',a:t=>({aA:[.3,1,.6],aB:[.3,1,-.6],by:AB(S(t*6))*3,ry:S(t*3)*.3})})),
   ...[['salto','Salto arrière','🤸',20,3,'e_backflip',4.1],['reverence','Révérence','🎩',5,1,'e_bow',2.8],['fourire','Fou rire','😂',6,1,'e_laugh',6],['cri','Cri de guerre','😤',6,1,'e_yell',6],['assis','Mort de rire','🤣',8,2,'e_sit',8.4],
     ['hourra','Hourra','🙌',5,1,'e_cheer',2.9],['victoire','Victoire','🏆',5,1,'e_victory',4.5]].map(([id,n,e,p,r,clip,dur])=>({id:'mx_'+id,n,e,p,r,dur,clip,d:'Animation Mixamo',a:t=>({aA:[.2,1,.5],aB:[.2,1,-.5],by:AB(S(t*4))*2})})),
-  {id:'star',n:'Étoile filante',e:'🌟',p:25,r:4,loop:1,fx:'star',d:'Tout le monde te regarde',a:t=>({aA:[0,.6,1],aB:[0,.6,-1],lA:.35,lB:-.35,ry:t*3,by:8+S(t*3)*6})}
+  {id:'star',n:'Étoile filante',e:'🌟',p:25,r:4,loop:1,fx:'star',d:'Tout le monde te regarde',a:t=>({aA:[0,.6,1],aB:[0,.6,-1],lA:.35,lB:-.35,ry:t*3,by:8+S(t*3)*6})},
+  // Check à deux : seul, on tend le poing ; avec un pote proche qui le fait aussi (ou un bot allié), on enchaîne le check ensemble.
+  {id:'dap',n:'Check',e:'🤜',p:0,r:1,dur:12,proc:1,duo:1,d:'Emote à deux : lance-la à côté d’un pote',a:(t,em)=>dapPose(t,em)}
 ];
-const EMI=Object.fromEntries(EMO.map((d,i)=>[d.id,i])),EMDEF=['crown','trophy','wave','clap','thumb',null,null,null];
+const DAP_R=90,DAP_T=2.6,LRP=(a,b,k)=>[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
+function dapPose(t,em){const ps=em&&em.pst?(gnow()-em.pst)/1000:-1;
+  if(ps<0)return{aA:[1,.12+.05*S(t*6),-.05],aB:MI(DN),by:AB(S(t*3))*1.2};// poing tendu, en attente
+  const F=[1,.22,-.14],K=[.45,.65,-.25],B=[.75,-.25,.15],U=[.55,1,.35],e=x=>x*x*(3-2*x);
+  if(ps<.35)return{aA:LRP(DN,F,e(ps/.35)),aB:MI(DN)};
+  if(ps<.6)return{aA:F,aB:MI(DN),by:AB(S(ps*20))*1.5};
+  if(ps<1.15){const k=e(Math.min(1,(ps-.6)/.2));return{aA:LRP(F,K,k),aB:LRP(MI(DN),[.6,.35,.55],k),by:2*k}}
+  if(ps<1.6)return{aA:LRP(K,B,e((ps-1.15)/.45)),aB:MI(DN)};
+  const k=e(Math.min(1,(ps-1.6)/.35));return{aA:LRP(B,U,k),aB:MI(DN),by:AB(S(ps*7))*3*k}}
+const EMI=Object.fromEntries(EMO.map((d,i)=>[d.id,i])),EMDEF=['crown','trophy','wave','clap','thumb','dap',null,null];
 const emoN=id=>id==='crown'?wallet.cw:id==='trophy'?wallet.wins*10000+Math.min(9999,wallet.cw):0;
 const ownEmote=id=>!!EMO[EMI[id]]&&((EMO[EMI[id]].p===0&&!EMO[EMI[id]].bp)||(own.e||[]).includes(id));
 const _ev=new THREE.Vector3();
@@ -1096,7 +1107,7 @@ function emoteSprite(g,id,n){const key=id+':'+n;if(g.userData.esk===key)return g
 function applyEmote(g,em,lt){const u=g.userData,d=em&&EMO[EMI[em.id]];
   if(!d){u.emoId=null;if(u.es)u.es.visible=false;if(u.emo){u.arms.forEach((a,i)=>a.quaternion.copy(u.aq[i]));u.legs.forEach(l=>l.rotation.z=0);g.rotation.x=0;g.rotation.z=0;g.children[2].visible=true;u.emo=0}return}
   if(d.spr){const s=emoteSprite(g,em.id,em.n|0);s.visible=true;s.position.y=110+S(lt*4)*4}else if(u.es)u.es.visible=false;
-  const p=d.a(lt);u.emo=1;u.emoId=em.id;g.children[2].visible=false;if(u.hon&&u.mixer)return;/* perso animé : le clip Mixamo remplace la pose */
+  const p=d.a(lt,em);u.emo=1;u.emoId=em.id;g.children[2].visible=false;if(u.hon&&u.mixer&&!d.proc)return;/* perso animé : le clip Mixamo remplace la pose */
   const arm=(a,v)=>a.quaternion.setFromUnitVectors(DOWN,_ev.set(v[0],v[1],v[2]).normalize());
   arm(u.arms[0],p.aA||DN);arm(u.arms[1],p.aB||MI(DN));
   if(p.lA!==undefined)u.legs[1].rotation.z=p.lA;if(p.lB!==undefined)u.legs[0].rotation.z=p.lB;
@@ -1127,6 +1138,15 @@ const emoDur=id=>{const d=EMO[EMI[id]];return d?(d.dur||(d.loop?14:3.5)):0};
 // emoSeq alterne à chaque lancement (em 3/4 sur le réseau) pour que les autres rejouent l'emote depuis le début.
 let emoSeq=0;
 function emote(id){if(!run||!(P.mode==='ground'||P.mode==='island')||P.knocked||P.drive||!ownEmote(id))return;emoSeq^=1;P.emote={id,t:0,n:emoN(id),q:emoSeq};chime()}
+// Check : cherche un partenaire (joueur proche qui fait aussi le check, ou bot allié), puis lance la séquence commune.
+function dapTick(){const em=P.emote;
+  if(em.pst){if(gnow()>em.pst+DAP_T*1000){P.emote=null;P.dapPeer=null}return}
+  const near_=e=>Math.abs(e.x-P.x)<DAP_R&&Math.abs(e.y-P.y)<DAP_R&&Math.hypot(e.x-P.x,e.y-P.y)<DAP_R&&Math.abs((e.z||0)-P.z)<30;
+  const pe=liveOthers().find(e=>e.em&&e.em.id==='dap'&&near_(e)),pb=!pe&&bots.find(b=>b.alive!==false&&b.team!==undefined&&b.team===P.team&&b.mode==='ground'&&!b.dap&&near_(b));
+  const pt_=pe||pb;if(!pt_){if(em.t>emoDur('dap')-.1)feed("🤜 Personne n'a tapé ton check");return}
+  em.pst=gnow();em.pa=Math.atan2(pt_.y-P.y,pt_.x-P.x);P.dapPeer=pt_;if(pe)pe.dapPst=em.pst;
+  if(pb){pb.dap={pst:em.pst,end:em.pst+DAP_T*1000};pb.a=Math.atan2(P.y-pb.y,P.x-pb.x)}
+  sfx('pickup');feed("🤜🤛 Check avec "+(pe?(pe.n||'ton pote'):botName(pb.i)))}
 function previewEmote(id){lobbyEm={id,n:emoN(id),t0:performance.now()};chime()}
 // Effets d'emote (pièces, flammes, étoiles) : pour le joueur local comme pour les autres joueurs visibles.
 function emoteFx(o,em,t){const d=em&&EMO[EMI[em.id]];if(!d||!d.fx||!run)return;const z=o.z||0;
@@ -1628,6 +1648,7 @@ function update(dt,now){
     else{if(P.gr)P.fz=P.z;P.gr=false;P.fz=Math.max(P.fz,P.z)}}
   }
   P.a=Math.atan2(dy,dx);P.cd-=dt;P.hc-=dt;
+  if(P.emote&&P.emote.id==='dap')dapTick();
   if(P.emote){P.emote.t+=dt;emoteFx(P,P.emote,P.emote.t);if(P.emote.t>emoDur(P.emote.id)||f||s||down||keys.Space||P.knocked)P.emote=null}
   {const km=!P.knocked&&P.mode==="ground"&&liveOthers().find(e=>isMate(e)&&e.kn&&dist(e,P)<55);if(km&&keys.KeyE){P.revT=(P.revT||0)+dt;if(P.revT>=4){if(room)room.emit("rev",{to:km.peer}).catch(()=>{});P.revT=0}}else P.revT=0}
   const canAct=(P.mode==="ground"||P.mode==="island")&&!P.drive&&!P.knocked,W=WEAPONS[P.sel],rr=Math.max(0,(P.own[P.sel]|0)-1);
@@ -1656,6 +1677,7 @@ function update(dt,now){
       b.vz+=(Math.max(-430,Math.min(-40,-b.z/Math.max(.8,dd/520)))-b.vz)*Math.min(1,dt*3);b.z+=b.vz*dt;collide(b);
       const fl=floorAt(b);if(b.z<=fl){b.z=fl;b.mode="ground";b.armT=b.buddy?3:b.follow&&b.mate&&b.mate.armT>0?b.mate.armT:rnd(6,20)}continue}
     if(b.armT>0)b.armT-=dt;
+    if(b.dap){if(gnow()>b.dap.end)b.dap=null;else{b.a=Math.atan2(P.y-b.y,P.x-b.x);continue}}
     if(curMode&&botReboot(b,dt)){const fl=floorAt(b);b.z=b.z>fl?Math.max(fl,b.z-500*dt):fl;continue}
     if(b.buddy){const f=followEnt(b);if(f&&(f===P?P.knocked:f.kn)){const d=dist(b,f);if(d>36){const a=Math.atan2(f.y-b.y,f.x-b.x);b.a=a;b.x+=Math.cos(a)*170*dt;b.y+=Math.sin(a)*170*dt;collide(b);b.revT=0}else if((b.revT=(b.revT||0)+dt)>=4){b.revT=0;if(f===P){P.knocked=false;P.hp=30;feed("🙌 "+botName(b.i)+" t'a relevé !")}else if(room)room.emit("rev",{to:b.buddy}).catch(()=>{})}continue}}
     b.cd-=dt;b.tt-=dt;if(b.hurtT>0)b.hurtT-=dt;if(b.wcd>0)b.wcd-=dt;if(b.peek>0)b.peek-=dt;
@@ -1752,14 +1774,14 @@ function animChar(g,x,y,dt,air,rl){
 function airPose(g,air,z){g.userData.air=air;glider(g,air&&z<GLIDE);g.rotation.z=air&&z>=GLIDE?-1.1:-(g.userData.lean||0);const bl=g.userData.blob;if(bl)bl.visible=!air&&!g.userData.far}
 function draw(t,dt){
   P.m.position.set(P.x,WY(P.x,P.y,P.z)+(P.drive?8:0),P.y);P.m.rotation.y=-(P.drive?P.drive.h:P.a);animChar(P.m,P.x,P.y,dt,!P.gr&&!P.drive,P.rel);P.m.children[2].visible=!P.drive;if(P.drive)P.m.userData.legs.forEach(l=>l.rotation.z=1.3);
-  for(const c of cars){if(!(c.m.visible=Math.abs(c.x-P.x)<2300*viewK&&Math.abs(c.y-P.y)<2300*viewK))continue;carPose(c)}airPose(P.m,P.mode==="air",P.z);if(P.knocked){P.m.rotation.z=-1.35;P.m.position.y+=6}applyEmote(P.m,P.emote,P.emote?P.emote.t:0);
-  for(const b of bots){if(!(b.m.visible=Math.abs(b.x-P.x)<2300*viewK&&Math.abs(b.y-P.y)<2300*viewK))continue;const bz=b.z||0;if(bz>=BUS_Z-20){b.m.visible=false;continue}botLod(b,Math.hypot(b.x-P.x,b.y-P.y));b.m.position.set(b.x,WY(b.x,b.y,bz),b.y);b.m.rotation.y=-b.a;if(!b.m.userData.far)b.m.userData.bar.scale.x=Math.max(.1,36*b.hp/100);b.m.children[2].visible=!(b.armT>0)&&!b.m.userData.far;{const ba=isHost?b.mode==="air":bz>30;animChar(b.m,b.x,b.y,dt,ba);airPose(b.m,ba,bz);if(HQ()&&b.m.userData.amp>.35&&!ba&&Math.random()<.08&&Math.abs(b.x-P.x)<450&&Math.abs(b.y-P.y)<450)pt(PF,b.x,TH(b.x,b.y)+3,b.y,rnd(-14,14),rnd(6,22),rnd(-14,14),.5,rnd(8,14),0xc8b78c,{gr:1,a:.5})}if(b.team===P.team)ensureTag(b.m,botName(b.i))}
+  for(const c of cars){if(!(c.m.visible=Math.abs(c.x-P.x)<2300*viewK&&Math.abs(c.y-P.y)<2300*viewK))continue;carPose(c)}airPose(P.m,P.mode==="air",P.z);if(P.knocked){P.m.rotation.z=-1.35;P.m.position.y+=6}if(P.emote&&P.emote.pa!==undefined)P.m.rotation.y=-P.emote.pa;applyEmote(P.m,P.emote,P.emote?P.emote.t:0);
+  for(const b of bots){if(!(b.m.visible=Math.abs(b.x-P.x)<2300*viewK&&Math.abs(b.y-P.y)<2300*viewK))continue;const bz=b.z||0;if(bz>=BUS_Z-20){b.m.visible=false;continue}botLod(b,Math.hypot(b.x-P.x,b.y-P.y));b.m.position.set(b.x,WY(b.x,b.y,bz),b.y);b.m.rotation.y=-b.a;if(!b.m.userData.far)b.m.userData.bar.scale.x=Math.max(.1,36*b.hp/100);b.m.children[2].visible=!(b.armT>0)&&!b.m.userData.far;{const ba=isHost?b.mode==="air":bz>30;animChar(b.m,b.x,b.y,dt,ba);airPose(b.m,ba,bz);if(b.dap||b.m.userData.emo)applyEmote(b.m,b.dap?{id:'dap',n:0,pst:b.dap.pst}:null,(gnow()-(b.dap?b.dap.pst:0))/1000);if(HQ()&&b.m.userData.amp>.35&&!ba&&Math.random()<.08&&Math.abs(b.x-P.x)<450&&Math.abs(b.y-P.y)<450)pt(PF,b.x,TH(b.x,b.y)+3,b.y,rnd(-14,14),rnd(6,22),rnd(-14,14),.5,rnd(8,14),0xc8b78c,{gr:1,a:.5})}if(b.team===P.team)ensureTag(b.m,botName(b.i))}
   for(const c of chests)c.m.visible=Math.abs(c.x-P.x)<CHEST_R&&Math.abs(c.y-P.y)<CHEST_R;
   if(--lootC<=0){lootC=12;lootV.length=0;for(const o of loot){const on=Math.abs(o.x-P.x)<LOOT_R&&Math.abs(o.y-P.y)<LOOT_R;if(o.m.visible!==on)o.m.visible=on;if(on)lootV.push(o)}}
   for(const o of lootV){o.m.rotation.y=t/500;o.m.position.y=16+o.hg+Math.sin(t/300+o.x)*4;if(o.pop){o.pop.t=Math.min(1,o.pop.t+dt*2.1);const k=o.pop.t,e=1-(1-k)*(1-k);o.m.position.x=mixf(o.pop.x,o.x,e);o.m.position.z=mixf(o.pop.y,o.y,e);o.m.position.y+=Math.sin(k*Math.PI)*70;if(k>=1){o.m.position.x=o.x;o.m.position.z=o.y;o.pop=null}}}
   setWeapon(P.m,P.sel);
   for(const c of cars)c.other=0;
-  const k=Math.min(1,dt*14);for(const e of others.values()){e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.z+=((e.tz||0)-e.z)*k;e.m.position.set(e.x,WY(e.x,e.y,e.z),e.y);e.m.rotation.y=-e.a;animChar(e.m,e.x,e.y,dt,false);airPose(e.m,e.z>200,e.z);e.m.visible=e.hp>0&&e.z<BUS_Z-20;if(isMate(e))ensureTag(e.m,e.n||"Coéquipier");if(e.kn){e.m.rotation.z=-1.35;e.m.position.y+=6}applyEmote(e.m,e.em,performance.now()/1000-(e.emT0||0));if(e.em&&e.m.visible)emoteFx(e,e.em,performance.now()/1000-(e.emT0||0));if(e.v&&cars[e.v-1]){const c=cars[e.v-1];c.other=1;c.x=e.x;c.y=e.y;c.h=e.a;carPose(c);e.m.position.y=TH(e.x,e.y)+8;e.m.userData.legs.forEach(l=>l.rotation.z=1.3)}setWeapon(e.m,e.w|0)}
+  const k=Math.min(1,dt*14);for(const e of others.values()){e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.z+=((e.tz||0)-e.z)*k;e.m.position.set(e.x,WY(e.x,e.y,e.z),e.y);e.m.rotation.y=-e.a;animChar(e.m,e.x,e.y,dt,false);airPose(e.m,e.z>200,e.z);e.m.visible=e.hp>0&&e.z<BUS_Z-20;if(isMate(e))ensureTag(e.m,e.n||"Coéquipier");if(e.kn){e.m.rotation.z=-1.35;e.m.position.y+=6}if(e.dapPst&&!(e.em&&e.em.id==='dap'))e.dapPst=0;applyEmote(e.m,e.em&&e.dapPst?{id:e.em.id,n:0,pst:e.dapPst}:e.em,performance.now()/1000-(e.emT0||0));if(e.em&&e.m.visible)emoteFx(e,e.em,performance.now()/1000-(e.emT0||0));if(e.v&&cars[e.v-1]){const c=cars[e.v-1];c.other=1;c.x=e.x;c.y=e.y;c.h=e.a;carPose(c);e.m.position.y=TH(e.x,e.y)+8;e.m.userData.legs.forEach(l=>l.rotation.z=1.3)}setWeapon(e.m,e.w|0)}
   storm.scale.set(Math.max(stormR,1),1,Math.max(stormR,1));storm.position.x=stormC.x;storm.position.z=stormC.y;storm.visible=P.mode!=="island"&&stormR>0||P.mode!=="island"&&ph>=R.length-1;stormTex.offset.x=t*.00002;stormTex.offset.y=-t*.00006;stormTex.repeat.x=Math.max(4,Math.round(stormR/110));
   {const tt=performance.now()/1000;GT.value=tt;atmos(dt,tt)}sky.position.copy(cam.position);{const pw=WY(P.x,P.y,P.z);sun.position.set(P.x+LD.x*1100,pw+LD.y*1100,P.y+LD.z*1100);sun.target.position.set(P.x,pw,P.y);const tg=pw-P.z;if(Math.abs(tg-camG)>70)camG=tg;else camG+=(tg-camG)*Math.min(1,dt*13)}fxStep(dt);moveFx(dt);dnTick(dt);
   const dx=-Math.sin(yaw),dy=-Math.cos(yaw);
