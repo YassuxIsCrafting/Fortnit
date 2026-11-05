@@ -163,7 +163,8 @@ body:not(.playing) #invm{display:none!important}
 #t-cfg{left:calc(30px + min(132px,32vh) + min(54px,13vh) + env(safe-area-inset-left,0px));bottom:calc(62px + env(safe-area-inset-bottom,0px))}
 #fade{position:fixed;inset:0;background:#0b0920;opacity:0;pointer-events:none;z-index:30;transition:opacity .45s ease-out}#fade.on{opacity:1;transition:none}
 #cdn{position:fixed;left:50%;top:28%;transform:translate(-50%,-50%);font-family:Bungee,Impact,sans-serif;font-size:min(120px,22vh);color:var(--gold);text-shadow:0 6px 0 #0006,0 0 30px #ffd23f88;pointer-events:none;z-index:5;display:none}#cdn.pop{animation:cdpop .9s ease-out}@keyframes cdpop{0%{transform:translate(-50%,-50%) scale(1.8);opacity:0}25%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-50%) scale(.85);opacity:.6}}
-#hist{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#14123ae6;z-index:14;padding:16px}#histp{width:min(560px,94vw);max-height:86vh}#histb{overflow:auto;font-family:system-ui,sans-serif;font-size:13px;display:flex;flex-direction:column;gap:5px;margin-bottom:10px}#histb .hr{display:flex;gap:10px;align-items:center;background:#ffffff10;border-radius:6px;padding:6px 10px}#histb .hr b{min-width:42px;font-family:Bungee,Impact,sans-serif;font-weight:400;color:var(--gold)}#histb .hr span{flex:1}#histb .hr small{opacity:.7}#histb .sum{opacity:.85;margin:0 0 4px}
+#hist{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#14123ae6;z-index:14;padding:16px}#histp{width:min(560px,94vw);max-height:86vh}#sal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#14123ae6;z-index:14;padding:16px}#salp{width:min(420px,94vw)}
+#salb{font-family:system-ui,sans-serif;font-size:13px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}#salb .code{font-family:Bungee,Impact,sans-serif;font-size:30px;letter-spacing:4px;color:var(--gold);text-align:center}#salb .row{display:flex;gap:6px}#salb input{flex:1;min-width:0;font:inherit;font-size:16px;text-transform:uppercase;letter-spacing:2px;padding:6px 8px;border-radius:6px;border:1px solid #ffffff40;background:#1d2b63;color:#fff}#histb{overflow:auto;font-family:system-ui,sans-serif;font-size:13px;display:flex;flex-direction:column;gap:5px;margin-bottom:10px}#histb .hr{display:flex;gap:10px;align-items:center;background:#ffffff10;border-radius:6px;padding:6px 10px}#histb .hr b{min-width:42px;font-family:Bungee,Impact,sans-serif;font-weight:400;color:var(--gold)}#histb .hr span{flex:1}#histb .hr small{opacity:.7}#histb .sum{opacity:.85;margin:0 0 4px}
 #cred{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#14123ae6;z-index:14;padding:16px}#credp{width:min(560px,94vw);max-height:86vh}
 #credb{overflow:auto;font-family:system-ui,sans-serif;font-size:13px;line-height:1.5;display:flex;flex-direction:column;gap:4px}#credb h3{margin:10px 0 2px;font-family:Bungee,Impact,sans-serif;font-weight:400;font-size:13px;color:var(--gold)}#credb a{color:#8de0ff}#credb p{margin:0}#credb .lic{opacity:.75;font-size:12px}
 #modes{grid-area:modes;pointer-events:auto;display:flex;gap:8px;overflow-x:auto;padding:8px 2px 2px;touch-action:pan-x;user-select:none;-webkit-user-select:none;scrollbar-width:none}#modes::-webkit-scrollbar{display:none}
@@ -290,7 +291,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
   </div>
   <div id="bt">
     <div id="mcard"><h2 id="mname">Battle Royale</h2><div id="msw"><button type="button" id="msub" aria-haspopup="true" aria-expanded="false" aria-controls="mpick">Solo · 100 joueurs</button><div id="mpick" role="menu" aria-label="Taille d'équipe"><button type="button" role="menuitemradio" data-s="0">Solo</button><button type="button" role="menuitemradio" data-s="1">Duo</button></div></div><button id="go">Jouer</button><p id="party"></p></div>
-    <div id="acts"><button type="button" id="devsw"></button><button type="button" id="credbtn">📜 Crédits</button><button type="button" id="histbtn">🕘 Historique</button><button type="button" id="cfgbtn">⚙️ Paramètres</button><button type="button" id="ewbtn">💃 Emote (B)</button></div>
+    <div id="acts"><button type="button" id="devsw"></button><button type="button" id="credbtn">📜 Crédits</button><button type="button" id="histbtn">🕘 Historique</button><button type="button" id="salbtn">🔒 Salon</button><button type="button" id="cfgbtn">⚙️ Paramètres</button><button type="button" id="ewbtn">💃 Emote (B)</button></div>
     <div id="modes" role="radiogroup" aria-label="Mode de jeu (glisse vers le haut pour Reload)">
       <button type="button" class="md on" data-m="0" role="radio" style="--bg:linear-gradient(135deg,#2b6cff,#14123a 85%)"><i>🪂</i><b>Battle Royale</b><small>Solo ou duo · 100 joueurs</small></button>
       <button type="button" class="md" data-m="2" role="radio" style="--bg:linear-gradient(135deg,#ff5d8f,#7b3dff 55%,#14123a)"><i>🔁</i><b>Reload</b><small>Duo · 40 joueurs · réapparition</small></button>
@@ -301,6 +302,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 <div id="dev" role="dialog" aria-modal="true" aria-labelledby="devt"><div class="panel" id="devp"><h2 id="devt">Tu joues sur…</h2><div class="row"><button type="button" id="dev-pc">🖥️ PC</button><button type="button" id="dev-mo">📱 Mobile</button></div><p class="hint">PC : clavier et souris. Mobile : commandes tactiles à l'écran. Tu pourras changer depuis le lobby.</p></div></div>
 <div id="pause" role="dialog" aria-modal="true" aria-labelledby="pauset"><div class="panel" id="pausep"><h2 id="pauset">⏸ Pause</h2><p>Partie solo : le temps est figé.</p><div class="row"><button type="button" id="pausecfg">Paramètres</button><button type="button" id="pausego">Reprendre</button></div></div></div>
 <div id="cfg" role="dialog" aria-modal="true" aria-labelledby="cfgt"><div class="panel" id="cfgp"><h2 id="cfgt">Paramètres</h2><div id="cfgb"></div><div class="row"><button type="button" id="cfgreset">Réinitialiser</button><button type="button" id="cfgx">Fermer</button></div></div></div>
+<div id="sal" role="dialog" aria-modal="true" aria-labelledby="salt"><div class="panel" id="salp"><h2 id="salt">Salon privé</h2><div id="salb"></div><button type="button" id="salx">Fermer</button></div></div>
 <div id="hist" role="dialog" aria-modal="true" aria-labelledby="histt"><div class="panel" id="histp"><h2 id="histt">Historique des parties</h2><div id="histb"></div><button type="button" id="histx">Fermer</button></div></div>
 <div id="cred" role="dialog" aria-modal="true" aria-labelledby="credt"><div class="panel" id="credp"><h2 id="credt">Crédits</h2><div id="credb"></div><button type="button" id="credx">Fermer</button></div></div>
 <div id="acct"><div class="panel" id="acp">
@@ -3180,10 +3182,26 @@ function padPoll(dt){
 }
 let padAct='KeyE';
 let lobT=0;function lobbyLoop(t){requestAnimationFrame(lobbyLoop);if(CFG.eco&&t-lobT<31)return;const ldt=Math.min(.05,(t-lobT)/1000||0);lobT=t;if(run)return;padPoll(ldt);lobbyUpdate(t);STAGE(t);if(POST){const U=POST.U;U.uOut.value=CFG.toon?.8:0;U.uSt.value=0;U.uSp.value=0;U.uRay.value=0;U.uFl.value=0;U.uBl.value=.6}drawScene(ls,lc)}
+// Salons privés (demande de Fortnit Dev) : un code partagé = une salle à part sur le serveur (net.js recharge la page).
+// Sans code, on est dans le salon public comme avant.
+const SAL_A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',salCode=()=>window.IE_SALON||'';
+function salNew(){let c='';const r=crypto.getRandomValues(new Uint8Array(5));for(const v of r)c+=SAL_A[v%SAL_A.length];return c}
+function salLink(c){try{const u=new URL(location.href);u.search='';u.hash='';u.searchParams.set('salon',c);return u.toString()}catch(e){return location.origin+location.pathname+'?salon='+c}}
+function salShow(){const b=$('salb'),c=salCode(),can=typeof window.IE_setSalon==='function';b.textContent='';const p=(t,cl)=>{const e=document.createElement('p');e.textContent=t;if(cl)e.className=cl;e.style.margin='0';b.append(e);return e},bt=(t,f)=>{const e=document.createElement('button');e.type='button';e.textContent=t;e.onclick=f;return e};
+  if(!can){p('Les salons privés demandent le serveur multijoueur (site en ligne, appli ou jouer-en-local).');$('sal').style.display='flex';return}
+  if(c){p('Tu es dans le salon privé :');p(c,'code');const n=room?room.peers().filter(q=>q.kind==='viewer').length:0;p(n+' joueur'+(n>1?'s':'')+' dans ce salon (12 au maximum). Donne ce code à tes amis : seuls ceux qui l’ont te rejoignent, et chaque salon a ses propres parties.');
+    const r=document.createElement('div');r.className='row';r.append(bt('📋 Copier le lien',()=>{const l=salLink(c);(navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(()=>feed('📋 Lien du salon copié')).catch(()=>prompt('Lien du salon :',l))}),bt('🌍 Revenir au salon public',()=>window.IE_setSalon('')));b.append(r)}
+  else{p('Tu es dans le salon public (tout le monde). Crée un salon privé pour jouer seulement avec tes amis : tu y seras seul au départ, puis ceux qui ont le code te rejoignent.');b.append(bt('➕ Créer un salon privé',()=>window.IE_setSalon(salNew())))}
+  p('Rejoindre un salon avec son code :');const r=document.createElement('div');r.className='row';const i=document.createElement('input');i.maxLength=8;i.placeholder='CODE';i.autocomplete='off';i.setAttribute('aria-label','Code du salon');
+  const go=bt('Rejoindre',()=>{const v=i.value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(v.length<4){i.focus();return}window.IE_setSalon(v)});i.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')go.click()};r.append(i,go);b.append(r);
+  $('sal').style.display='flex';$('salx').focus()}
+$('salbtn').onclick=salShow;$('salx').onclick=()=>{$('sal').style.display='none'};
+{const c=salCode(),b=$('salbtn');if(c)b.textContent='🔒 Salon '+c}
 function netUI(){
   const el=document.getElementById('net');
   if(!room){el.textContent='Mode solo : le multijoueur n\'est pas disponible dans cette vue.';return}
   const n=room.peers().filter(p=>p.kind==='viewer').length;
+  if(salCode()){el.textContent='🔒 Salon privé '+salCode()+' : '+n+' joueur'+(n>1?'s':'')+(n>1?'. Clique sur Jouer pour rejoindre l\x27île de départ.':' (toi seul pour l\x27instant). Partage le code avec 🔒 Salon ; en attendant, partie avec bots.');return}
   el.textContent=n>1?'Multijoueur : '+n+' joueurs connectés. Clique sur Jouer pour rejoindre l\x27île de départ.':'Aucun autre joueur connecté : partie solo avec bots. Clique sur Jouer : 1 minute sur l\x27île de départ, puis le bus part avec des bots pour compléter à 100.';
 }
 function wire(){

@@ -51,7 +51,7 @@ export class Room extends DurableObject {
     this.fails = new Map();
     for (const ws of ctx.getWebSockets()) {        // reconstruction après une veille
       const a = ws.deserializeAttachment();
-      if (a && a.id) { this.ids.set(ws, a.id); this.pres.set(a.id, a.pr || {}); this.meta.set(a.id, { key: a.key || null, ip: a.ip || '', saved: Date.now() }); }
+      if (a && a.id) { this.ids.set(ws, a.id); if (!a.aux) this.pres.set(a.id, a.pr || {}); this.meta.set(a.id, { key: a.key || null, ip: a.ip || '', saved: Date.now(), aux: !!a.aux }); }
     }
     ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS acc (k TEXT PRIMARY KEY, u TEXT, salt TEXT, hash TEXT, toks TEXT, p TEXT)');
     ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS fr (a TEXT, b TEXT, st INTEGER, PRIMARY KEY (a, b))');   // a demande b ; st 0 = en attente, 1 = amis
@@ -75,29 +75,32 @@ export class Room extends DurableObject {
   idOf(ws) { let id = this.ids.get(ws); if (!id) { const a = ws.deserializeAttachment(); id = a && a.id; if (id) this.ids.set(ws, id); } return id; }
   bcast(fromId, obj) {
     const s = JSON.stringify(obj);
-    for (const w of this.ctx.getWebSockets()) { if (this.idOf(w) !== fromId) { try { w.send(s); } catch {} } }
+    for (const w of this.ctx.getWebSockets()) { const i = this.idOf(w); if (i !== fromId && !(this.meta.get(i) || {}).aux) { try { w.send(s); } catch {} } }
   }
   persist(ws, id, force) {
     const m = this.meta.get(id); if (!m) return;
     if (!force && Date.now() - m.saved < 2000) return;
     m.saved = Date.now();
-    try { ws.serializeAttachment({ id, key: m.key, ip: m.ip, pr: trim(this.pres.get(id) || {}) }); } catch {}
+    try { ws.serializeAttachment({ id, key: m.key, ip: m.ip, aux: m.aux ? 1 : 0, pr: trim(this.pres.get(id) || {}) }); } catch {}
   }
 
   async fetch(req) {
     if (req.headers.get('Upgrade') !== 'websocket') return new Response('Île Éclair : serveur OK', { headers: { 'content-type': 'text/plain; charset=utf-8' } });
     const pair = new WebSocketPair(), client = pair[0], server = pair[1];
-    if (this.ctx.getWebSockets().length >= MAX_PLAYERS) {
+    // aux=1 : connexion « comptes » d'un joueur qui est dans un salon privé (comptes et amis restent ici).
+    // Elle ne prend pas de place, n'a pas de présence et ne reçoit pas le trafic de la partie publique.
+    const aux = new URL(req.url).searchParams.get('aux') === '1';
+    if (!aux && this.ctx.getWebSockets().filter(w => !(this.meta.get(this.idOf(w)) || {}).aux).length >= MAX_PLAYERS) {
       server.accept(); server.send(JSON.stringify({ t: 'full' })); server.close(1013, 'complet');
       return new Response(null, { status: 101, webSocket: client });
     }
     const id = rnd(4), ip = req.headers.get('CF-Connecting-IP') || '';
     this.ctx.acceptWebSocket(server);
-    this.ids.set(server, id); this.pres.set(id, {}); this.meta.set(id, { key: null, ip, saved: 0 });
+    this.ids.set(server, id); if (!aux) this.pres.set(id, {}); this.meta.set(id, { key: null, ip, saved: 0, aux });
     this.persist(server, id, true);
-    const peers = {}; for (const [k, v] of this.pres) if (k !== id) peers[k] = v;
+    const peers = {}; if (!aux) for (const [k, v] of this.pres) if (k !== id) peers[k] = v;
     server.send(JSON.stringify({ t: 'init', id, peers }));
-    this.bcast(id, { t: 'join', id });
+    if (!aux) this.bcast(id, { t: 'join', id });
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -116,6 +119,7 @@ export class Room extends DurableObject {
     const meta = this.meta.get(id) || { key: null, ip: '', saved: 0 };
     const reply = o => { try { ws.send(JSON.stringify({ t: 'res', r: m.r, ...o })); } catch {} };
     try {
+      if ((m.t === 'pr' || m.t === 'ev') && meta.aux) return;
       if (m.t === 'pr') {
         const p = cleanPatch(m.patch); if (!p) return;
         const pr = this.pres.get(id) || {}; merge(pr, p); this.pres.set(id, pr);
@@ -179,7 +183,7 @@ export class Room extends DurableObject {
     } catch (e) { if (m.r) reply({ ok: false, err: 'Erreur serveur.' }); }
   }
 
-  leave(ws) { const id = this.idOf(ws); if (!id) return; const k = (this.meta.get(id) || {}).key; this.pres.delete(id); this.meta.delete(id); if (k) try { this.notifyFriends(k); } catch {} this.buckets.delete(id); this.bcast(id, { t: 'leave', id }); }
+  leave(ws) { const id = this.idOf(ws); if (!id) return; const mt = this.meta.get(id) || {}, k = mt.key; this.pres.delete(id); this.meta.delete(id); if (k) try { this.notifyFriends(k); } catch {} this.buckets.delete(id); if (!mt.aux) this.bcast(id, { t: 'leave', id }); }
   async webSocketClose(ws, code, reason) { try { ws.close(code, reason); } catch {} this.leave(ws); }
   async webSocketError(ws) { this.leave(ws); }
 }
@@ -190,7 +194,9 @@ export default {
       const allowed = (env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim().replace(/\/$/, '')).filter(Boolean);
       const origin = (req.headers.get('Origin') || '').replace(/\/$/, '');
       if (allowed.length && !allowed.includes(origin)) return new Response('origine refusée', { status: 403 });
-      return env.ROOM.get(env.ROOM.idFromName('principale')).fetch(req);
+      // Salons privés : /s/CODE (5 à 8 lettres ou chiffres) = une salle à part ; sinon la salle publique « principale ».
+      const sm = new URL(req.url).pathname.match(/^\/s\/([A-Z0-9]{4,8})$/);
+      return env.ROOM.get(env.ROOM.idFromName(sm ? 's:' + sm[1] : 'principale')).fetch(req);
     }
     return new Response('Île Éclair : serveur OK', { headers: { 'content-type': 'text/plain; charset=utf-8' } });
   }

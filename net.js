@@ -3,42 +3,63 @@
 (function () {
   var URL_ = window.IE_WS;
   if (window.claude || !URL_) return;               // déjà fourni par la plateforme, ou pas de serveur : mode solo
-  var ws = null, myId = null, mine = {}, peers = new Map(), hs = {}, cbs = [], reqs = new Map(), rn = 0, gotInit = false, readyRes;
-  var ready = new Promise(function (r) { readyRes = r; });
+  // Salons privés : un code de 4 à 8 lettres/chiffres (adresse ?salon=CODE, ou gardé dans le navigateur).
+  // Dans un salon, la partie passe par la salle /s/CODE du serveur, et les comptes/amis par une 2e connexion
+  // « aux » vers la salle publique (sans place prise ni présence). Sans code : une seule connexion, comme avant.
+  var norm = function (c) { c = String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return c.length >= 4 && c.length <= 8 ? c : ''; };
+  var CODE = '';
+  try { var qs = new URLSearchParams(location.search).get('salon'); if (qs !== null) { CODE = norm(qs); if (CODE) localStorage.setItem('ie_salon', CODE); } else CODE = norm(localStorage.getItem('ie_salon')); } catch (e) {}
+  window.IE_SALON = CODE;
+  window.IE_setSalon = function (c) {
+    c = norm(c); try { if (c) localStorage.setItem('ie_salon', c); else localStorage.removeItem('ie_salon'); } catch (e) {}
+    try { var u = new URL(location.href); u.searchParams.delete('salon'); location.replace(u.toString()); } catch (e) { location.reload(); }
+  };
+  var BASE = URL_.replace(/\/+$/, '');
+  var ws = null, gs = null, myId = null, mine = {}, peers = new Map(), hs = {}, cbs = [], reqs = new Map(), rn = 0, readyRes, readyGRes, gotA = false, gotG = false;
+  var ready = new Promise(function (r) { readyRes = r; }), readyG = new Promise(function (r) { readyGRes = r; });
   var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
-  function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+  function sendOn(s, o) { if (s && s.readyState === 1) s.send(JSON.stringify(o)); }
+  function send(o) { sendOn(CODE ? gs : ws, o); }      // partie (présence, événements)
+  function sendA(o) { sendOn(ws, o); }                  // comptes, amis, ping
   function notify() { cbs.forEach(function (f) { try { f(); } catch (e) {} }); }
   function merge(t, p) { for (var k in p) { if (p[k] === null) delete t[k]; else t[k] = p[k]; } }
 
-  function connect() {
-    try { ws = new WebSocket(URL_); } catch (e) { setTimeout(connect, 3000); return; }
-    ws.onmessage = function (e) {
-      var m; try { m = JSON.parse(e.data); } catch (x) { return; }
-      if (m.t === 'init') {
-        myId = m.id; peers = new Map();
-        for (var k in m.peers) peers.set(k, m.peers[k]);
-        if (Object.keys(mine).length) send({ t: 'pr', patch: mine });   // après une reconnexion
-        if (!gotInit) { gotInit = true; readyRes(); }
-        notify();
-      } else if (m.t === 'join') { peers.set(m.id, {}); notify(); }
-      else if (m.t === 'leave') { peers.delete(m.id); notify(); }
-      else if (m.t === 'pr') { var o = peers.get(m.id); if (!o) { o = {}; peers.set(m.id, o); } merge(o, m.patch || {}); notify(); }
-      else if (m.t === 'ev') {
-        (hs[m.topic] || []).forEach(function (f) { try { f({ topic: m.topic, data: m.data, peer: m.id, isMe: false, sameTab: false }); } catch (x) {} });
-      } else if (m.t === 'fnote' || m.t === 'pinv' || m.t === 'pans') {
-        var h = window.IE_onSocial; if (h) try { h(m); } catch (x) {}
-      } else if (m.t === 'res') {
-        var q = reqs.get(m.r); if (q) { reqs.delete(m.r); if (m.ok) q.res(m); else q.rej(m.err || 'Erreur'); }
-      }
-    };
-    ws.onclose = function () {
-      peers = new Map(); notify();
-      reqs.forEach(function (q) { q.rej('Connexion perdue.'); }); reqs.clear();
-      setTimeout(connect, 2000);
-    };
-    ws.onerror = function () {};
+  function onGame(m) {
+    if (m.t === 'init') {
+      myId = m.id; peers = new Map();
+      for (var k in m.peers) peers.set(k, m.peers[k]);
+      if (Object.keys(mine).length) send({ t: 'pr', patch: mine });   // après une reconnexion
+      if (!gotG) { gotG = true; readyGRes(); }
+      notify();
+    } else if (m.t === 'join') { peers.set(m.id, {}); notify(); }
+    else if (m.t === 'leave') { peers.delete(m.id); notify(); }
+    else if (m.t === 'pr') { var o = peers.get(m.id); if (!o) { o = {}; peers.set(m.id, o); } merge(o, m.patch || {}); notify(); }
+    else if (m.t === 'ev') {
+      (hs[m.topic] || []).forEach(function (f) { try { f({ topic: m.topic, data: m.data, peer: m.id, isMe: false, sameTab: false }); } catch (x) {} });
+    }
   }
-  connect();
+  function onAux(m) {
+    if (m.t === 'init' && !gotA) { gotA = true; readyRes(); }
+    if (m.t === 'fnote' || m.t === 'pinv' || m.t === 'pans') {
+      var h = window.IE_onSocial; if (h) try { h(m); } catch (x) {}
+    } else if (m.t === 'res') {
+      var q = reqs.get(m.r); if (q) { reqs.delete(m.r); if (m.ok) q.res(m); else q.rej(m.err || 'Erreur'); }
+    } else if (!CODE) onGame(m);
+  }
+  function open(url, onMsg, set, onClose) {
+    var s; try { s = new WebSocket(url); } catch (e) { setTimeout(function () { open(url, onMsg, set, onClose); }, 3000); return; }
+    set(s);
+    s.onmessage = function (e) { var m; try { m = JSON.parse(e.data); } catch (x) { return; } onMsg(m); };
+    s.onclose = function () { onClose(); setTimeout(function () { open(url, onMsg, set, onClose); }, 2000); };
+    s.onerror = function () {};
+  }
+  var lostG = function () { peers = new Map(); notify(); };
+  open(CODE ? BASE + '/?aux=1' : URL_, onAux, function (s) { ws = s; }, function () {
+    if (!CODE) lostG();
+    reqs.forEach(function (q) { q.rej('Connexion perdue.'); }); reqs.clear();
+  });
+  if (CODE) open(BASE + '/s/' + CODE, onGame, function (s) { gs = s; }, lostG);
+  else readyG = ready;
 
   var room = {
     peers: function () {
@@ -57,7 +78,7 @@
     return Promise.race([ready, wait(8000)]).then(function () {
       return new Promise(function (res, rej) {
         if (!ws || ws.readyState !== 1) return rej('Serveur injoignable. Réessaie dans un instant.');
-        var r = ++rn; o.r = r; reqs.set(r, { res: res, rej: rej }); send(o);
+        var r = ++rn; o.r = r; reqs.set(r, { res: res, rej: rej }); sendA(o);
         setTimeout(function () { if (reqs.delete(r)) rej('Le serveur ne répond pas.'); }, 10000);
       });
     });
@@ -87,7 +108,7 @@
 
   window.claude = {
     use: function (n) {
-      if (n === 'room') return Promise.race([ready, wait(6000)]).then(function () { return myId ? room : null; });
+      if (n === 'room') return Promise.race([readyG, wait(6000)]).then(function () { return myId ? room : null; });
       if (n === 'auth') return Promise.resolve(auth);
       return Promise.resolve(null);
     }
