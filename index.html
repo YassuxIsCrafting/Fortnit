@@ -91,6 +91,8 @@ body.touch #feed{font-size:11px;max-width:36vw}body.touch #kt{font-size:18px}bod
 .sw{display:flex;flex-wrap:wrap;gap:6px}
 .sw button{width:28px;height:28px;padding:0;border:3px solid var(--ink);border-radius:50%;box-shadow:none;font-size:12px}
 .sw button.on{outline:3px solid var(--gold);outline-offset:1px}
+.favrow{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}.favrow button{font-size:12px;padding:4px 9px;border-radius:6px}.favrow button.on{background:var(--gold);color:var(--ink)}.favrow button:disabled{opacity:.45}
+.sw button.fav{box-shadow:0 0 0 2px var(--gold)}.sw.txt button.fav::before{content:'★ ';color:#e0a800}
 .sw.txt button{width:auto;height:auto;padding:4px 9px;border-radius:6px;background:#fff;color:var(--ink);border-width:2px}
 #cc{width:100%;height:30px;padding:0;border:3px solid var(--ink);border-radius:6px;background:#fff;cursor:pointer}
 #rl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow:auto;font-family:system-ui,sans-serif;font-size:15px}
@@ -267,6 +269,7 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
   <div id="lobby">
     <div class="panel" id="cust">
       <h2>Mon héros</h2>
+      <div class="favrow"><button type="button" id="favm">⭐ Gérer les favoris</button><button type="button" id="favr">🎲 Look au hasard</button></div>
       <input id="pseudo" maxlength="14" placeholder="Ton pseudo" aria-label="Ton pseudo" autocomplete="off">
       <h3>Skin</h3><div class="sw txt" id="sw-k"></div>
       <h3>Tenue</h3><div class="sw" id="sw-c"></div><input type="color" id="cc" value="#3da5ff" aria-label="Couleur de tenue personnalisée">
@@ -761,7 +764,7 @@ function init(st,n){
   chestBeams();
   cars=[];{const rc=mul(4242);for(let k=0;k<600&&cars.length<50&&blds.length;k++){const b=blds[Math.floor(rc()*blds.length)],s=Math.floor(rc()*4),o=b.s/2+75,x=b.x+b.s/2+[o,0,-o,0][s],y=b.y+b.s/2+[0,o,0,-o][s],h=rc()*6.2832,v=Math.floor(rc()*CARC.length);
     if(x<60||y<60||x>M-60||y>M-60||inBld(x,y,20)||trees.some(t=>Math.hypot(t.x-x,t.y-y)<75)||chests.some(c=>Math.hypot(c.x-x,c.y-y)<70)||cars.some(c=>Math.hypot(c.x-x,c.y-y)<90))continue;cars.push(mkCar(cars.length,x,y,h,v))}}
-  placeVans();sprInit();sprHud();
+  placeVans();sprInit();sprHud();anInit();
   P={x:C,y:C,z:0,vz:0,fz:0,gr:true,hp:100,born:gnow(),kills:0,sh:0,own:[0,0,0,0,1],mag:[0,0,0,0,0],sel:4,sl:[null,null,null,null],cs:-1,rel:null,use:null,inv:{mini:0,big:0,med:0,tp:0,gr:0},st:{dmg:0,shots:0,hits:0,heads:0,dist:0,chests:0},wood:0,stone:0,metal:0,bm:0,ammo:0,r:16,cd:0,a:0,hc:0,disc:new Set(),mode:'ground',m:mkChar(look.c,0,0,SKINS[look.s],look.h,4,look.k)};P.m.userData.ug=look.u;dyn.add(P.m);
   bots=[];botsAll=[];bus=null;
   bul=[];fx=[];pops=[];rags=[];finale=null;finEnd=false;heroOn=0;stairs=[];slabs=[];growing=[];t0=gnow();aim=false;fov=CFG.fov;cam.fov=CFG.fov;cam.updateProjectionMatrix();
@@ -1535,6 +1538,29 @@ function grenBoom(x,y,h,o){if(!run)return;const dP=Math.hypot(x-P.x,y-P.y);sfx('
   if(o!==P&&P.alive!==false&&P.mode!=="dead"&&!(o&&o.team!==undefined&&o.team===P.team)){const d=fall(P);if(d){hit(P,d);ouch();dmgDir(x,y);if(P.hp<=0&&!P.dead&&o&&o.peer){P.dead=1;if(room)room.emit('kill',{k:o.peer}).catch(()=>{})}}}
   if(isHost)for(const b of bots){if(!b.alive||(o&&o.team!==undefined&&o.team===b.team))continue;const d=fall(b);if(!d)continue;const shH=(b.sh||0)>0;
     b.killer=o===P?"me":(o&&o.peer)||"";b.atk=o;b.hurtT=.9;hit(b,d);if(b.m)b.m.userData.hurt=1;if(o===P){qEv('dmg',d);if(P.st){P.st.hits++;P.st.dmg+=d}dmgNum(b.x,b.y,b.z||0,d,false,shH);hitMark(shH,false,b.hp<=0);sfx('hit')}}}
+// Animaux de la forêt (création originale) : cerfs et lapins low-poly qui broutent près des arbres, se baladent et
+// s'enfuient quand on approche ou qu'on tire près d'eux. Décor seulement : chaque joueur a les siens (rien sur le réseau).
+let anims=[],gDeer=null,gHare=null;
+function anGeo(){if(gDeer)return;const D=0x8a5a32,W=0xf1e9da,K=0x3a2a1c;
+  gDeer=mergeBoxes([[34,15,12,0,30,0,D],[6,6,6,-18,33,0,W],[8,16,7,15,40,0,D],[14,9,8,21,50,0,D],[6,5,6,29,48,0,K],[2,12,2,19,60,4,K],[2,12,2,19,60,-4,K],[7,2,2,16,64,6,K],[7,2,2,16,64,-6,K],
+    [3,24,3,12,12,4,D],[3,24,3,12,12,-4,D],[3,24,3,-12,12,4,D],[3,24,3,-12,12,-4,D],[2,2,1,24,52,4.6,K],[2,2,1,24,52,-4.6,K]]);
+  gHare=mergeBoxes([[13,9,9,0,7,0,0x9b8064],[7,7,7,8,11,0,0x9b8064],[2,8,3,7,18,2,0x9b8064],[2,8,3,7,18,-2,0x9b8064],[4,4,4,-8,8,0,W],[1,1.5,1,11.6,12,1.8,K],[1,1.5,1,11.6,12,-1.8,K]])}
+function anInit(){for(const a of anims)dyn.remove(a.m);anims=[];if(!trees.length)return;anGeo();const r=mul(777);
+  for(let k=0;k<200&&anims.length<44;k++){const t=trees[Math.floor(r()*trees.length)],deer=r()<.4,an=r()*6.2832,d=40+r()*60,x=t.x+Math.cos(an)*d,y=t.y+Math.sin(an)*d;
+    if(x<80||y<80||x>M-80||y>M-80||TH(x,y)<LWY+3||inBld(x,y,30)||anims.some(a=>Math.hypot(a.x-x,a.y-y)<120))continue;
+    const m=new THREE.Mesh(deer?gDeer:gHare,mChest);m.castShadow=true;dyn.add(m);anims.push({m,x,y,hx:x,hy:y,a:r()*6.2832,deer,st:0,t:r()*4,ph:r()*6})}}
+function anStep(dt){if(!anims.length||!P)return;const loud=down&&!aim||false;
+  for(const a of anims){const dP=Math.hypot(a.x-P.x,a.y-P.y);a.m.visible=dP<2200;if(!a.m.visible)continue;
+    const scare=(P.mode==="ground"||P.mode==="island")&&(dP<(a.deer?280:190)||(loud&&dP<700));
+    if(scare&&a.st!==2){a.st=2;a.t=a.deer?3.5:2.5}
+    a.t-=dt;let sp=0;
+    if(a.st===2){const fa=Math.atan2(a.y-P.y,a.x-P.x);a.a+=Math.atan2(Math.sin(fa-a.a),Math.cos(fa-a.a))*Math.min(1,dt*6);sp=a.deer?330:280;if(a.t<=0&&!scare){a.st=0;a.t=2+Math.random()*3}}
+    else if(a.t<=0){a.st=a.st?0:1;a.t=a.st?1.5+Math.random()*3:2+Math.random()*4;if(a.st===1){const h=Math.atan2(a.hy-a.y,a.hx-a.x);a.a=Math.hypot(a.hx-a.x,a.hy-a.y)>300?h:a.a+(Math.random()-.5)*2.2}}
+    if(a.st===1)sp=a.deer?45:35;
+    if(sp){const nx=a.x+Math.cos(a.a)*sp*dt,ny=a.y+Math.sin(a.a)*sp*dt;
+      if(nx<70||ny<70||nx>M-70||ny>M-70||TH(nx,ny)<LWY+3||inBld(nx,ny,14))a.a+=Math.PI*(.6+Math.random()*.8);else{a.x=nx;a.y=ny}}
+    a.ph+=dt*(a.st===2?(a.deer?9:14):a.st===1?6:2);const hop=a.deer?(a.st===2?Math.abs(Math.sin(a.ph))*7:0):(a.st?Math.abs(Math.sin(a.ph))*(a.st===2?12:5):0);
+    a.m.position.set(a.x,TH(a.x,a.y)+hop,a.y);a.m.rotation.set(0,-a.a,a.st===0&&a.deer?-.12-.1*Math.sin(a.ph):0)}}
 function useItem(k){
   if(k==='tp')return throwOrb();if(k==='gr')return throwGren();
   if(!run||P.use||!P.inv[k]||P.knocked||P.mode==="dead")return;
@@ -1756,7 +1782,7 @@ function update(dt,now){
   if(down&&P.cd<=0&&!P.use&&!P.rel&&canAct){
     if(W.melee){swing();P.cd=W.rate}
     else if(S&&S.mag>0){shoot(P,P.a,sprW(WR[P.sel][rr]),aimSlope(),P.sel);S.mag--;P.st.shots+=W.pel||1;P.cd=W.rate}}
-  orbStep(dt);grenStep(dt);
+  orbStep(dt);grenStep(dt);anStep(dt);
   if(P.use){P.use.t+=dt;if(P.use.t>=P.use.d){const u=P.use.k;P.use=null;P.inv[u]--;qEv('heal');if(u==='mini')P.sh=Math.min(50,P.sh+25);else if(u==='big')P.sh=Math.min(100,P.sh+50);else P.hp=100}}
   for(const c of cards.filter(c=>!c.by&&c.kind!=="me"&&gnow()-c.t0>CARD_TTL))removeCard(c);
   if(P.mode==="ground"&&!P.knocked){
@@ -2104,9 +2130,19 @@ const saveLook=()=>{saveU();if(acct)syncUp();else{try{localStorage.setItem('ie_l
 const mkBtn=(box,f)=>{const b=document.createElement('button');b.type='button';f(b);$(box).appendChild(b);return b};
 const cBtns=OUT.map(c=>mkBtn('sw-c',b=>{b.style.background=c;b.title='Tenue '+c;b.onclick=()=>{look.c=c;$('cc').value=c;saveLook()}}));
 const sBtns=SKINS.map((c,i)=>mkBtn('sw-s',b=>{b.style.background=c;b.title='Peau '+(i+1);b.onclick=()=>{look.s=i;saveLook()}}));
-let uShowT=0;const uBtns=GLD.map((d,i)=>mkBtn('sw-u',b=>{b.textContent=d.n;b.onclick=()=>{look.u=i;uShowT=performance.now()+4000;saveLook()}}));
-const kBtns=SKN.map((s,i)=>mkBtn('sw-k',b=>{b.textContent=s.n;b.onclick=()=>{look.k=i;saveLook()}}));
-const hBtns=HATS.map((n,i)=>mkBtn('sw-h',b=>{b.textContent=n;b.onclick=()=>{look.h=i;saveLook()}}));
+let uShowT=0;const uBtns=GLD.map((d,i)=>mkBtn('sw-u',b=>{b.textContent=d.n;b.onclick=()=>{if(favMode)return favTog('u',i);look.u=i;uShowT=performance.now()+4000;saveLook()}}));
+const kBtns=SKN.map((s,i)=>mkBtn('sw-k',b=>{b.textContent=s.n;b.onclick=()=>{if(favMode)return favTog('k',i);look.k=i;saveLook()}}));
+const hBtns=HATS.map((n,i)=>mkBtn('sw-h',b=>{b.textContent=n;b.onclick=()=>{if(favMode)return favTog('h',i);look.h=i;saveLook()}}));
+// Favoris du dressing (skins, accessoires, parapluies) : en mode ⭐, un clic ajoute ou retire un favori ; les favoris passent
+// en tête de liste avec une étoile, et 🎲 tire un look au hasard parmi les favoris qu'on possède.
+let favMode=false;const favs={k:[],h:[],u:[]};try{const fv=JSON.parse(localStorage.getItem('ie_fav')||'{}');for(const t in favs)if(Array.isArray(fv[t]))favs[t]=fv[t].filter(Number.isInteger)}catch(e){}
+const FAVB={k:kBtns,h:hBtns,u:uBtns};
+function favPaint(){for(const t in FAVB)FAVB[t].forEach((b,i)=>{const on=favs[t].includes(i);b.style.order=on?-1:'';b.classList.toggle('fav',on)});
+  $('favm').classList.toggle('on',favMode);$('favm').textContent=favMode?'✔ Terminer':'⭐ Gérer les favoris';$('favr').disabled=!(favs.k.length+favs.h.length+favs.u.length)}
+function favTog(t,i){const a=favs[t],j=a.indexOf(i);if(j>=0)a.splice(j,1);else a.push(i);try{localStorage.setItem('ie_fav',JSON.stringify(favs))}catch(e){}favPaint()}
+function favRand(){const pk=(t,ok)=>{const c=favs[t].filter(ok);return c.length?c[Math.floor(Math.random()*c.length)]:null},k=pk('k',ownSkin),h=pk('h',ownHat),u=pk('u',ownGlid);
+  if(k===null&&h===null&&u===null)return;if(k!==null)look.k=k;if(h!==null)look.h=h;if(u!==null){look.u=u;uShowT=performance.now()+4000}saveLook()}
+$('favm').onclick=()=>{favMode=!favMode;favPaint()};$('favr').onclick=favRand;favPaint();
 function paintUI(){cBtns.forEach((b,i)=>b.className=OUT[i]===look.c.toLowerCase()?'on':'');sBtns.forEach((b,i)=>b.className=look.s===i?'on':'');hBtns.forEach((b,i)=>b.className=look.h===i?'on':'');kBtns.forEach((b,i)=>b.className=look.k===i?'on':'');uBtns.forEach((b,i)=>b.className=look.u===i?'on':'');$('cc').value=look.c}
 $('cc').oninput=e=>{if(HEX.test(e.target.value)){look.c=e.target.value.toLowerCase();saveLook()}};
 $('pseudo').oninput=()=>{clearTimeout(nt);nt=setTimeout(()=>{try{localStorage.setItem('ie_name',curName())}catch(e){}pushLook()},350)};
@@ -2127,8 +2163,12 @@ function lobbyUpdate(t){
   const r=roster(),seen=new Set();rosterDOM(r);
   r.slice(0,7).forEach((e,i)=>{
     seen.add(e.id);const key=[e.n,e.c,e.sk,e.h,e.k,e.cr].join('|'),off=i?(i%2?(i+1)/2:-i/2):0;let a=av.get(e.id);
-    if(!a||a.key!==key){const x=a?a.x:0;if(a)dropAv(a);const g=mkChar(e.c,0,e.n,e.sk,e.h,0,e.k);if(e.cr)addCrown(g);g.scale.setScalar(2.2);lg.add(g);a={g,key,x};av.set(e.id,a)}
-    a.x+=(off*86-a.x)*.12;a.g.position.set(a.x,Math.sin(t/500+i*1.7)*2.5,-Math.abs(off)*20);a.g.rotation.y=-Math.PI*.35+Math.sin(t/900+i)*.35-off*.08;a.g.rotation.x=0;a.g.rotation.z=0;a.g.userData.legs.forEach(l=>l.rotation.z=0);if(e.me){const el=lobbyEm?(performance.now()-lobbyEm.t0)/1000:0;applyEmote(a.g,lobbyEm&&el<Math.min(emoDur(lobbyEm.id),8)?lobbyEm:null,el);const pu=pv&&pv.u!==undefined?pv.u:performance.now()<uShowT?look.u:-1;if(pu>=0){a.g.userData.ug=pu;glider(a.g,true);a.g.userData.gl.scale.setScalar(.6);a.g.userData.gl.position.y=14}else glider(a.g,false)}
+    const kl=[e.c,e.sk,e.h,e.k,e.cr].join('|');
+    if(!a||a.key!==key){const x=a?a.x:0,chg=a&&e.me&&a.kl!==kl;if(a)dropAv(a);const g=mkChar(e.c,0,e.n,e.sk,e.h,0,e.k);if(e.cr)addCrown(g);g.scale.setScalar(2.2);lg.add(g);a={g,key,kl,x,chg:chg?t:0};av.set(e.id,a);
+      if(chg){sfx('chime');for(let j=0;j<60;j++){const an=rnd(0,6.28),sp=rnd(40,140);pt(PL,x+Math.cos(an)*20,rnd(20,150),-Math.abs(off)*20+Math.sin(an)*20,Math.cos(an)*sp,rnd(30,120),Math.sin(an)*sp,rnd(.6,1.2),rnd(4,9),[0xffd23f,0xffffff,0xc27bff,0x4aa8ff][j%4],{a:.9})}}}
+    a.x+=(off*86-a.x)*.12;a.g.position.set(a.x,Math.sin(t/500+i*1.7)*2.5,-Math.abs(off)*20);a.g.rotation.y=-Math.PI*.35+Math.sin(t/900+i)*.35-off*.08;a.g.rotation.x=0;a.g.rotation.z=0;a.g.userData.legs.forEach(l=>l.rotation.z=0);
+    // nouveau look : un tour complet sur soi avec un petit rebond
+    if(a.chg){const k=(t-a.chg)/800;if(k>=1){a.chg=0;a.g.scale.setScalar(2.2)}else{a.g.rotation.y+=(1-Math.pow(1-k,3))*Math.PI*2;a.g.scale.setScalar(2.2*(1+.22*Math.sin(k*Math.PI)))}}if(e.me){const el=lobbyEm?(performance.now()-lobbyEm.t0)/1000:0;applyEmote(a.g,lobbyEm&&el<Math.min(emoDur(lobbyEm.id),8)?lobbyEm:null,el);const pu=pv&&pv.u!==undefined?pv.u:performance.now()<uShowT?look.u:-1;if(pu>=0){a.g.userData.ug=pu;glider(a.g,true);a.g.userData.gl.scale.setScalar(.6);a.g.userData.gl.position.y=14}else glider(a.g,false)}
   });
   for(const[k,a]of av)if(!seen.has(k)){dropAv(a);av.delete(k)}
 }
@@ -2554,6 +2594,8 @@ const SERVICES=[
 const histGet=()=>{try{const h=JSON.parse(localStorage.getItem('ie_hist')||'[]');return Array.isArray(h)?h:[]}catch(e){return[]}};
 function histAdd(win,pl){if(!P||P.mode==='island')return;const h=histGet();h.unshift({t:Date.now(),w:win?1:0,p:pl|0,k:P.kills|0,d:Math.round(P.st&&P.st.dmg||0),s:Math.round((gnow()-P.born)/1000),m:rlMode?'Reload':curMode?'Duo':'Solo'});try{localStorage.setItem('ie_hist',JSON.stringify(h.slice(0,20)))}catch(e){}}
 function histShow(){const b=$('histb'),h=histGet();b.textContent='';
+  {const S=bp&&bp.st||{},p=document.createElement('p'),n=v=>(v|0).toLocaleString('fr-FR');p.className='sum';// statistiques de la saison (passe de combat)
+    p.textContent='📊 Saison : niveau '+bpLvl()+' · '+n(S.match)+' parties · '+n(S.win)+' victoire'+((S.win|0)>1?'s':'')+' · '+n(S.top10)+' top 10 · '+n(S.kill)+' éliminations · '+n(S.dmg)+' dégâts · '+n(S.chest)+' coffres · '+n(S.build)+' constructions';b.append(p)}
   if(!h.length){const p=document.createElement('p');p.textContent='Aucune partie pour l’instant : joue une partie et elle apparaîtra ici.';b.append(p)}
   else{const w=h.filter(x=>x.w).length,k=h.reduce((a,x)=>a+(x.k|0),0),p=document.createElement('p');p.className='sum';p.textContent=h.length+' parties · '+w+' victoire'+(w>1?'s':'')+' · '+k+' éliminations · meilleure place #'+Math.min(...h.map(x=>x.p||99));b.append(p)}
   for(const x of h){const r=document.createElement('div'),pl=document.createElement('b'),t=document.createElement('span'),d=document.createElement('small');r.className='hr';
