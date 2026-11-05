@@ -1652,8 +1652,8 @@ function update(dt,now){
   if(P.emote){P.emote.t+=dt;emoteFx(P,P.emote,P.emote.t);if(P.emote.t>emoDur(P.emote.id)||f||s||down||keys.Space||P.knocked)P.emote=null}
   {const km=!P.knocked&&P.mode==="ground"&&liveOthers().find(e=>isMate(e)&&e.kn&&dist(e,P)<55);if(km&&keys.KeyE){P.revT=(P.revT||0)+dt;if(P.revT>=4){if(room)room.emit("rev",{to:km.peer}).catch(()=>{});P.revT=0}}else P.revT=0}
   const canAct=(P.mode==="ground"||P.mode==="island")&&!P.drive&&!P.knocked,W=WEAPONS[P.sel],rr=Math.max(0,(P.own[P.sel]|0)-1);
-  if(P.rel){if(P.rel.w!==P.sel)P.rel=null;else if((P.rel.t+=dt)>=P.rel.d){const take=Math.min(W.mag-P.mag[P.sel],P.ammo);P.mag[P.sel]+=take;P.ammo-=take;P.rel=null}}
-  else if(!W.melee&&P.own[P.sel]&&P.mag[P.sel]<=0&&P.ammo>0&&canAct)P.rel={w:P.sel,t:0,d:W.rl*RAR[rr].rl};sfx("reload");
+  if(P.rel){const k0=P.rel.t/P.rel.d;if(P.rel.w!==P.sel)P.rel=null;else if(rlSfx(P.rel.w,k0,(P.rel.t+=dt)/P.rel.d),P.rel.t>=P.rel.d){const take=Math.min(W.mag-P.mag[P.sel],P.ammo);P.mag[P.sel]+=take;P.ammo-=take;P.rel=null}}
+  else if(!W.melee&&P.own[P.sel]&&P.mag[P.sel]<=0&&P.ammo>0&&canAct)P.rel={w:P.sel,t:0,d:W.rl*RAR[rr].rl};
   if(down&&P.use&&canAct){P.use=null;feed("✋ Soin annulé")}
   if(P.sel!==P.lsel){if(P.lsel!==undefined)P.cd=Math.max(P.cd,.2);P.lsel=P.sel}
   if(down&&P.cd<=0&&!P.use&&!P.rel&&canAct){
@@ -1757,6 +1757,24 @@ const $=id=>document.getElementById(id),fmt=t=>Math.floor(t/60)+':'+String(Math.
 const cmpEls=['N','NE','E','SE','S','SO','O','NO'].map(n=>{const d=document.createElement('span');d.textContent=n;$('cmp').appendChild(d);return d});
 function compass(){const b=((-yaw*57.2958)%360+360)%360;cmpEls.forEach((d,i)=>{const o=((i*45-b+540)%360)-180;d.style.left='calc(50% + '+(o*3.2)+'px)';d.style.opacity=Math.max(0,1-Math.abs(o)/70)})}
 const AX_Z=new THREE.Vector3(0,0,1),_aq=new THREE.Quaternion();
+// Rechargement en plusieurs temps : l'arme pivote, le chargeur vide tombe, la main libre va en chercher un à la ceinture,
+// l'enfonce dans l'arme puis on arme d'un coup sec. Au pompe, la main glisse trois cartouches une à une.
+const RLW=[[3,-4],[13,-6],[7,-1],[4,-3]],RL_R=new THREE.Vector3(14,-7,12).normalize(),RL_H=new THREE.Vector3(-1,-10,-3).normalize(),_rw=new THREE.Vector3(),_rd=new THREE.Vector3(),_rh=new THREE.Vector3();
+const gMag=new THREE.BoxGeometry(4.4,9,3.2),gShell=new THREE.CylinderGeometry(1.3,1.3,5,8),mMag=L(0x30303a),mShell=L(0xd8452e),sstep=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x)};
+const rlSG=k=>{const p=Math.max(0,Math.min(2.999,(k-.15)/.7*3))%1;return{p,go:sstep(0,.35,p)*(1-sstep(.45,.85,p)),ins:sstep(.45,.85,p)}};// pompe : une cartouche par tiers
+function reloadPose(g,u,w,k,wi){
+  if(!u.rlM){if(k<0)return;u.rlM=[new THREE.Mesh(gMag,mMag),new THREE.Mesh(gMag,mMag),new THREE.Mesh(gShell,mShell)];for(const m of u.rlM){m.visible=false;g.add(m)}}
+  const[mo,mn,sh]=u.rlM,on=k>=0&&!!w;mo.visible=mn.visible=sh.visible=false;if(!on)return;
+  const sg=wi===2,a=u.arms[1],wl=RLW[wi]||RLW[0];// position du puits de chargeur dans le repère du personnage
+  _rw.set(wl[0],wl[1],0).applyEuler(w.rotation).add(w.position).applyQuaternion(g.children[2].quaternion).add(g.children[2].position);
+  _rd.subVectors(_rw,a.position).normalize();let dir;
+  if(sg){const c=rlSG(k);dir=_rh.copy(RL_R).lerp(RL_H,c.go).lerp(_rd,c.ins*(1-sstep(.85,1,c.p))).normalize()}
+  else dir=_rh.copy(RL_R).lerp(RL_H,sstep(.2,.38,k)).lerp(_rd,sstep(.45,.66,k)).lerp(RL_R,sstep(.84,.98,k)).normalize();
+  if(!u.emo)a.quaternion.setFromUnitVectors(DOWN,dir);
+  const hand=_rh.copy(dir).multiplyScalar(16.5).add(a.position);if(u.real&&u.hon)hand.set(hand.x*RA.k,RA.sy+(hand.y-35)*RA.k,hand.z);
+  if(sg){const c=rlSG(k);if(k>.15&&k<.85&&c.p>.2){sh.visible=true;sh.position.copy(hand).lerp(_rw,sstep(.5,.85,c.p));sh.rotation.set(0,0,Math.PI/2)}return}
+  if(k<.42){const f=Math.max(0,(k-.12)/.3);mo.visible=true;mo.position.copy(_rw);mo.position.y-=f*f*38;mo.rotation.set(f*1.5,0,w.rotation.z+f*2.4)}
+  if(k>.32&&k<.72){mn.visible=true;mn.position.copy(hand).lerp(_rw,sstep(.55,.7,k));mn.rotation.set(w.rotation.x,0,w.rotation.z)}}
 // Animations : course (bras et jambes), recul de l'arme, rechargement, atterrissage, chute, clignement et grimace.
 function animChar(g,x,y,dt,air,rl){
   const u=g.userData;if(!u.legs)return;if(u.px===undefined){u.px=x;u.py=y;u.ph=0;u.amp=0}
@@ -1765,9 +1783,10 @@ function animChar(g,x,y,dt,air,rl){
   const fl=air?Math.sin(u.tt*13)*.22:0,r=air?.5+fl:Math.sin(u.ph)*u.amp;u.legs[0].rotation.z=r;u.legs[1].rotation.z=air?-.35-fl:-r;
   if(u.air0&&!air&&u.land===undefined)u.land=.6;u.air0=air;u.lean=u.amp*.09;
   const near2=Math.abs(x-P.x)<700&&Math.abs(y-P.y)<700;if(!near2)return;
-  u.kick=Math.max(0,(u.kick||0)-dt*9);u.hurt=Math.max(0,(u.hurt||0)-dt*2.4);u.rl=(u.rl||0)+((rl?1:0)-(u.rl||0))*Math.min(1,dt*9);
-  const w=g.children[2]&&g.children[2].children[0];if(w){u.sw=Math.max(0,(u.sw||0)-dt*4.5);const se=u.sw*u.sw;w.position.x=-u.kick*6-se*4;w.rotation.z=u.kick*.22+u.rl*.75-se*1.2;w.position.y=Math.sin(u.ph*2)*u.amp*.9-u.rl*3-se*10}
-  if(!u.emo&&!u.glup&&!g.userData.cineP){const sw=Math.sin(u.ph)*u.amp*.32;u.arms.forEach((a,i)=>{a.quaternion.copy(u.aq[i]);a.quaternion.premultiply(_aq.setFromAxisAngle(AX_Z,(i?-sw:sw)+u.rl*(i?.5:.2)+(air?Math.sin(u.tt*11+i)*.3:0)))})}
+  u.kick=Math.max(0,(u.kick||0)-dt*9);u.hurt=Math.max(0,(u.hurt||0)-dt*2.4);const rk=rl?Math.min(1,rl.t/rl.d):-1,rw=rl?rl.w:0;u.rl=(u.rl||0)+((rk<0?0:sstep(0,.1,rk)*(1-sstep(.9,1,rk)))-(u.rl||0))*Math.min(1,dt*12);const ck=rk<0?0:Math.sin(sstep(.8,.9,rk)*Math.PI)*(rw===2?0:1);
+  const w=g.children[2]&&g.children[2].children[0];if(w){u.sw=Math.max(0,(u.sw||0)-dt*4.5);const se=u.sw*u.sw;w.position.x=-u.kick*6-se*4-ck*4;w.rotation.z=u.kick*.22+u.rl*.45+ck*.3-se*1.2;w.rotation.x=u.rl*.7;w.position.y=Math.sin(u.ph*2)*u.amp*.9-u.rl*3-se*10}
+  if(!u.emo&&!u.glup&&!g.userData.cineP){const sw=Math.sin(u.ph)*u.amp*.32;u.arms.forEach((a,i)=>{a.quaternion.copy(u.aq[i]);a.quaternion.premultiply(_aq.setFromAxisAngle(AX_Z,(i?-sw:sw)+u.rl*(i?0:.2)+(air?Math.sin(u.tt*11+i)*.3:0)))})}
+  reloadPose(g,u,w,!u.glup&&!g.userData.cineP?rk:-1,rw);
   if(u.land>0){u.land=Math.max(0,u.land-dt*4.2);const l=Math.sin(u.land*Math.PI*.5);g.scale.set(1+l*.14,1-l*.22,1+l*.14);if(u.land<=0){g.scale.setScalar(1);u.land=undefined}}
   if(u.fc){u.bk=(u.bk||rnd(1.5,4))-dt;const shut=u.bk<.12;if(u.bk<0)u.bk=rnd(1.8,5);const hu=u.hurt>.05;for(const e of u.fc.e)e.scale.y=shut||hu?.15:1.15;u.fc.m.rotation.z=hu?0:Math.PI;u.fc.b.forEach((b,i)=>b.rotation.x=(i?-1:1)*(hu?-.5:.15));}
 }
@@ -2247,6 +2266,8 @@ function musTick(){
 }
 function setMusic(m){musMode=m}
 // Effets sonores. d = distance au joueur (sons des autres atténués avec la distance).
+// Sons du rechargement aux bons moments : chargeur retiré, chargeur enfoncé (ou chaque cartouche au pompe), armement.
+function rlSfx(w,a,b){const x=v=>a<v&&b>=v;if(w===2){for(const v of[.15+.7*(.75/3),.15+.7*(1.75/3),.15+.7*(2.75/3)])if(x(v))sfx('magin')}else{if(x(.14))sfx('magout');if(x(.68))sfx('magin')}if(x(.82))sfx('cock')}
 function sfx(name,arg,d){
   const a=audio();if(!a||!CFG.sfx||!CFG.vol||a.ctx.state!=='running')return;
   const now=performance.now();if(lastSfx[name]>now-(name==="shot"?25:40))return;lastSfx[name]=now;
@@ -2262,6 +2283,9 @@ function sfx(name,arg,d){
   else if(name==='build'){tone(B,220,t,.1,'square',v(.1),330);hiss(B,t,.07,v(.15),1200)}
   else if(name==='chest'){[784,988,1175,1568].forEach((f,i)=>tone(B,f,t+i*.07,.25,'triangle',v(.14)))}
   else if(name==='pickup'){tone(B,660,t,.08,'triangle',v(.15));tone(B,990,t+.06,.1,'triangle',v(.13))}
+  else if(name==='magout'){tone(B,900,t,.03,'square',v(.07),400);hiss(B,t,.06,v(.12),2500)}
+  else if(name==='magin'){tone(B,480,t,.04,'square',v(.12),180);hiss(B,t,.04,v(.16),3200)}
+  else if(name==='cock'){hiss(B,t,.05,v(.18),3000);tone(B,1300,t+.09,.03,'square',v(.1),600);hiss(B,t+.09,.04,v(.16),2200)}
   else if(name==='reload'){hiss(B,t,.05,v(.18),3000);hiss(B,t+.18,.05,v(.18),2200)}
   else if(name==='jump'){tone(B,260,t,.14,'triangle',v(.12),420)}
   else if(name==='whoosh'){hiss(B,t,.6,v(.25),600,'lowpass')}
