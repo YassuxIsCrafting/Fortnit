@@ -16,6 +16,7 @@
   };
   var BASE = URL_.replace(/\/+$/, '');
   var ws = null, gs = null, myId = null, mine = {}, peers = new Map(), hs = {}, cbs = [], reqs = new Map(), rn = 0, readyRes, readyGRes, gotA = false, gotG = false;
+  var full = false;   // salle publique pleine (12 joueurs) : on garde quand même les comptes via une connexion « aux »
   var ready = new Promise(function (r) { readyRes = r; }), readyG = new Promise(function (r) { readyGRes = r; });
   var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
   function sendOn(s, o) { if (s && s.readyState === 1) s.send(JSON.stringify(o)); }
@@ -39,22 +40,23 @@
     }
   }
   function onAux(m) {
+    if (m.t === 'full' && !CODE) { full = true; return; }   // le serveur va fermer : la reconnexion passera en « aux »
     if (m.t === 'init' && !gotA) { gotA = true; readyRes(); }
     if (m.t === 'fnote' || m.t === 'pinv' || m.t === 'pans') {
       var h = window.IE_onSocial; if (h) try { h(m); } catch (x) {}
     } else if (m.t === 'res') {
       var q = reqs.get(m.r); if (q) { reqs.delete(m.r); if (m.ok) q.res(m); else q.rej(m.err || 'Erreur'); }
-    } else if (!CODE) onGame(m);
+    } else if (!CODE && !full) onGame(m);
   }
   function open(url, onMsg, set, onClose) {
-    var s; try { s = new WebSocket(url); } catch (e) { setTimeout(function () { open(url, onMsg, set, onClose); }, 3000); return; }
+    var s; try { s = new WebSocket(typeof url === 'function' ? url() : url); } catch (e) { setTimeout(function () { open(url, onMsg, set, onClose); }, 3000); return; }
     set(s);
     s.onmessage = function (e) { var m; try { m = JSON.parse(e.data); } catch (x) { return; } onMsg(m); };
     s.onclose = function () { onClose(); setTimeout(function () { open(url, onMsg, set, onClose); }, 2000); };
     s.onerror = function () {};
   }
   var lostG = function () { peers = new Map(); notify(); };
-  open(CODE ? BASE + '/?aux=1' : URL_, onAux, function (s) { ws = s; }, function () {
+  open(function () { return CODE || full ? BASE + '/?aux=1' : URL_; }, onAux, function (s) { ws = s; }, function () {
     if (!CODE) lostG();
     reqs.forEach(function (q) { q.rej('Connexion perdue.'); }); reqs.clear();
   });
@@ -74,14 +76,24 @@
     presence: function (p) { merge(mine, p); send({ t: 'pr', patch: p }); return Promise.resolve(); }
   };
 
-  function call(o) {
-    return Promise.race([ready, wait(8000)]).then(function () {
+  // Attend que la connexion « comptes » soit ouverte (jusqu'à ms) : sur mobile elle se coupe souvent
+  // (appli en arrière-plan, réseau qui change) et se rouvre 2 s plus tard, il ne faut pas échouer pendant ce temps.
+  function whenOpen(ms) {
+    var t0 = Date.now();
+    return new Promise(function (res) { (function chk() { if (gotA && ws && ws.readyState === 1) return res(true); if (Date.now() - t0 > ms) return res(false); setTimeout(chk, 150); })(); });
+  }
+  function call1(o) {
+    return whenOpen(10000).then(function (ok) {
       return new Promise(function (res, rej) {
-        if (!ws || ws.readyState !== 1) return rej('Serveur injoignable. Réessaie dans un instant.');
-        var r = ++rn; o.r = r; reqs.set(r, { res: res, rej: rej }); sendA(o);
+        if (!ok) return rej('Serveur injoignable. Vérifie ta connexion et réessaie.');
+        var r = ++rn, q = {}; for (var k in o) q[k] = o[k]; q.r = r; reqs.set(r, { res: res, rej: rej }); sendA(q);
         setTimeout(function () { if (reqs.delete(r)) rej('Le serveur ne répond pas.'); }, 10000);
       });
     });
+  }
+  // Une 2e chance automatique si la connexion a sauté pendant la demande
+  function call(o) {
+    return call1(o).catch(function (e) { if (e === 'Connexion perdue.' || e === 'Le serveur ne répond pas.') return wait(500).then(function () { return call1(o); }); throw e; });
   }
   // Le mot de passe n'est jamais envoyé tel quel : le navigateur en dérive une clé (PBKDF2, 150 000 tours)
   // avec le nom d'utilisateur comme sel, et c'est cette clé que le serveur vérifie.
@@ -96,7 +108,11 @@
     });
   }
   var auth = {
-    register: function (u, pw, p) { return derive(u, pw).then(function (k) { return call({ t: 'reg', u: u, pw: k, p: p }); }); },
+    // Si la création a réussi mais que la réponse s'est perdue, la 2e tentative dit « déjà pris » : on essaie alors de se connecter avec le même mot de passe
+    register: function (u, pw, p) { return derive(u, pw).then(function (k) { return call1({ t: 'reg', u: u, pw: k, p: p }).catch(function (e) {
+      if (e !== 'Connexion perdue.' && e !== 'Le serveur ne répond pas.') throw e;
+      return wait(500).then(function () { return call1({ t: 'reg', u: u, pw: k, p: p }); }).catch(function (e2) { if (e2 === 'Ce nom est déjà pris.') return call1({ t: 'login', u: u, pw: k }).catch(function () { throw e2; }); throw e2; });
+    }); }); },
     login: function (u, pw) { return derive(u, pw).then(function (k) { return call({ t: 'login', u: u, pw: k }); }); },
     resume: function (u, token) { return call({ t: 'resume', u: u, token: token }); },
     save: function (p) { return call({ t: 'save', p: p }); },

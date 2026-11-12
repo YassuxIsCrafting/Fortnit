@@ -2890,7 +2890,7 @@ async function acctInit(){
   $('tab-acct').style.display=(db||auth)?'':'none';if(!db&&!auth)return;
   try{const s=JSON.parse(localStorage.getItem('ie_session')||'null');
     if(s&&/^[A-Za-z0-9_-]{3,14}$/.test(s.u)){
-      if(auth){if(s.t){const r=await auth.resume(s.u,s.t);setAcct({u:r.u,token:s.t,p:r.p});return}}
+      if(auth){if(s.t){let r;try{r=await auth.resume(s.u,s.t)}catch(e){if(e==='Session expirée.'){try{localStorage.removeItem('ie_session')}catch(x){}$('au').value=s.u;openAcct('Ta session a expiré : reconnecte-toi.')}else openAcct(typeof e==='string'?e:'');return}setAcct({u:r.u,token:s.t,p:r.p});return}}
       else{const ref=db.doc('accounts/'+s.u.toLowerCase()),sn=await ref.get();
         if(sn.exists&&sn.data().h===s.h){setAcct({u:sn.data().u,h:s.h,ref,p:sn.data().p});return}}}}catch(e){}
   openAcct();
