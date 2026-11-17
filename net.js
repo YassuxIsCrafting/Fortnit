@@ -12,7 +12,8 @@
   window.IE_SALON = CODE;
   window.IE_setSalon = function (c) {
     c = norm(c); try { if (c) localStorage.setItem('ie_salon', c); else localStorage.removeItem('ie_salon'); } catch (e) {}
-    try { var u = new URL(location.href); u.searchParams.delete('salon'); location.replace(u.toString()); } catch (e) { location.reload(); }
+    // Rechargement : on retire ?salon= de l'adresse ; si la page n'a pas rechargé au bout d'1,5 s (appli, navigateur intégré), on force
+    try { var u = new URL(location.href); u.searchParams.delete('salon'); u.hash = ''; setTimeout(function () { location.reload(); }, 1500); location.replace(u.toString()); } catch (e) { location.reload(); }
   };
   var BASE = URL_.replace(/\/+$/, '');
   var ws = null, gs = null, myId = null, mine = {}, peers = new Map(), hs = {}, cbs = [], reqs = new Map(), rn = 0, readyRes, readyGRes, gotA = false, gotG = false;
