@@ -105,7 +105,9 @@ export class Room extends DurableObject {
   }
 
   blocked(ip) { const f = this.fails.get(ip); return f && f.until > Date.now(); }
-  fail(ip) { const f = this.fails.get(ip) || { n: 0, until: 0 }; if (++f.n >= 8) { f.until = Date.now() + 5 * 60e3; f.n = 0; } this.fails.set(ip, f); }
+  // Anti-essais par adresse : 12 mauvais mots de passe en 10 min bloquent 5 min. Les échecs plus vieux que 10 min sont oubliés
+  // (avant, le compteur ne redescendait jamais : des joueurs sur le même wifi finissaient bloqués à force de petites erreurs).
+  fail(ip) { const now = Date.now(); let f = this.fails.get(ip); if (!f || now - f.first > 10 * 60e3) f = { n: 0, first: now, until: f ? f.until : 0 }; if (++f.n >= 12) { f.until = now + 5 * 60e3; f.n = 0; f.first = now; } this.fails.set(ip, f); }
   row(key) { return this.ctx.storage.sql.exec('SELECT * FROM acc WHERE k = ?', key).toArray()[0]; }
 
   async webSocketMessage(ws, raw) {
@@ -147,13 +149,13 @@ export class Room extends DurableObject {
         const key = String(m.u || '').toLowerCase(), a = this.row(key), bad = 'Nom ou mot de passe incorrect.', pw = String(m.pw || '');
         if (!a || !KEY.test(pw)) { this.fail(meta.ip); return reply({ ok: false, err: bad }); }
         if (!same(await sha(a.salt + ':' + pw), a.hash)) { this.fail(meta.ip); return reply({ ok: false, err: bad }); }
-        const token = rnd(24), toks = [...JSON.parse(a.toks || '[]'), await sha(token)].slice(-5);
+        const token = rnd(24), toks = [...JSON.parse(a.toks || '[]'), await sha(token)].slice(-10);   // 10 appareils connectés en même temps (avant 5)
         this.ctx.storage.sql.exec('UPDATE acc SET toks = ? WHERE k = ?', JSON.stringify(toks), key);
         meta.key = key; this.meta.set(id, meta); this.persist(ws, id, true); this.notifyFriends(key);
         reply({ ok: true, u: a.u, token, p: JSON.parse(a.p) });
       } else if (m.t === 'resume') {
         const key = String(m.u || '').toLowerCase(), a = this.row(key);
-        if (!a || !JSON.parse(a.toks || '[]').includes(await sha(String(m.token || '')))) { this.fail(meta.ip); return reply({ ok: false, err: 'Session expirée.' }); }
+        if (!a || !JSON.parse(a.toks || '[]').includes(await sha(String(m.token || '')))) return reply({ ok: false, err: 'Session expirée.' });   // pas compté comme essai : un jeton de 48 caractères ne se devine pas
         meta.key = key; this.meta.set(id, meta); this.persist(ws, id, true); this.notifyFriends(key);
         reply({ ok: true, u: a.u, p: JSON.parse(a.p) });
       } else if (m.t === 'save') {
