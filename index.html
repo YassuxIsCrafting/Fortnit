@@ -188,6 +188,9 @@ body:not(.playing) .hud:not(#feed),body:not(.playing) #hb{visibility:hidden}
 /* Mobile (demande d'Alae Karout) : les panneaux du lobby (Dressing, Boutique…) défilent au doigt au lieu d'être coupés,
    et le long résumé de fin de partie défile à part pour ne plus pousser le bouton « Rejouer » hors de l'écran */
 #ov{overflow-y:auto}#lobby .panel{max-height:100%;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+/* Barre coulissante du Dressing et de la Boutique : visible aussi sur mobile, où les barres natives sont cachées */
+#cust,#shopp{scrollbar-width:none}#cust::-webkit-scrollbar,#shopp::-webkit-scrollbar{display:none}
+.vbar{position:fixed;width:14px;border-radius:7px;background:#ffffff22;display:none;z-index:5;touch-action:none;cursor:pointer}.vbar i{position:absolute;left:2px;right:2px;border-radius:5px;background:#ffd23f;box-shadow:0 0 6px #ffd23f88}
 @media (max-height:700px){#ov #msg{max-height:30vh;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}#sg{max-height:none;overflow:visible}#lobby{padding-top:4px}}
 #shopp{width:min(580px,56vw)}#scat{display:flex;flex-wrap:wrap;gap:6px}#scat button{font-size:12px;padding:5px 11px;border-width:2px;box-shadow:none;background:#fff;color:var(--ink)}#scat button.on{background:var(--gold)}#scat button:active{transform:none}
 #sg h3{display:flex;justify-content:space-between;align-items:baseline;margin:10px 2px 6px;font-size:13px;color:#fff}#sg h3 small{font-family:system-ui,sans-serif;font-size:11px;opacity:.75}#sg h3:first-child{margin-top:2px}
@@ -2802,6 +2805,16 @@ function renderShop(){
 }
 function showTab(t){$("ov").className="t-"+t;if(t==="friends")refreshFriends();for(const x of["play","locker","shop","pass","quests","friends"])$('tab-'+x).className='tab'+(x===t?' on':'');pv=null;sel=null;bpSel=null;if(t==='shop')renderShop();if(t==='pass'||t==='quests'){bpRoll();renderBP()}}
 ["play","locker","shop","pass","quests","friends"].forEach(t=>{$("tab-"+t).onclick=()=>showTab(t)});
+// Barre coulissante (demande d'Alae Ait Ali) : collée au bord droit du panneau, on la glisse ou on clique dessus pour défiler.
+const vbars=["cust","shopp"].map(id=>{const p=$(id),b=document.createElement("div"),th=document.createElement("i");b.className="vbar";b.appendChild(th);$("ov").appendChild(b);
+  const up=()=>{const r=p.getBoundingClientRect(),m=p.scrollHeight-p.clientHeight;if(!r.width||m<4){b.style.display="none";return}
+    b.style.display="block";b.style.left=(r.right-18)+"px";b.style.top=(r.top+6)+"px";b.style.height=(r.height-12)+"px";
+    const H=r.height-12,h=Math.max(30,H*p.clientHeight/p.scrollHeight);th.style.height=h+"px";th.style.top=((H-h)*p.scrollTop/m)+"px"};
+  const go=e=>{const r=b.getBoundingClientRect(),h=th.offsetHeight;p.scrollTop=Math.max(0,Math.min(1,(e.clientY-r.top-h/2)/(r.height-h)))*(p.scrollHeight-p.clientHeight);up()};
+  b.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId)}catch(_){}b.dr=1;go(e)});
+  b.addEventListener("pointermove",e=>{if(b.dr)go(e)});for(const k of["pointerup","pointercancel"])b.addEventListener(k,()=>{b.dr=0});
+  p.addEventListener("scroll",up,{passive:true});addEventListener("resize",up);return up});
+setInterval(()=>{if($("ov").style.display!=="none")vbars.forEach(u=>u())},400);
 $("ewbtn").onclick=()=>{if(!ewOpen)openWheel()};
 addEventListener("mousedown",e=>{if(ewOpen&&!run){e.preventDefault();e.stopPropagation();closeWheel(e.button===0)}},true);
 // Chaque règle spéciale est un mode à part (demandé par l'utilisateur) : une carte par règle après Battle Royale et Reload.
