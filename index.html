@@ -1575,7 +1575,7 @@ function orbStep(dt){const o=orb;if(!o)return;if(!run||P.mode!=="ground"||P.knoc
 // (dans une case vide, ou à la place de l'arme en main). Menu I : lâcher armes et soins devant soi.
 const WN=['Pistolet',"F. d'assaut",'Pompe','Sniper'],WK=['pi','ar','sg','sn'];let drops=[],invOpen=false;
 function selSlot(i){if(i>=0&&!P.sl[i])return;P.cs=i;P.sel=i<0?4:P.sl[i].w;P.use=null}
-function takeW(o,w,rr,force){if(vrM===14&&run)return false;const sl=P.sl,same=sl.findIndex(q=>q&&q.w===w),free=sl.indexOf(null);let i;
+function takeW(o,w,rr,force){if(vrM===14&&run)return false;if(fwOf()>=0)w=fwOf();const sl=P.sl,same=sl.findIndex(q=>q&&q.w===w),free=sl.indexOf(null);let i;
   if(!force){if(same>=0){if(sl[same].r>=rr)return 0;i=same}else if(free>=0)i=free;else return 0}
   else{i=free>=0?free:P.cs;if(i<0){feed("✋ Prends une arme en main pour l'échanger");return 0}}
   const keep=P.cs===i;if(sl[i])dropW(i);sl[i]={w,r:rr,mag:o.mag!==undefined?o.mag:WEAPONS[w].mag};if(o.mag===undefined)P.ammo=Math.min(999,P.ammo+15);
@@ -1688,8 +1688,8 @@ function jrShow(id){const m=$('invm');invOpen=true;try{document.exitPointerLock(
 function shopTry(){if(!run||!w5.s||P.mode!=="ground"||P.drive)return false;const s=w5.s.find(s=>Math.hypot(s.x-P.x,s.y-P.y)<75);if(!s)return false;
   if(!P.mis){const q=MIS[Math.floor(Math.random()*MIS.length)];P.mis={k:q[0],n:q[1],t:q[2],r:q[3],b:q[0]==='kill'?P.kills:q[0]==='chest'?P.st.chests:P.st.dmg};feed('🛒 Mission du marchand : '+q[2]+' (+'+q[3]+' or)')}shopDraw();return true}
 function shopDraw(){const m=$('invm');invOpen=true;try{document.exitPointerLock()}catch(e){}m.style.display='flex';let h='<h3>🛒 Marchand · 💰 '+(P.gold|0)+' or</h3><small>'+(P.mis?(P.mis.ok?'✅ ':'🎯 ')+'Mission : '+P.mis.t+' (+'+P.mis.r+' or)':'')+'</small>';
-  SHOP.forEach(([n,p],i)=>{h+='<div class="ivr"><b>'+n+'</b><span>'+p+' or</span><button type="button" data-d="$'+i+'"'+((P.gold|0)<p?' disabled':'')+'>Acheter</button></div>'});m.innerHTML=h+'<button type="button" data-d="x">Fermer</button>'}
-function shopBuy(i){const it=SHOP[i];if(!it||(P.gold|0)<it[1])return;const I=P.inv,G=Object.keys(GD);
+  SHOP.forEach(([n,p],i)=>{h+='<div class="ivr"><b>'+n+'</b><span>'+p+' or</span><button type="button" data-d="$'+i+'"'+((P.gold|0)<p||(vrM===14&&i===6)?' disabled':'')+'>'+(vrM===14&&i===6?'Pas en Course':'Acheter')+'</button></div>'});m.innerHTML=h+'<button type="button" data-d="x">Fermer</button>'}
+function shopBuy(i){const it=SHOP[i];if(!it||(P.gold|0)<it[1]||(vrM===14&&i===6))return;const I=P.inv,G=Object.keys(GD);
   if(i===0)I.mini=Math.min(6,I.mini+2);else if(i===1)I.med=Math.min(3,I.med+1);else if(i===2)I.gr=Math.min(4,(I.gr|0)+2);else if(i===3){const k=G[Math.floor(Math.random()*G.length)];I[k]=(I[k]|0)+GD[k][2];P.gk=k;feed(GD[k][0]+' '+GD[k][1])}
   else if(i===4)I.fu=Math.min(2,(I.fu|0)+1);else if(i===5){P.wood=Math.min(999,P.wood+100);P.stone=Math.min(999,(P.stone|0)+100);P.metal=Math.min(999,(P.metal|0)+100)}else if(!takeW({},Math.floor(Math.random()*4),4,true))return;
   P.gold-=it[1];sfx('pickup');shopDraw()}
@@ -1828,7 +1828,7 @@ function vrTick(dt){if(!vrM||P.mode==='island'||!run||finale)return;const now=gn
   if(vrM===13)propTick(dt,alive);
   if(vrM===14)pill=raceTick(dt);if(!run)return;
   if(vrM===15&&!stormPre){const t=new Set();for(const b of bots)if(b.team!==P.team)t.add(b.team);for(const e of liveOthers())if(e.team!==P.team)t.add(e.team);pill='⚔️ '+t.size+' duo'+(t.size>1?'s':'')+' adverse'+(t.size>1?'s':'')}
-  if(vrM===5){if(!P.chT)P.chT=now+30000;const left=Math.ceil((P.chT-now)/1000);pill='🎲 '+left+' s';if(now>=P.chT){P.chT=now+30000;let any=false;for(let i=0;i<4;i++)if(P.sl[i]){P.sl[i]=rndW();any=true}if(!any)P.sl[0]=rndW();selSlot(P.cs>=0&&P.sl[P.cs]?P.cs:0);feed('🎲 Chaos : nouvelles armes !');sfx('chime');
+  if(vrM===5&&P.mode!=='ground'&&!P.chT)pill='🎲 à l’atterrissage';else if(vrM===5){if(!P.chT)P.chT=now+30000;const left=Math.ceil((P.chT-now)/1000);pill='🎲 '+left+' s';if(now>=P.chT){P.chT=now+30000;let any=false;for(let i=0;i<4;i++)if(P.sl[i]){P.sl[i]=rndW();any=true}if(!any)P.sl[0]=rndW();selSlot(P.cs>=0&&P.sl[P.cs]?P.cs:0);feed('🎲 Chaos : nouvelles armes !');sfx('chime');
     if(isHost)for(const b of bots)if(b.alive&&b.W){const q=rndW();b.w=q.w;b.rr=q.r;b.W=botWep(q.w,q.r)}}}
   if(vrM===7&&lavaM){if(!thR){let lo=1e9,hi=-1e9;for(let i=0;i<70;i++)for(let j=0;j<70;j++){const h=TH(100+i*(M-200)/69,100+j*(M-200)/69);lo=Math.min(lo,h);hi=Math.max(hi,h)}thR=[lo,hi]}
     const tot=WAITS.reduce((a,b)=>a+b,0)+SHRS.reduce((a,b)=>a+b,0),k=Math.max(0,Math.min(1,(el-60)/(tot-60))),lv=thR[0]-6+(thR[1]-thR[0])*.6*k;lavaM.position.y=lv;lavaM.material.color.setHSL(.04,1,.5+.06*Math.sin(now/300));
@@ -2274,7 +2274,11 @@ function update(dt,now){
   const ents=[P,...liveOthers(),...bots,...(P.mode==='island'?dums:[])];
   if(isHost&&rlMode)for(const b of botsAll)if(!b.alive&&b.rsT&&gnow()>=b.rsT){b.rsT=0;const f=b.mate&&b.mate.alive?b.mate:b.buddy?followEnt(b):null;if(f&&(f===P?P.mode!=="dead"&&P.hp>0:f.hp>0))reloadBot(b,f)}
   if(!isHost){const k=Math.min(1,dt*12);for(const b of bots){b.x+=(b.sx-b.x)*k;b.y+=(b.sy-b.y)*k;b.z+=((b.tz||0)-b.z)*k}}
-  else for(const b of [...bots]){
+  // Sol de lave : peu avant qu'il brûle, les bots posent un sol sous leurs pieds et y restent (ils tirent sans bouger)
+  const lava8=vrM===8&&stEl()>40;
+  if(isHost)for(const b of bots)if(lava8&&b.alive&&b.mode==="ground"&&(b.z||0)<3&&b.wood>=10&&!b.zo&&!(b.sl8>gnow())){b.sl8=gnow()+1500;const gx=Math.floor(b.x/WS)*WS,gy=Math.floor(b.y/WS)*WS;
+    if(!taken(gx,gy,0,'f')){addSlab(gx,gy,0,'f',0);b.wood-=10;sfx("build",0,Math.hypot(gx-P.x,gy-P.y));if(room)room.emit('wall',{x:gx,y:gy,b:0,k:'f',m:0}).catch(()=>{})}}
+  if(isHost)for(const b of [...bots]){
     if(b.mode==="bus"){b.x=bp.x;b.y=bp.y;b.z=BUS_Z;const bf=b.buddy&&followEnt(b);if(b.buddy?(bp.p>=1||(bf&&(bf===P?P.mode!=="bus":(bf.z||0)<BUS_Z-20))):bp.p>=b.drop){b.mode="air";b.vz=-200}continue}
     if(b.mode==="air"){const af=b.buddy&&followEnt(b);if(af){b.lx=af.x+50;b.ly=af.y+30}
       const ex=b.lx-b.x,ey=b.ly-b.y,dd=Math.hypot(ex,ey),mv=Math.min(520*dt,dd);if(dd>1){b.x+=ex/dd*mv;b.y+=ey/dd*mv;b.a=Math.atan2(ey,ex)}
@@ -2321,9 +2325,12 @@ function update(dt,now){
       if(b.armT>0)b.a+=Math.PI;else fire(b.a);
     }else{const f=b.buddy?followEnt(b):b.follow&&b.mate&&b.mate.alive?b.mate:null;
       if(f&&dist(b,f)<=170)b.a=Math.atan2(f.y-b.y,f.x-b.x);else{
-      if(f){b.tx=f.x;b.ty=f.y;b.tt=1}else if(!zg){const c=(b.armT>0||b.loots<2)&&botChest(b,dt);if(c){b.tx=c.x;b.ty=c.y;b.tt=1;if(Math.hypot(b.x-c.x,b.y-c.y)<48)botLoot(b,c)}else if(b.tt<=0||Math.hypot(b.x-b.tx,b.y-b.ty)<30)botWander(b)}
+      // Roi de la colline / Contrôle des zones : un bot sur trois va tenir une zone
+      const vz=vzones.length&&!stormPre&&!(b.armT>0)&&b.i%3===0?vzones[b.i%vzones.length]:null;
+      if(f){b.tx=f.x;b.ty=f.y;b.tt=1}else if(vz&&!zg){if(b.tt<=0||Math.hypot(b.x-b.tx,b.y-b.ty)<30||Math.hypot(b.tx-vz.x,b.ty-vz.y)>vz.r){const a=Math.random()*6.2832,d=Math.random()*vz.r*.6;b.tx=vz.x+Math.cos(a)*d;b.ty=vz.y+Math.sin(a)*d;b.tt=rnd(3,6)}}else if(!zg){const c=(b.armT>0||b.loots<2)&&botChest(b,dt);if(c){b.tx=c.x;b.ty=c.y;b.tt=1;if(Math.hypot(b.x-c.x,b.y-c.y)<48)botLoot(b,c)}else if(b.tt<=0||Math.hypot(b.x-b.tx,b.y-b.ty)<30)botWander(b)}
       b.a=Math.atan2(b.ty-b.y,b.tx-b.x);vx=Math.cos(b.a);vy=Math.sin(b.a)}
     }
+    if(lava8&&(b.z||0)>=3){vx=vy=0}
     {const vl=Math.hypot(vx,vy);if(vl>.5)botMove(b,Math.atan2(vy,vx),130*Math.min(1.2,vl),dt);else{b.x+=vx*130*dt;b.y+=vy*130*dt;collide(b)}}
     {const fl=floorAt(b);b.z=b.z>fl?Math.max(fl,b.z-500*dt):fl}
   }
