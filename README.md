@@ -5,7 +5,8 @@ sur PC et sur mobile.
 
 > Jeu indépendant, gratuit et sans but commercial, sans lien avec Epic Games ni avec aucun autre éditeur.
 
-- Jeu en ligne : https://ile-eclair.yasser-mobiarchitects.workers.dev/
+- Jeu en ligne : https://yassuxiscrafting.github.io/Fortnit/ (l'ancienne adresse
+  https://ile-eclair.yasser-mobiarchitects.workers.dev/ y redirige)
 - Appli Android : `IleEclair.apk`, à compiler depuis le dossier `android/` (voir plus bas).
 - Appli Windows : `IleEclair.exe`, à compiler depuis le dossier `desktop/`, toujours à jour (voir plus bas).
 
@@ -122,23 +123,25 @@ http://ADRESSE-DE-CE-PC:3000.
 ## Structure
 
 ```
-index.html, net.js, config.js   -> le jeu (site publié sur Cloudflare Workers : ile-eclair)
+index.html, net.js, config.js   -> le jeu (site publié par GitHub Pages)
 models/                         -> modèles 3D du jeu (générés par tools/blender)
+cloudflare-redirect/            -> worker ile-eclair (redirection vers GitHub Pages)
 cloudflare/                     -> serveur multijoueur, comptes et amis (Cloudflare Workers)
 android/                        -> appli Android (WebView)
 desktop/                        -> appli Windows (Electron)
 ```
 
-## Site du jeu (Cloudflare)
+## Site du jeu (GitHub Pages)
 
-Le site est servi par le worker `ile-eclair`, qui ne contient que des fichiers statiques (l'ancien worker
-`fortnit-jeu` a été supprimé : les applis compilées avant le renommage ne marchent plus). Le serveur et les
-comptes gardent leur nom technique `fortnit`. Pour mettre le site à jour, copier `index.html`, `config.js`,
-`net.js` et les modèles utilisés par le jeu (`models/*.glb` sauf les fichiers bruts listés dans `.gitignore`)
-dans un dossier, puis publier :
+Le site est publié par GitHub Pages depuis la branche `main` (racine du dépôt) :
+https://yassuxiscrafting.github.io/Fortnit/. Pour le mettre à jour, il suffit de pousser sur `main`.
+
+L'ancienne adresse Cloudflare, le worker `ile-eclair` (`cloudflare-redirect/worker.js`), redirige les
+navigateurs vers GitHub Pages. Pour les applis Android et Windows, qui n'ouvrent que `ile-eclair`, il sert
+directement les fichiers de GitHub Pages : pas besoin de recompiler les applis. Pour le republier :
 
 ```bash
-npx wrangler deploy --name ile-eclair --assets <dossier> --compatibility-date 2026-11-02
+npx wrangler deploy cloudflare-redirect/worker.js --name ile-eclair --compatibility-date 2026-11-02
 ```
 
 ## Serveur multijoueur (Cloudflare)
