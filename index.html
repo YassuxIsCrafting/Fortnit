@@ -297,10 +297,10 @@ button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
     <div class="panel" id="roster"><h2>Dans le lobby</h2><ul id="rl"></ul><p id="net"></p></div>
   </div>
   <div id="bt">
-    <div id="mcard"><h2 id="mname">Battle Royale</h2><div id="msw"><button type="button" id="msub" aria-haspopup="true" aria-expanded="false" aria-controls="mpick">Solo · 100 joueurs</button><div id="mpick" role="menu" aria-label="Taille d'équipe"><button type="button" role="menuitemradio" data-s="0">Solo</button><button type="button" role="menuitemradio" data-s="1">Duo</button></div></div><button id="go">Jouer</button><p id="party"></p></div>
+    <div id="mcard"><h2 id="mname">Battle Royale</h2><div id="msw"><button type="button" id="msub" aria-haspopup="true" aria-expanded="false" aria-controls="mpick">Solo · 100 joueurs</button><div id="mpick" role="menu" aria-label="Taille d'équipe"><button type="button" role="menuitemradio" data-s="0">Solo</button><button type="button" role="menuitemradio" data-s="1">Duo</button><button type="button" role="menuitemradio" data-s="3">Trio</button></div></div><button id="go">Jouer</button><p id="party"></p></div>
     <div id="acts"><button type="button" id="devsw"></button><button type="button" id="credbtn">📜 Crédits</button><button type="button" id="histbtn">🕘 Historique</button><button type="button" id="salbtn">🔒 Salon</button><button type="button" id="cfgbtn">⚙️ Paramètres</button><button type="button" id="ewbtn">💃 Emote (B)</button></div>
     <div id="modes" role="radiogroup" aria-label="Mode de jeu (glisse vers le haut pour Reload)">
-      <button type="button" class="md on" data-m="0" role="radio" style="--bg:linear-gradient(135deg,#2b6cff,#14123a 85%)"><i>🪂</i><b>Battle Royale</b><small>Solo ou duo · 100 joueurs</small></button>
+      <button type="button" class="md on" data-m="0" role="radio" style="--bg:linear-gradient(135deg,#2b6cff,#14123a 85%)"><i>🪂</i><b>Battle Royale</b><small>Solo, duo ou trio · 100 joueurs</small></button>
       <button type="button" class="md" data-m="2" role="radio" style="--bg:linear-gradient(135deg,#ff5d8f,#7b3dff 55%,#14123a)"><i>🔁</i><b>Reload</b><small>Duo · 40 joueurs · réapparition</small></button>
     </div>
   <p id="ctl"><b>ZQSD</b> bouger · <b>Souris</b> viser · <b>Clic</b> pioche / tirer · <b>Clic droit</b> viser · <b>1</b> pioche · <b>2-5</b> armes · <b>6·7·8</b> soins · <b>F</b> coffre / caisse · <b>E</b> voiture · <b>Espace</b> sauter (encore contre un mur : saut mural, maintenu : escalade) · <b>T</b> glisser en courant · <b>J</b> gadget (<b>K</b> pour changer) · <b>A</b> (Q en QWERTY) mur · <b>R</b> escalier · <b>C</b> sol · <b>V</b> toit en pente · <b>X</b> matériau (bois, pierre, métal) · <b>M</b> carte · <b>B</b> roue des emotes · <b>G</b> chat · <b>Échap</b> pause (en solo)</p></div>
@@ -1074,23 +1074,24 @@ function zomTick(b,dt,ents){let tg=null,td=900;for(const e of ents){if(e===b||e.
   if(tg){const a=Math.atan2(tg.y-b.y,tg.x-b.x);b.a=a;if(td>30)botMove(b,a,b.hp>0?200:0,dt);else if(b.cd<=0){shoot(b,a,ZWP,((tg.z||0)-(b.z||0))/Math.max(td,1),4);b.cd=.8}if(Math.random()<dt*.15)sfx('thud',0,td)}
   else{if(b.tt<=0||Math.hypot(b.x-b.tx,b.y-b.ty)<30)botWander(b);const a=Math.atan2(b.ty-b.y,b.tx-b.x);b.a=a;botMove(b,a,120,dt)}}
 let vrSel=0,vrM=0,islVr=0;try{vrSel=Math.max(0,Math.min(VR.length-1,+localStorage.getItem('ie_vr')|0))}catch(e){}
-let mode=0,curMode=0,teamMap=new Map(),party={pt:0,mate:''};try{mode=Math.min(2,Math.max(0,+localStorage.getItem('ie_mode')|0))}catch(e){}
-function setMode(m){mode=party.pt&&!m?1:m;try{localStorage.setItem('ie_mode',String(mode));if(mode<2)localStorage.setItem('ie_mode0',String(mode))}catch(e){}if(mode===2&&vrSel)vrPick(0);document.querySelectorAll('#modes .md').forEach(b=>{const on=mode===2?+b.dataset.m===2:+b.dataset.m!==2&&(+b.dataset.v|0)===vrSel;b.className='md'+(on?' on':'');b.setAttribute('aria-checked',on)});{const n=document.getElementById('mname'),s=document.getElementById('msub');if(n)n.textContent=mode===2?'Reload':vrSel?VR[vrSel][0].slice(VR[vrSel][0].indexOf(' ')+1):'Battle Royale';if(s)s.textContent=vrSel===15&&mode<2?'Duo · 8 joueurs':['Solo · 100 joueurs','Duo · 100 joueurs','Duo · 40 joueurs'][mode]}
-  document.querySelectorAll('#mpick button').forEach(b=>{const s=+b.dataset.s,on=s===(mode?1:0);b.className=on?'on':'';b.setAttribute('aria-checked',on);b.disabled=!s&&(mode===2||!!party.pt);b.title=b.disabled?(mode===2?'Reload se joue en duo':'Tu es en groupe : duo obligatoire'):''});if(room)room.presence({md:mode}).catch(()=>{})}
+let mode=0,curMode=0,teamSz=1,teamMap=new Map(),party={pt:0,mate:''};try{mode=Math.min(3,Math.max(0,+localStorage.getItem('ie_mode')|0))}catch(e){}
+function setMode(m){mode=party.pt&&!m?1:m;try{localStorage.setItem('ie_mode',String(mode));if(mode!==2)localStorage.setItem('ie_mode0',String(mode))}catch(e){}if(mode===2&&vrSel)vrPick(0);document.querySelectorAll('#modes .md').forEach(b=>{const on=mode===2?+b.dataset.m===2:+b.dataset.m!==2&&(+b.dataset.v|0)===vrSel;b.className='md'+(on?' on':'');b.setAttribute('aria-checked',on)});{const n=document.getElementById('mname'),s=document.getElementById('msub');if(n)n.textContent=mode===2?'Reload':vrSel?VR[vrSel][0].slice(VR[vrSel][0].indexOf(' ')+1):'Battle Royale';if(s)s.textContent=vrSel===15&&mode!==2?'Duo · 8 joueurs':['Solo · 100 joueurs','Duo · 100 joueurs','Duo · 40 joueurs','Trio · 100 joueurs'][mode]}
+  document.querySelectorAll('#mpick button').forEach(b=>{const s=+b.dataset.s,on=s===(mode===3?3:mode?1:0);b.className=on?'on':'';b.setAttribute('aria-checked',on);b.disabled=(!s&&(mode===2||!!party.pt))||(s===3&&(mode===2||vrSel===15));b.title=b.disabled?(mode===2?'Reload se joue en duo':vrSel===15?'L’Arène se joue en duo':'Tu es en groupe : duo ou trio obligatoire'):''});if(room)room.presence({md:mode}).catch(()=>{})}
 function setParty(pt,mate){party={pt,mate};if(room)room.presence({pt}).catch(()=>{});setMode(pt&&!mode?1:mode);const el=document.getElementById('party');el.textContent='';
   if(pt){el.append('👥 Groupe : toi + '+mate+' ');const b=document.createElement('button');b.type='button';b.className='link';b.textContent='Quitter le groupe';b.onclick=()=>setParty(0,'');el.append(b)}}
 const humans=()=>[{peer:myId(),pt:party.pt,md:mode,vr:vrSel},...(joinIG?[...islandPeers(),...ingame()]:islandPeers()).map(p=>({peer:p.peer,pt:p.presence.pt|0,md:p.presence.md|0,vr:p.presence.vr|0}))].sort((a,b)=>String(a.peer)<String(b.peer)?-1:1);
 function buildTeams(n){
   const me=myId(),hum=humans();
-  curMode=hum[0].md>=1||vrM===15?1:0;teamMap=new Map();const size=new Map();
+  curMode=hum[0].md>=1||vrM===15?1:0;teamSz=!curMode?1:hum[0].md===3&&vrM!==15?3:2;const TS=teamSz;teamMap=new Map();const size=new Map();
   if(curMode){const byPt=new Map();for(const h of hum)if(h.pt)(byPt.get(h.pt)||byPt.set(h.pt,[]).get(h.pt)).push(h);
-    const lone=[];for(const h of hum){const g=h.pt&&byPt.get(h.pt);if(g&&g.length===2)teamMap.set(h.peer,h.pt);else lone.push(h)}
-    for(let i=0;i<lone.length;i+=2){const t=hashNum(lone[i].peer);teamMap.set(lone[i].peer,t);if(lone[i+1])teamMap.set(lone[i+1].peer,t)}}
+    const lone=[];for(const h of hum){const g=h.pt&&byPt.get(h.pt);if(g&&g.length>=2&&g.length<=TS)teamMap.set(h.peer,h.pt);else lone.push(h)}
+    for(let i=0;i<lone.length;i+=TS){const t=hashNum(lone[i].peer);for(let q=0;q<TS&&lone[i+q];q++)teamMap.set(lone[i+q].peer,t)}}
   else for(const h of hum)teamMap.set(h.peer,hashNum(h.peer));
   for(const t of teamMap.values())size.set(t,(size.get(t)||0)+1);
   P.team=teamMap.get(me);let j=botsAll.length-1;
-  if(curMode)for(const h of hum){const t=teamMap.get(h.peer);if(size.get(t)===1&&j>=0){const b=botsAll[j--];b.team=t;b.buddy=h.peer;size.set(t,2)}}
-  let k=0;for(let i=0;i<=j;i++){const b=botsAll[i];b.mate=null;b.follow=false;b.team=1e9+(curMode?Math.floor(k/2):k);if(curMode&&k%2===1){const a=botsAll[i-1];a.mate=b;b.mate=a;b.follow=true}k++}
+  if(curMode)for(const h of hum){const t=teamMap.get(h.peer);while(size.get(t)<TS&&j>=0){const b=botsAll[j--];b.team=t;b.buddy=h.peer;size.set(t,size.get(t)+1)}}
+  // Équipes de bots : le premier mène, les autres le suivent (en trio, le chef garde le 2e comme coéquipier)
+  let k=0;for(let i=0;i<=j;i++){const b=botsAll[i];b.mate=null;b.follow=false;b.team=1e9+(curMode?Math.floor(k/TS):k);if(curMode&&k%TS){const a=botsAll[i-k%TS];b.mate=a;b.follow=true;if(!a.mate)a.mate=b}k++}
 }
 const followEnt=b=>b.buddy===myId()?P:others.get(b.buddy);
 const isMate=e=>e!==P&&e.team!==undefined&&e.team===P.team;
@@ -1267,7 +1268,7 @@ function rebootBot(b,v){
 }
 // Le bot porteur de carte : va chercher la carte puis le fourgon, et lance la relance. Renvoie true s'il est occupé.
 function botReboot(b,dt){
-  const cd=b.carry||cards.find(c=>!c.by&&((c.kind==='bot'&&c.ref===b.mate)||(c.kind==='me'&&b.buddy===myId())||(c.kind==='peer'&&b.buddy===c.ref)));
+  const cd=b.carry||cards.find(c=>!c.by&&((c.kind==='bot'&&c.ref!==b&&c.ref.team===b.team)||(c.kind==='me'&&P.team===b.team)||(c.kind==='peer'&&teamMap.get(c.ref)===b.team)));
   if(!cd)return false;
   if(!b.carry){if(dist(b,cd)>24){const a=Math.atan2(cd.y-b.y,cd.x-b.x);b.a=a;botMove(b,a,175,dt);return true}b.carry=cd;cd.by=b;cd.m.visible=false}
   const v=nearestVan(b.x,b.y);if(!v)return false;
@@ -2454,7 +2455,7 @@ function draw(t,dt){
   mm.fillStyle="#7dff8a";for(const e of [...bots,...liveOthers()])if(isMate(e)){mm.beginPath();mm.arc(e.x/M*s,e.y/M*s,3.5,0,7);mm.fill()}
   mm.save();mm.translate(P.x/M*s,P.y/M*s);mm.rotate(P.a);mm.fillStyle='#fff';mm.strokeStyle='#14123a';mm.lineWidth=2;mm.beginPath();mm.moveTo(7,0);mm.lineTo(-5,5);mm.lineTo(-5,-5);mm.closePath();mm.stroke();mm.fill();mm.restore();
   }$("pa").textContent=P.mode==="island"?islandPeers().length+1:bots.length+liveOthers().length+1;$('pk').textContent=P.kills;$("pcr").style.display=P.crowned?"":"none";$('pt').textContent=wallet.tk;
-  $("pst").textContent=P.mode==="island"?(islT?"🚌 "+((["Solo","Duo","Reload"][islMd]||"Solo"))+(islVr&&VR[islVr]?" · "+VR[islVr][0]:"")+" · départ du bus dans "+fmt(Math.max(0,(islT+ISLAND_WAIT-gnow())/1000)):"🚌 Partie en cours… le bus partira juste après"):stormPre?"🌀 La tempête se forme bientôt":ph>=LN?"🌀 Tempête totale !":shrinking?"🌀 La zone se réduit "+fmt(stormLeft):ph===0?"🌀 La tempête se forme dans "+fmt(stormLeft):"🌀 Resserrement dans "+fmt(stormLeft);
+  $("pst").textContent=P.mode==="island"?(islT?"🚌 "+((["Solo","Duo","Reload","Trio"][islMd]||"Solo"))+(islVr&&VR[islVr]?" · "+VR[islVr][0]:"")+" · départ du bus dans "+fmt(Math.max(0,(islT+ISLAND_WAIT-gnow())/1000)):"🚌 Partie en cours… le bus partira juste après"):stormPre?"🌀 La tempête se forme bientôt":ph>=LN?"🌀 Tempête totale !":shrinking?"🌀 La zone se réduit "+fmt(stormLeft):ph===0?"🌀 La tempête se forme dans "+fmt(stormLeft):"🌀 Resserrement dans "+fmt(stormLeft);
   if(bigMap)drawBigMap();
   compass();
   document.getElementById('hp').style.width=Math.max(0,P.hp)+'%';
@@ -2834,15 +2835,15 @@ addEventListener("mousedown",e=>{if(ewOpen&&!run){e.preventDefault();e.stopPropa
 const VRS=['','Personne ne construit','Que des snipers','Que des pistolets','Une balle suffit','Armes au hasard','Atterris équipé','La lave monte','Le sol brûle','Tiens la colline','3 zones à tenir','Atteins la fusée','Zombies contagieux','Déguise-toi en objet','10 anneaux à passer','Duo · 8 joueurs'];
 function vrPick(i){vrSel=Math.max(0,Math.min(VR.length-1,i|0));try{localStorage.setItem('ie_vr',String(vrSel))}catch(e){}}
 {const md=$("modes");VR.forEach(([n,d],i)=>{if(!i)return;const b=document.createElement('button'),h=(i*29+190)%360;b.type='button';b.className='md';b.dataset.m='0';b.dataset.v=String(i);b.setAttribute('role','radio');b.title=d;
-  b.style.setProperty('--bg','linear-gradient(135deg,hsl('+h+',75%,52%),#14123a 85%)');const ic=n.split(' ')[0],nm=n.slice(ic.length+1),e1=document.createElement('i'),e2=document.createElement('b'),e3=document.createElement('small');e1.textContent=ic;e2.textContent=nm;e3.textContent=i===15?VRS[i]:(VRS[i]||d)+' · solo ou duo';b.append(e1,e2,e3);md.append(b)})}
-let mdSwiped=false;document.querySelectorAll("#modes .md").forEach(b=>b.onclick=()=>{if(mdSwiped){mdSwiped=false;return}if(+b.dataset.m===2){vrPick(0);setMode(2)}else{vrPick(+b.dataset.v|0);setMode(vrSel===15?1:mode<2?mode:mdPrev())}});setMode(mode);
-// Petit sélecteur Solo / Duo qui s'ouvre à droite de la carte de mode
+  b.style.setProperty('--bg','linear-gradient(135deg,hsl('+h+',75%,52%),#14123a 85%)');const ic=n.split(' ')[0],nm=n.slice(ic.length+1),e1=document.createElement('i'),e2=document.createElement('b'),e3=document.createElement('small');e1.textContent=ic;e2.textContent=nm;e3.textContent=i===15?VRS[i]:(VRS[i]||d)+' · solo, duo ou trio';b.append(e1,e2,e3);md.append(b)})}
+let mdSwiped=false;document.querySelectorAll("#modes .md").forEach(b=>b.onclick=()=>{if(mdSwiped){mdSwiped=false;return}if(+b.dataset.m===2){vrPick(0);setMode(2)}else{vrPick(+b.dataset.v|0);setMode(vrSel===15?1:mode!==2?mode:mdPrev())}});setMode(mode);
+// Petit sélecteur Solo / Duo / Trio qui s'ouvre à droite de la carte de mode
 {const sw=$("msub"),pk=$("mpick"),open=o=>{pk.classList.toggle('open',o);sw.setAttribute('aria-expanded',o)};
   sw.onclick=e=>{e.stopPropagation();open(!pk.classList.contains('open'))};
-  pk.querySelectorAll('button').forEach(b=>b.onclick=e=>{e.stopPropagation();if(b.disabled)return;setMode(+b.dataset.s?(mode===2?2:1):0);open(false)});
+  pk.querySelectorAll('button').forEach(b=>b.onclick=e=>{e.stopPropagation();if(b.disabled)return;setMode(+b.dataset.s===3?3:+b.dataset.s?(mode===2?2:1):0);open(false)});
   addEventListener('click',()=>open(false));addEventListener('keydown',e=>{if(e.code==='Escape')open(false)});}
 // Reload se choisit en glissant vers le haut sur le sélecteur de mode (et vers le bas pour revenir)
-const mdPrev=()=>{if(party.pt)return 1;try{return localStorage.getItem('ie_mode0')==='1'?1:0}catch(e){return 0}};
+const mdPrev=()=>{let v=0;try{v=+localStorage.getItem('ie_mode0')|0}catch(e){}v=v===1||v===3?v:0;return party.pt&&!v?1:v};
 function swipeMode(up){if(up&&mode!==2){try{localStorage.setItem('ie_mode0',String(mode))}catch(e){}setMode(2);sfx('whoosh')}else if(!up&&mode===2){setMode(mdPrev());sfx('whoosh')}}
 {const el=$("modes");let sy=null,sx=0,pid=null;
   el.addEventListener('pointerdown',e=>{sy=e.clientY;sx=e.clientX;pid=e.pointerId;mdSwiped=false});
@@ -3153,7 +3154,7 @@ function tiPaint(){const sl=$('tisel');if(!sl)return;if(look.ti&&!tiOk(look.ti))
   for(const[id,n,ok,how]of TITLES){const o=document.createElement('option'),u=ok();o.value=id;o.textContent=u?n:'🔒 '+n+' ('+how+')';o.disabled=!u;sl.append(o)}sl.value=look.ti||''}
 $('tisel').onchange=e=>{look.ti=tiOk(e.target.value)?e.target.value:'';saveLook();lastSig=''};tiPaint();
 const histGet=()=>{try{const h=JSON.parse(localStorage.getItem('ie_hist')||'[]');return Array.isArray(h)?h:[]}catch(e){return[]}};
-function histAdd(win,pl){if(!P||P.mode==='island')return;rankAdd(win,pl);const h=histGet();h.unshift({t:Date.now(),w:win?1:0,p:pl|0,k:P.kills|0,d:Math.round(P.st&&P.st.dmg||0),s:Math.round((gnow()-P.born)/1000),m:(vrM?VR[vrM][0]+' · ':'')+(rlMode?'Reload':curMode?'Duo':'Solo')});try{localStorage.setItem('ie_hist',JSON.stringify(h.slice(0,20)))}catch(e){}}
+function histAdd(win,pl){if(!P||P.mode==='island')return;rankAdd(win,pl);const h=histGet();h.unshift({t:Date.now(),w:win?1:0,p:pl|0,k:P.kills|0,d:Math.round(P.st&&P.st.dmg||0),s:Math.round((gnow()-P.born)/1000),m:(vrM?VR[vrM][0]+' · ':'')+(rlMode?'Reload':teamSz===3?'Trio':curMode?'Duo':'Solo')});try{localStorage.setItem('ie_hist',JSON.stringify(h.slice(0,20)))}catch(e){}}
 function histShow(){const b=$('histb'),h=histGet();b.textContent='';rankShow(b);
   {const S=bp&&bp.st||{},p=document.createElement('p'),n=v=>(v|0).toLocaleString('fr-FR');p.className='sum';// statistiques de la saison (passe de combat)
     p.textContent='📊 Saison : niveau '+bpLvl()+' · '+n(S.match)+' parties · '+n(S.win)+' victoire'+((S.win|0)>1?'s':'')+' · '+n(S.top10)+' top 10 · '+n(S.kill)+' éliminations · '+n(S.dmg)+' dégâts · '+n(S.chest)+' coffres · '+n(S.build)+' constructions';b.append(p)}
